@@ -6,7 +6,7 @@ Paste as is or edit. Nothing here claims a hardware result.
 ## Properties
 
 - Category: Developer tools
-- Privacy policy URL: `https://pengveloper.github.io/airfab-sentinel/privacy/` (the page in `web/privacy/`, published by the Pages workflow once the repository is public). Check that it opens in a private browser window before submitting
+- Privacy policy: entered in Partner Center as hosted text (the wording of [PRIVACY.md](../PRIVACY.md) in English and Korean). It can be switched to the URL `https://pengveloper.github.io/airfab-sentinel/privacy/` once that page is live
 - Website: `https://pengveloper.github.io/airfab-sentinel/` (the simulator demo) or the repository address
 - Support contact: the repository's issue tracker
 

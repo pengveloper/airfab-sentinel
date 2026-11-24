@@ -38,15 +38,23 @@ Progress:
 | Individual developer account | Registered 2026-11-24 |
 | Name reserved | "Sentinel Lab", Store ID `9NVR2WGRQB9X` (a reservation lapses if nothing is submitted within three months) |
 | Package identity | `Pengveloper.SentinelLab`, set in `desktop/builder.config.js`; CI builds the package with it |
-| Submission | Not started. Listing text is prepared in [STORE_LISTING.md](STORE_LISTING.md) |
+| Submission draft: pricing and availability | Done: free, all markets, public |
+| Submission draft: properties | Done: Developer tools; declares that the app handles personal information (device names and identifiers from the user's own boards, processed locally); privacy policy entered as text hosted by Microsoft; OneDrive backup of app data turned off |
+| Submission draft: age rating | Questionnaire answered (all ages in every system). The account owner still has to tick the IARC terms box and save |
+| Submission draft: package | Not uploaded. The file comes from the CI artifact |
+| Submission draft: Store listing | Waiting for the package (listing languages appear after upload). Text is prepared in [STORE_LISTING.md](STORE_LISTING.md) |
 | Certification and first Store install | Not done |
 
-To submit: download `SentinelLab-<version>-store.appx` from the latest CI run (artifact
-`sentinel-lab-windows`), start a submission in Partner Center, upload the package, paste the
-listing text, answer the age-rating questionnaire, give a public privacy policy URL, and submit.
-The privacy policy must be reachable without signing in. A dedicated page is in `web/privacy/`;
-the `pages` workflow publishes it, together with the simulator demo, to GitHub Pages as soon as
-the repository is public and Pages is set to deploy from GitHub Actions.
+To finish: tick the IARC terms box on the age-rating summary and save; download
+`SentinelLab-<version>-store.appx` from the latest CI run (artifact `sentinel-lab-windows`) and
+upload it under Packages; paste the listing text and add screenshots for Korean and English;
+then submit for certification.
+
+Partner Center accepts the privacy policy either as a URL or as text that Microsoft hosts. The
+draft uses hosted text, so the submission does not depend on this repository being public. The
+page in `web/privacy/` is the same policy for the public site; the `pages` workflow publishes it
+with the simulator demo once the repository is public and Pages is set to deploy from GitHub
+Actions.
 
 ## Antivirus
 

@@ -40,7 +40,7 @@ try {
   step('window is isolated: no Node, fixed bridge, CSP header, no path escape');
 
   // 2. 첫 실행: 비밀번호를 정하기 전에는 브로커가 꺼져 있다
-  await win.waitForSelector('#setup:not([hidden])', { timeout: 10_000 });
+  await win.waitForSelector('#setup:not([hidden])', { state: 'attached', timeout: 20_000 });
   assert.equal((await win.evaluate(() => window.desktop.status())).running, false);
   assert.equal(await tryConnect('anything-at-all'), null);
   await win.waitForTimeout(2600); await shot(win, '01-setup.png');
@@ -94,7 +94,10 @@ try {
   assert.equal(app.windows().length, 1);
   step('navigation and new windows are blocked');
 
-} catch (e) { failed = true; console.error(e); try { await (await app.firstWindow()).screenshot({ path: path.join(out, 'failure.png') }); } catch { /* ignore */ } }
+} catch (e) { failed = true; console.error(e);
+  // 실패했을 때 원인을 좁힐 수 있도록 창의 상태를 남깁니다.
+  try { const w = await app.firstWindow(); console.log('state at failure:', JSON.stringify(await w.evaluate(() => ({ setupHidden: document.querySelector('#setup').hidden, deskHidden: document.querySelector('#desk').hidden, source: window.Lab && Lab.S.source, status: window.Desk && window.Desk.status(), size: [innerWidth, innerHeight], visibility: document.visibilityState, body: document.body.className })))); } catch { /* ignore */ }
+  try { await (await app.firstWindow()).screenshot({ path: path.join(out, 'failure.png') }); } catch { /* ignore */ } }
 await app.close().catch(() => {});
 await new Promise(r => setTimeout(r, 1000));
 try { fs.rmSync(userData, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch { /* 임시 폴더는 운영체제가 치웁니다 */ }

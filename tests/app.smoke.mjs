@@ -61,6 +61,12 @@ try {
   await new Promise(r => board.subscribe('wled/lab/api', r));
   step('authentication: wrong password rejected, correct password accepted');
 
+  // 창 조작 버튼(최소화, 닫기)이 차지하는 영역 밖에 브로커 버튼이 있어야 누를 수 있습니다. 좁은 화면에서도 마찬가지입니다.
+  const fit = await win.evaluate(() => { const o = navigator.windowControlsOverlay, r = document.querySelector('#openConn').getBoundingClientRect(), area = o && o.visible ? o.getTitlebarAreaRect() : null;
+    return { left: r.left, right: r.right, limit: area ? area.x + area.width : innerWidth, width: innerWidth }; });
+  assert.ok(fit.left >= 0 && fit.right <= fit.limit + 1, `hub button must stay clear of the window controls: ${JSON.stringify(fit)}`);
+  step(`top bar fits a ${fit.width}px wide window`);
+
   // 4. 보드 메시지가 화면까지
   await win.waitForFunction(() => Lab.S.source === 'live', null, { timeout: 10_000 });
   await win.waitForSelector('#sp-empty:not([hidden])'); await shot(win, '03-waiting.png');

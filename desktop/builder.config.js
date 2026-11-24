@@ -1,6 +1,7 @@
 // electron-builder configuration.
-// Store identity values come from Partner Center after the app name is reserved; until then the
-// placeholders below produce a package that builds and installs for local testing only.
+// The Store identity below is the one Partner Center assigned when the name "Sentinel Lab" was
+// reserved (Product identity page). These values are public: they are written into every package
+// manifest. Environment variables can override them for a fork or a test identity.
 const env = process.env;
 
 module.exports = {
@@ -30,9 +31,9 @@ module.exports = {
   appx: {
     applicationId: 'SentinelLab',
     displayName: 'Sentinel Lab',
-    identityName: env.APPX_IDENTITY_NAME || 'pengveloper.SentinelLab',
-    publisher: env.APPX_PUBLISHER || 'CN=pengveloper',
-    publisherDisplayName: env.APPX_PUBLISHER_DISPLAY_NAME || 'pengveloper',
+    identityName: env.APPX_IDENTITY_NAME || 'Pengveloper.SentinelLab',
+    publisher: env.APPX_PUBLISHER || 'CN=51D09130-0EBA-4F7D-8E24-51F9EC2B32F3',
+    publisherDisplayName: env.APPX_PUBLISHER_DISPLAY_NAME || 'Pengveloper',
     backgroundColor: '#05080d',
     languages: ['ko-KR', 'en-US'],
     capabilities: ['runFullTrust', 'privateNetworkClientServer'],

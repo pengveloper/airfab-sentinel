@@ -9,7 +9,7 @@ records which channel meets the goal, which do not yet, and what is still to do.
 
 | Channel | SmartScreen | Cost | State |
 |---|---|---|---|
-| Microsoft Store (MSIX, re-signed by Microsoft) | No warning | Free for individual developers | Package builds in CI. Submission needs a developer account (below) |
+| Microsoft Store (MSIX, re-signed by Microsoft) | No warning | Free for individual developers | Account registered and name reserved. Package builds in CI. Submission pending (below) |
 | GitHub Releases, signed through SignPath Foundation | Publisher shown as SignPath Foundation; reputation carries over from their certificate | Free for open-source projects that are accepted | Needs a public repository and an application |
 | GitHub Releases, unsigned portable zip | "Windows protected your PC" on first run | Free | Built in CI today. For developers who can verify the checksum |
 | Build from source | None (nothing is downloaded as an executable from this project) | Free | `npm ci && npm start` |
@@ -31,15 +31,21 @@ What the project already does:
 - The package declares only `runFullTrust` (required for a packaged desktop app) and `privateNetworkClientServer` (the hub listens on the LAN).
 - The app does not update itself, so Store delivery is the single update path.
 
-What the account owner does once:
+Progress:
 
-1. Register as an individual developer at https://storedeveloper.microsoft.com with a personal Microsoft account. Registration is free.
-2. In Partner Center, reserve the name "Sentinel Lab" and open Product identity. Note the three values: Package/Identity/Name, Package/Identity/Publisher, and Publisher display name.
-3. In this repository, add them as Actions variables: `APPX_IDENTITY_NAME`, `APPX_PUBLISHER`, `APPX_PUBLISHER_DISPLAY_NAME`. The next CI run builds a package with the real identity.
-4. Create a submission, upload the `.appx` from the CI artifact, fill in the listing, and link [PRIVACY.md](../PRIVACY.md) as the privacy policy.
-5. Submit for certification. Microsoft tests the package and scans it before it is listed.
+| Step | State |
+|---|---|
+| Individual developer account | Registered 2026-11-24 |
+| Name reserved | "Sentinel Lab", Store ID `9NVR2WGRQB9X` (a reservation lapses if nothing is submitted within three months) |
+| Package identity | `Pengveloper.SentinelLab`, set in `desktop/builder.config.js`; CI builds the package with it |
+| Submission | Not started. Listing text is prepared in [STORE_LISTING.md](STORE_LISTING.md) |
+| Certification and first Store install | Not done |
 
-Until step 3 is done, the package is built with placeholder identity values and is useful only for checking that packaging works.
+To submit: download `SentinelLab-<version>-store.appx` from the latest CI run (artifact
+`sentinel-lab-windows`), start a submission in Partner Center, upload the package, paste the
+listing text, answer the age-rating questionnaire, give a public privacy policy URL, and submit.
+The privacy policy must be reachable without signing in, so it needs a public address
+(this repository once it is public, or a page on a personal site).
 
 ## Antivirus
 
@@ -65,7 +71,7 @@ Compare the result with `SHA256SUMS.txt` from the same CI run or release.
 
 | Item | Blocked on |
 |---|---|
-| Store submission | Developer account and reserved name |
+| Store submission | A public privacy policy URL, then upload and review by the account owner |
 | SignPath Foundation application | Repository made public |
 | Tagged releases with build provenance attestation | Repository made public |
 | Public web demo (GitHub Pages) | Repository made public |

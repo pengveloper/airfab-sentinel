@@ -55,6 +55,8 @@ try {
   // 3. 인증
   assert.equal(await tryConnect('wrong-password-123'), null);
   const board = await tryConnect(password); assert.ok(board, 'correct password connects');
+  const commands = []; board.on('message', (topic, p) => { if (topic === 'wled/lab/api') commands.push(p.toString()); });
+  await new Promise(r => board.subscribe('wled/lab/api', r));
   step('authentication: wrong password rejected, correct password accepted');
 
   // 4. 보드 메시지가 화면까지
@@ -73,7 +75,8 @@ try {
   step('board messages reach the window; first-measurement steps fill in; client id is masked');
 
   // 5. 규칙이 보낸 명령이 기기에게 도달
-  const got = await new Promise(resolve => { board.subscribe('wled/lab/api'); board.on('message', (topic, p) => { if (topic === 'wled/lab/api') resolve(p.toString()); }); setTimeout(() => resolve(null), 12_000); });
+  for (let i = 0; i < 100 && !commands.length; i++) await new Promise(r => setTimeout(r, 250));   // 규칙은 움직임이 시작될 때 실행됩니다
+  const got = commands[0] || null;
   assert.ok(got && JSON.parse(got).seg, 'a rule command arrives as WLED JSON');
   step('rule engine command is delivered to devices');
   clearInterval(timer); board.end(true);

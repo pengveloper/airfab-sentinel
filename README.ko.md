@@ -34,6 +34,11 @@ Node.js 22가 필요합니다. 첫 실행에서 허브 비밀번호를 정한 �
 시뮬레이터로 콘솔만 보려면 `console/index.html`을 Chrome이나 Edge로 엽니다.
 데스크톱 앱 없이 쓰는 Docker용 Mosquitto 구성은 `broker/`에 있습니다.
 
+## 데모와 개인정보 처리방침 페이지
+
+저장소가 공개되면 `pages` 워크플로가 시뮬레이터 데모와 개인정보 처리방침을 GitHub Pages에 올립니다.
+주소는 `https://pengveloper.github.io/airfab-sentinel/` 과 `/privacy/` 이고, 아직 실행된 적은 없습니다.
+
 ## 실측 순서
 
 앱의 "노드" 화면에 같은 순서가 있고, 보드의 메시지를 받으면 단계가 자동으로 채워집니다.

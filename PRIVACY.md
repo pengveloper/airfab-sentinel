@@ -1,5 +1,7 @@
 # Privacy
 
+The published version of this policy, in Korean and English, is the page in `web/privacy/`.
+
 Sentinel Lab does not collect, transmit or sell any data.
 
 - The app makes no connection to the internet. It has no account, analytics, crash reporting or advertising.

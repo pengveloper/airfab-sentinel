@@ -6,8 +6,8 @@ Paste as is or edit. Nothing here claims a hardware result.
 ## Properties
 
 - Category: Developer tools
-- Privacy policy URL: the public address of [PRIVACY.md](../PRIVACY.md)
-- Website: the repository address once it is public
+- Privacy policy URL: `https://pengveloper.github.io/airfab-sentinel/privacy/` (the page in `web/privacy/`, published by the Pages workflow once the repository is public). Check that it opens in a private browser window before submitting
+- Website: `https://pengveloper.github.io/airfab-sentinel/` (the simulator demo) or the repository address
 - Support contact: the repository's issue tracker
 
 ## Why the package needs `runFullTrust`

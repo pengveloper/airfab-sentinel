@@ -44,8 +44,9 @@ Progress:
 To submit: download `SentinelLab-<version>-store.appx` from the latest CI run (artifact
 `sentinel-lab-windows`), start a submission in Partner Center, upload the package, paste the
 listing text, answer the age-rating questionnaire, give a public privacy policy URL, and submit.
-The privacy policy must be reachable without signing in, so it needs a public address
-(this repository once it is public, or a page on a personal site).
+The privacy policy must be reachable without signing in. A dedicated page is in `web/privacy/`;
+the `pages` workflow publishes it, together with the simulator demo, to GitHub Pages as soon as
+the repository is public and Pages is set to deploy from GitHub Actions.
 
 ## Antivirus
 
@@ -71,8 +72,8 @@ Compare the result with `SHA256SUMS.txt` from the same CI run or release.
 
 | Item | Blocked on |
 |---|---|
-| Store submission | A public privacy policy URL, then upload and review by the account owner |
+| Store submission | The privacy page being live, then upload and review by the account owner |
 | SignPath Foundation application | Repository made public |
 | Tagged releases with build provenance attestation | Repository made public |
-| Public web demo (GitHub Pages) | Repository made public |
+| Public web demo and privacy page (GitHub Pages) | Repository made public and Pages enabled; the workflow is written but has not run yet |
 | First install and run on a real Windows PC outside CI | Operator |

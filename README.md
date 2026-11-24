@@ -80,6 +80,11 @@ Windows will warn on first run.
 The full comparison of channels, the Store steps and the antivirus notes are in
 [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md).
 
+## Demo and privacy page
+
+The `pages` workflow publishes the simulator demo and the privacy policy to GitHub Pages once this
+repository is public: `https://pengveloper.github.io/airfab-sentinel/` and `/privacy/`. It has not run yet.
+
 ## Run it
 
 ```sh
@@ -129,6 +134,7 @@ On Linux the app test needs a display: `xvfb-run -a npm run test:app`.
 ## Repository layout
 
 ```
+web/        privacy policy page published to GitHub Pages
 desktop/    Electron main process, embedded hub, preload bridge, packaging config
 console/    the console (runs in the desktop window and as a static page)
 tests/      data layer, hub, app smoke test, packaged-build check

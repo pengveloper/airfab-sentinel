@@ -24,10 +24,11 @@ window.addEventListener('hashchange',()=>show(location.hash.slice(1),false));
 const src=$('#src'),mixed=$('#mixed'),rate=$('#rate'),clock=$('#clock'),openBtn=$('#openConn');
 function status(){const d=new Date();clock.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
   rate.textContent=S.rate.toFixed(0)+' msg/s';
-  if(S.source==='live'){src.className='chip '+(S.linkDown?'bad':'live');src.textContent=S.linkDown?'연결 끊김, 다시 시도 중':'실측: 브로커 연결됨';openBtn.textContent='연결 끊기';}
+  if(S.source==='live'){src.className='chip '+(S.linkDown?'bad':'live');src.textContent=S.linkDown?(window.Desk?'브로커 꺼짐':'연결 끊김, 다시 시도 중'):(window.Desk?'실측: 내장 브로커':'실측: 브로커 연결됨');openBtn.textContent='연결 끊기';}
   else if(S.source==='demo'){src.className='chip sim';src.textContent='데모: 시뮬레이션 값';openBtn.textContent='브로커 연결';}
   else if(S.source==='replay'){src.className='chip rp';src.textContent='재생: 기록 파일 '+S.replayInfo.done+'/'+S.replayInfo.total;openBtn.textContent='브로커 연결';}
   else{src.className='chip';src.textContent='대기';openBtn.textContent='브로커 연결';}
+  if(window.Desk)openBtn.textContent='브로커';
   mixed.hidden=!S.simMixed;const sp=$('#sp-src');sp.className=src.className;sp.textContent=src.textContent+(S.simMixed?' · 시뮬레이터 포함':'');}
 setInterval(status,500);
 
@@ -38,7 +39,7 @@ function openDrawer(){lastFocus=document.activeElement;drawer.hidden=false;$('#c
   else note.textContent='PC에서 Mosquitto를 켠 뒤 연결합니다. 비밀번호는 이 탭의 메모리에만 둡니다.';
   (Lab.canLive?$('#c-pass'):$('#c-close')).focus();}
 function closeDrawer(){drawer.hidden=true;if(lastFocus)lastFocus.focus();}
-openBtn.addEventListener('click',()=>{if(S.source==='live'){Lab.disconnect();Lab.demo();}else openDrawer();});
+openBtn.addEventListener('click',()=>{if(window.Desk){Desk.open();return;}if(S.source==='live'){Lab.disconnect();Lab.demo();}else openDrawer();});
 $('#c-close').addEventListener('click',closeDrawer);
 drawer.addEventListener('click',e=>{if(e.target===drawer)closeDrawer();});
 window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!drawer.hidden)closeDrawer();});

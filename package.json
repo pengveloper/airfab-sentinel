@@ -1,6 +1,30 @@
 {
   "name": "sentinel-lab",
+  "productName": "Sentinel Lab",
+  "version": "0.2.0",
+  "description": "Desktop console and MQTT hub for trying ESP32 sensing firmware side by side",
+  "author": "pengveloper",
+  "license": "MIT",
   "private": true,
-  "type": "module",
-  "scripts": { "test": "node --test tests/core.test.mjs" }
+  "main": "desktop/main/main.mjs",
+  "scripts": {
+    "postinstall": "node desktop/scripts/fonts.mjs",
+    "start": "electron .",
+    "test": "node --test tests/core.test.mjs tests/broker.test.mjs",
+    "test:app": "node tests/app.smoke.mjs",
+    "fonts": "node desktop/scripts/fonts.mjs",
+    "dist": "electron-builder --config desktop/builder.config.js --publish never"
+  },
+  "dependencies": {
+    "aedes": "1.2.0"
+  },
+  "devDependencies": {
+    "@fontsource-variable/archivo": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/ibm-plex-sans-kr": "5.3.0",
+    "electron": "45.4.1",
+    "electron-builder": "26.18.0",
+    "mqtt": "5.16.1",
+    "playwright-core": "1.65.1"
+  }
 }

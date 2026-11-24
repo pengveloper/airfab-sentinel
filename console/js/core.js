@@ -6,7 +6,8 @@ const mask=s=>String(s).replace(/\b[0-9a-f]{16}\b/gi,m=>m.slice(0,4)+'…').repl
 const LSK='sentinel-lab-console-v1';
 const SLOTS={csi:[[1,6.1],[5,6.3],[1,3.5]],ble:[[0.9,0.9],[5.6,6.2],[9.1,5.6],[9.1,2.6],[3,3.5]]};
 const ROOM_KO={office:'작업실',living:'거실',entry:'현관',bedroom:'침실',kitchen:'주방'};
-const canLive=location.protocol==='file:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+const DESK=!!window.desktop; // 데스크톱 앱 안에서는 내장 브로커와 창 사이의 통로를 씁니다
+const canLive=DESK||location.protocol==='file:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function defCfg(){return{room:{w:10,h:7},router:{x:9.2,y:0.8},
   nodes:[{key:'cam',type:'cam',alias:'카메라',x:5,y:0.6},{key:'led',type:'led',alias:'상태 LED',x:2.4,y:0.7}],
   pinned:['sim:phone','sim:keys'],
@@ -32,6 +33,9 @@ function mark(k,v){const b=cfg.bring||(cfg.bring={});if(k!=='cam'&&(S.source!=='
 function clearBring(){cfg.bring={};save();}
 function ensureNode(key,type,alias){let n=node(key);if(n)return n;const L=SLOTS[type]||SLOTS.ble,used=cfg.nodes.filter(x=>x.type===type).length,s=L[used%L.length];
   n={key,type,alias,x:s[0],y:s[1],sim:S.source==='demo'};cfg.nodes.push(n);save();return n;}
+/* 데모로 넘어갈 때 실제 보드의 자리(배치)는 따로 보관했다가, 실측으로 돌아오면 되돌립니다. */
+function park(){const real=cfg.nodes.filter(n=>!n.sim&&(n.type==='csi'||n.type==='ble'));if(!real.length)return;cfg.parked=(cfg.parked||[]).filter(p=>!real.some(r=>r.key===p.key)).concat(real);cfg.nodes=cfg.nodes.filter(n=>!real.includes(n));save();}
+function unpark(){cfg.nodes=cfg.nodes.filter(n=>!n.sim);for(const n of cfg.parked||[])if(!node(n.key))cfg.nodes.push(n);cfg.parked=[];save();}
 function feed(txt,kind){S.feed.unshift({t:now(),txt,kind});if(S.feed.length>40)S.feed.pop();}
 
 /* ---- 위치 추정 ---- */
@@ -84,17 +88,24 @@ function ingest(topic,text,src,retained){S.count++;_c++;S.lastTs=now();const fre
 let client=null;
 function publish(topic,payload){if(S.source==='live'&&client){client.publish(topic,payload);}else if(S.source==='demo'&&window.Sim){Sim.onPublish(topic,payload);}}
 function connect(url,user,pass,cb){if(!canLive){cb('이 페이지에서는 브라우저 정책 때문에 브로커에 연결할 수 없습니다. PC에 내려받은 콘솔에서 연결하세요.');return;}
-  if(typeof mqtt==='undefined'){cb('vendor/mqtt.min.js를 불러오지 못했습니다.');return;}
+  const desk=DESK&&url==='desktop';
+  if(!desk&&typeof mqtt==='undefined'){cb('vendor/mqtt.min.js를 불러오지 못했습니다.');return;}
   disconnect();cfg.broker={url,user};save();let done=false;
-  client=mqtt.connect(url,{username:user,password:pass,reconnectPeriod:3000,connectTimeout:6000,clientId:'sentinel-console-'+Math.random().toString(16).slice(2,8)});
-  client.on('connect',()=>{if(window.Sim)Sim.stop();if(S.source!=='live'){clearState();cfg.nodes=cfg.nodes.filter(n=>!n.sim);save();}S.source='live';if(!cfg.bring)cfg.bring={};if(!cfg.bring.broker){cfg.bring.broker=now();save();}
+  client=desk?deskClient():mqtt.connect(url,{username:user,password:pass,reconnectPeriod:3000,connectTimeout:6000,clientId:'sentinel-console-'+Math.random().toString(16).slice(2,8)});
+  client.on('connect',()=>{if(window.Sim)Sim.stop();if(S.source!=='live'){clearState();unpark();}S.source='live';if(!cfg.bring)cfg.bring={};if(!cfg.bring.broker){cfg.bring.broker=now();save();}
     client.subscribe(['espectre/v1/devices/+/motion','espectre/v1/devices/+/sensing','espectre/v1/devices/+/health','espresense/devices/#','espresense/rooms/+/+','lab/sim/active',cfg.led.topic]);
     feed('브로커에 연결됨','sys');if(!done){done=true;cb(null);}});
   client.on('message',(t,b,pk)=>ingest(t,b.toString(),'live',!!(pk&&pk.retain)));
   client.on('error',e=>{if(S.source!=='live'&&client){try{client.end(true);}catch(x){}client=null;}if(!done){done=true;cb('연결하지 못했습니다: '+(e&&e.message||'알 수 없는 오류')+'. 브로커가 켜져 있는지, 사용자 이름과 비밀번호가 맞는지 확인하세요.');}});
   client.on('close',()=>{if(S.source==='live')S.linkDown=true;});client.on('connect',()=>{S.linkDown=false;});}
+/* 데스크톱 앱: MQTT.js 클라이언트와 같은 모양으로, 메인 프로세스의 브로커가 넘겨 주는 메시지를 받습니다. */
+function deskClient(){const h={},em=(e,...a)=>(h[e]||[]).slice().forEach(f=>f(...a)),D=window.desktop;let up=false,offM=null,offB=null;
+  const c={on(e,f){(h[e]||(h[e]=[])).push(f);return c;},subscribe(){},publish(t,p){D.publish(t,String(p));},end(){if(offM)offM();if(offB)offB();offM=offB=null;}};
+  const state=s=>{if(s.running&&!up){up=true;em('connect');D.replayRetained().then(l=>l.forEach(m=>em('message',m.topic,m.payload,{retain:true})));}else if(!s.running&&up){up=false;em('close');}};
+  offM=D.onMessage(m=>em('message',m.topic,m.payload,{retain:!!m.retain}));offB=D.onBroker(state);
+  D.status().then(s=>{if(s.running)state(s);else em('error',new Error(s.error==='PORT_IN_USE'?'1883 포트를 다른 프로그램이 쓰고 있습니다':'브로커가 꺼져 있습니다'));});return c;}
 function disconnect(){stopReplay();if(client){try{client.end(true);}catch(e){}client=null;}if(S.source==='live'){S.source='idle';S.simMixed=false;}}
-function demo(){disconnect();clearState();S.simEver=false;S.source='demo';if(window.Sim)Sim.start();feed('데모 시작: 내장 시뮬레이터가 보내는 값입니다','sys');}
+function demo(){disconnect();clearState();park();S.simEver=false;S.source='demo';if(window.Sim)Sim.start();feed('데모 시작: 내장 시뮬레이터가 보내는 값입니다','sys');}
 
 /* ---- 자동화 ---- */
 function hexRgb(h){return[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));}
@@ -126,7 +137,7 @@ let rp=null;
 function stopReplay(){if(rp){clearTimeout(rp.timer);rp=null;if(S.source==='replay')S.source='idle';}}
 function replay(text,speed,cb){const rows=[];let head=null;for(const ln of String(text).split('\n')){if(!ln.trim())continue;let o;try{o=JSON.parse(ln);}catch(e){continue;}if(o.kind==='sentinel-lab-log'||o.kind==='sentinel-lab-p1-log'){head=o;continue;}if(o.topic&&o.t&&typeof o.payload==='string'){const t=Date.parse(o.t);if(!isNaN(t))rows.push([t,o.topic,o.payload]);}}
   if(!rows.length){cb('재생할 메시지를 찾지 못했습니다. 콘솔에서 내려받은 JSONL 파일인지 확인하세요.');return;}
-  disconnect();if(window.Sim)Sim.stop();clearState();cfg.nodes=cfg.nodes.filter(n=>!n.sim);save();S.source='replay';S.replayInfo={total:rows.length,done:0,origin:head?head.data_source:'unknown'};S.simEver=!head||head.data_source!=='broker';
+  disconnect();if(window.Sim)Sim.stop();clearState();unpark();S.source='replay';S.replayInfo={total:rows.length,done:0,origin:head?head.data_source:'unknown'};S.simEver=!head||head.data_source!=='broker';
   rp={i:0,timer:null};const sp=speed||1,step=()=>{if(!rp)return;const r=rows[rp.i++];ingest(r[1],r[2],'replay');S.replayInfo.done=rp.i;if(rp.i>=rows.length){feed('재생 끝','sys');rp=null;return;}rp.timer=setTimeout(step,Math.min(2000,Math.max(0,(rows[rp.i][0]-r[0])/sp)));};
   feed('기록 재생 시작: '+rows.length+'건','sys');step();cb(null,rows.length);}
 function report(){const L=['| 시작 | 노드 | 길이 | 정답 구간 | 감지 | 놓침 | 오탐 | 재현율 | 정답 출처 | 데이터 |','|---|---|---|---|---|---|---|---|---|---|'];

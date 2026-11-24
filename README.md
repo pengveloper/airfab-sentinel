@@ -1,88 +1,95 @@
 # Sentinel Lab
 
-A browser console for trying open-source ESP32 sensing firmware side by side.
-Each board runs one complete upstream firmware and reports over MQTT; this console
-collects the messages into one view, checks detections against ground truth, and
-keeps a strict line between simulated data and real measurements.
+A desktop app for trying open-source ESP32 sensing firmware side by side. It runs an MQTT
+hub for your boards, shows what they report in one console, checks detections against
+ground truth, and keeps simulated data and real measurements strictly apart.
 
 한국어 문서: [README.ko.md](README.ko.md)
 
-![3D room view with a CSI link, BLE nodes and tracked devices](docs/screenshots/space.webp)
+![3D room: a Wi-Fi sensing link with its Fresnel zone, the live motion score along the link, BLE nodes and tracked devices](docs/screenshots/space.webp)
 
-Every value in these screenshots comes from the built-in simulator. No hardware
-result is claimed anywhere in this repository yet. See [Status](#status).
+Every value in these screenshots comes from the built-in simulator. No hardware result is
+claimed in this repository yet. See [Status](#status).
 
-## Why it is built this way
+## What it does
 
-One ESP32 has a single 2.4 GHz radio, and projects such as ESPectre (Wi-Fi CSI motion
-sensing) and ESPresense (BLE presence) are complete firmwares with their own licenses.
-Merging them into one binary is neither practical nor clean. Sentinel Lab keeps them
-separate instead:
+- **One app instead of a toolchain.** Start the app and the MQTT hub starts with it. No Docker, no scripts. The first-run screen asks for one thing, the hub password, and then shows the values to type into each board.
+- **One firmware per board, unmodified.** ESPectre senses motion from Wi-Fi channel state information, ESPresense measures Bluetooth distance per room, Tasmota streams an ESP32-CAM. Each is flashed from its own web installer and reports over MQTT.
+- **A console that explains the physics.** The 3D view draws the sensing region of each Wi-Fi link (its Fresnel zones) on the floor and raises the last 14 seconds of motion score as a ribbon along the link. The part above the detection threshold turns gold.
+- **Validation, not vibes.** A session records when a person really crossed the link and matches that against the firmware's detections: hits, misses, false detections, recall. Ground truth comes from a held key, a PIR sensor, or (demo only) the simulator.
+- **Evidence you can hand over.** Export the message log, replay it later, and generate a standalone HTML report with the score curve of every session.
 
-- one firmware per board, flashed unmodified from the upstream web installers
-- one MQTT broker on the LAN
-- one console that understands each firmware's topics
+| First run | Hub panel |
+|---|---|
+| ![First-run screen asking for the hub password](docs/screenshots/first-run.webp) | ![Panel listing the address, port and user to enter on each board](docs/screenshots/broker.webp) |
+
+| Motion and validation | First-measurement guide |
+|---|---|
+| ![Score timeline with a validation session](docs/screenshots/motion.webp) | ![Seven-step guide that fills in as boards report](docs/screenshots/nodes.webp) |
+
+## Architecture
 
 ```mermaid
 flowchart LR
-  A["ESP32-S3 · ESPectre<br/>Wi-Fi CSI motion"] -- MQTT 1883 --> B[(Mosquitto)]
-  C["ESP32-S3 / C3 · ESPresense<br/>BLE distance per room"] -- MQTT 1883 --> B
-  P["PIR on an ESPresense input<br/>ground truth"] -- MQTT 1883 --> B
-  B -- WebSocket 9001, localhost only --> D["Sentinel Lab console"]
-  D -- "rules → WLED JSON" --> B
-  E["ESP32-CAM · MJPEG stream"] -- HTTP --> D
+  subgraph LAN
+    A["ESP32-S3 · ESPectre<br/>Wi-Fi CSI motion"]
+    C["ESP32-S3 / C3 · ESPresense<br/>BLE distance per room"]
+    P["PIR on an ESPresense input<br/>ground truth"]
+    E["ESP32-CAM · Tasmota<br/>MJPEG stream"]
+  end
+  subgraph APP["Sentinel Lab (desktop)"]
+    H["Main process<br/>MQTT hub: auth, limits, private addresses only"]
+    W["Sandboxed window<br/>console, 3D, validation, reports"]
+    H -- "11 validated IPC calls" --> W
+  end
+  A -- MQTT 1883 --> H
+  C -- MQTT 1883 --> H
+  P -- MQTT 1883 --> H
+  W -- "rules → WLED JSON" --> H
+  E -- HTTP --> W
 ```
 
-## What the console does
+The same console code also runs as a static web page with the simulator, which is how a
+public demo can be hosted without any server. One ESP32 has a single 2.4 GHz radio and
+these firmwares carry their own licenses, so the project integrates them at the message
+level instead of merging them into one binary.
 
-| View | What you get |
-|---|---|
-| Space | 3D room with the CSI link, BLE nodes, tracked devices and a live event feed. Presentation mode fills the screen for recordings. |
-| Motion | Score timeline with the detection threshold, plus validation sessions that compare detections with ground truth. |
-| Presence | Floor plan with trilaterated BLE device positions. Drag nodes to where they really are. |
-| Camera | MJPEG stream from an ESP32-CAM next to the sensor data. |
-| Rules | "When motion starts, set the LED" style automations, published as WLED JSON. |
-| Nodes | A seven-step first-measurement guide that fills in as real board messages arrive. |
-| Evidence | Message log export (JSONL), log replay, a Markdown summary, and a standalone HTML report. |
+A site hub that boards can reach on the LAN is also the unit that scales: more sites means
+more hubs, and a cloud relay (for example to AWS IoT Core) can be added per hub when a
+central view is needed. That relay is on the roadmap, not in this version.
 
-![Motion view during a validation session](docs/screenshots/motion.webp)
+## Security
 
-### Validation sessions
+The app listens on your LAN, so it is built defensively. The window is sandboxed, loads
+only files shipped with the app, and reaches the system through eleven validated calls.
+The hub requires a password, accepts only private-range addresses, limits failed logins,
+connection count and message size, and stores the password with Windows credential
+protection. The executable is hardened with Electron fuses, and CI audits dependencies and
+scans every build with Microsoft Defender.
 
-A session records when a person actually crossed the link (ground truth) and matches
-those intervals against the firmware's detections, allowing two seconds of slack on
-either side. It reports hits, misses, false detections and recall. Ground truth can
-come from a held button, from a PIR sensor wired to an ESPresense input, or, in demo
-mode only, from the simulator.
+Details, test references and the list of what is not covered: [SECURITY.md](SECURITY.md).
 
-![Standalone verification report](docs/screenshots/report.webp)
+## Installing without Windows warnings
 
-### Honest labelling
+Windows decides whether to warn by signature and reputation, so this is a distribution
+question rather than a code question. The warning-free path is the Microsoft Store, which
+signs the package itself and is free for individual developers. The Store package builds in
+CI today; submission is pending. Until then, the portable zip from CI is unsigned and
+Windows will warn on first run.
 
-- Simulator data is labelled SIMULATED in the UI, in exports and in reports.
-- Messages received from a broker are labelled as received, not as verified. A human
-  records hardware verification in `evidence/` with the board, firmware version and operator.
-- Retained MQTT messages are never counted as fresh evidence, and a retained message
-  alone does not create a node.
-- Device identifiers are masked to their first four characters on screen and in exports.
+The full comparison of channels, the Store steps and the antivirus notes are in
+[docs/DISTRIBUTION.md](docs/DISTRIBUTION.md).
 
-## Quick start
+## Run it
 
-Open `console/index.html` in Chrome or Edge. It starts in demo mode with the built-in
-simulator. There is nothing to install or build.
-
-To receive real messages:
-
-```powershell
-cd broker
-./start.ps1        # Windows, PowerShell 7. macOS and Linux: ./start.sh
+```sh
+npm ci
+npm start
 ```
 
-The script asks you to choose the broker password, starts Mosquitto in Docker, prints
-the LAN address to enter on the boards, and opens the console. Then follow the guide
-in the Nodes view. The password hash lives in a Docker volume, not in this folder.
-
-![First-measurement guide](docs/screenshots/nodes.webp)
+Node.js 22. On first run, set the hub password and follow the guide in the Nodes view.
+To see the console alone with the simulator, open `console/index.html` in Chrome or Edge.
+A Docker-based Mosquitto kit for use without the desktop app is in `broker/`.
 
 ## Hardware roles
 
@@ -101,8 +108,10 @@ None of these firmwares is included or modified here. Each keeps its own license
 |---|---|
 | Console views, PIR ground truth, replay, report, presentation mode | Checked with the built-in simulator (SIMULATED) |
 | Data layer: masking, detection intervals, session statistics, trilateration, retained-message handling, rules | 10 automated tests pass (SOFTWARE_VERIFIED) |
-| Broker config: authentication, MQTT 1883 and WebSocket 9001 listeners, console live path, rule delivery | Checked against the `eclipse-mosquitto:2` (2.1.4) container on Linux with test publishers (SOFTWARE_VERIFIED) |
-| `start.ps1` on Windows with Docker Desktop | Not run yet (OPERATOR_REQUIRED) |
+| Embedded hub: private addresses only, authentication, login throttling, reserved topics, size limits | 9 automated tests over real TCP sockets pass (SOFTWARE_VERIFIED) |
+| Desktop app: window isolation, first run, password storage, message flow, rule delivery, navigation lock | 7-step smoke test of the real app passes on Linux; packaged build starts (SOFTWARE_VERIFIED) |
+| Windows build, DPAPI path, MSIX packaging, Defender scan | Runs in GitHub Actions on `windows-latest`; see the latest run |
+| Installing from the Microsoft Store without a warning | Not done yet (OPERATOR_REQUIRED) |
 | Real boards | Not measured yet (OPERATOR_REQUIRED) |
 
 Requirements, tests and evidence are linked in [docs/TRACEABILITY.md](docs/TRACEABILITY.md).
@@ -111,30 +120,30 @@ The evidence table is in [evidence/EVIDENCE-P1.md](evidence/EVIDENCE-P1.md).
 ## Tests
 
 ```sh
-npm test
+npm test            # data layer (T-CON-001..010) and hub (T-HUB-001..009)
+npm run test:app    # starts the real app: isolation, first run, auth, message flow
 ```
 
-Runs on Node.js 20 or later with no dependencies. The tests load the console's data
-layer with a fake clock and a fake MQTT client.
+On Linux the app test needs a display: `xvfb-run -a npm run test:app`.
 
 ## Repository layout
 
 ```
-console/    static console (three.js r149 and MQTT.js are vendored)
-broker/     Mosquitto config, compose file, start scripts
-tools/      broker-sim.html, a publisher that sends simulated messages through a real broker
-tests/      automated tests for the data layer
+desktop/    Electron main process, embedded hub, preload bridge, packaging config
+console/    the console (runs in the desktop window and as a static page)
+tests/      data layer, hub, app smoke test, packaged-build check
+broker/     optional Mosquitto kit for running without the desktop app
+tools/      broker-sim.html, a publisher of simulated messages through a real broker
 evidence/   evidence table and the template for hardware verification
-docs/       screenshots and the traceability table
+docs/       screenshots, traceability, distribution
 ```
 
-## Safety and scope
+## Scope
 
-- The broker is meant for a home LAN. Port 1883 requires a password; port 9001 is bound to localhost.
-- Wi-Fi credentials, broker passwords and unmasked MAC addresses do not belong in this repository.
+- Built for a home or lab LAN. MQTT on the LAN is not encrypted; see SECURITY.md.
 - Tools for attacking or jamming networks are out of scope.
 - The two banner photographs inside the console are staged illustrations, not photos of the lab equipment.
 
 ## License
 
-[MIT](LICENSE). Third-party notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+[MIT](LICENSE). Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Privacy: [PRIVACY.md](PRIVACY.md).

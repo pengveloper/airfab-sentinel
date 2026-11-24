@@ -27,7 +27,7 @@ function space(t){const cfg=Lab.cfg,hot=csiList().filter(n=>n.state==='motion'),
     $('#sp-feed').innerHTML=S.feed.slice(0,5).map(f=>`<li><time>${hms(f.t)}</time><span class="${f.kind}">${esc(f.txt)}</span></li>`).join('')||'<li><time></time><span class="sys">아직 없습니다</span></li>';
     const sig=S.ver+'|'+cfg.pinned.join()+'|'+S.source+'|'+S.csi.size+'|'+S.rooms.size;
     if(sig!==cardSig){cardSig=sig;let h='';const nx=brNext();
-      if(Lab.canLive&&nx)h+=`<div class="card nextup"><div class="ct"><b>다음 단계</b><span class="kv">${BR.filter(s=>brDone(s.k)).length} / ${BR.length}</span></div><p>${nx.t}</p><a class="btn" href="#nodes">순서 보기</a></div>`;
+      if(Lab.canLive&&nx)h+=`<div class="card nextup"><div class="ct"><b>다음 단계</b><span class="kv">${BR.filter(s=>brDone(s.k)).length} / ${BR.length}</span></div><p>${brOf(nx).t}</p><a class="btn" href="#nodes">순서 보기</a></div>`;
       for(const n of csiList())h+=`<div class="card" data-k="${n.key}"><div class="ct"><b>${esc(Lab.node(n.key).alias)}</b><span class="chip" data-f="st"></span></div><div class="big"><span data-f="v">0.00</span><small>움직임 점수, 임계값 <span data-f="thr"></span></small></div><canvas role="img" aria-label="최근 1분 점수"></canvas></div>`;
       const rooms=cfg.nodes.filter(n=>n.type==='ble');
       if(rooms.length)h+=`<div class="card" id="cd-ble"><div class="ct"><b>BLE 위치</b>${srcChip()}</div><div data-f="rows" class="muted"></div></div>`;
@@ -132,15 +132,17 @@ function rules(){if(!every('ru',400))return;const cfg=Lab.cfg,tn=now(),ul=$('#ru
 const BR=[
   {k:'broker',t:'PC에서 브로커 켜기',d:'broker 폴더에서 start.ps1을 실행한 뒤, 이 콘솔에서 브로커에 연결합니다.',
    more:[['주소','ws://localhost:9001'],['사용자','lab'],['비밀번호','start.ps1에서 직접 정한 값']],go:['conn','브로커 연결 열기'],
-   help:'연결되지 않으면 Docker Desktop이 켜져 있는지 먼저 확인하세요.'},
+   help:'연결되지 않으면 Docker Desktop이 켜져 있는지 먼저 확인하세요.',
+   desk:{t:'앱이 브로커를 켭니다',d:'이 앱을 켜면 브로커가 함께 켜집니다. 아래 값을 보드에 넣으면 됩니다.',more:[['Host','@LAN'],['Port','1883'],['사용자','lab'],['비밀번호','브로커 창에서 확인']],go:['conn','브로커 정보 열기'],
+     help:'보드가 붙지 않으면 Windows가 처음 띄운 방화벽 창에서 개인 네트워크를 허용했는지 확인하세요.'}},
   {k:'csi',t:'S3 보드 ①에 ESPectre 굽기',d:'크롬이나 엣지에서 굽고 와이파이를 넣은 다음, Device settings에 아래 MQTT 값을 넣습니다.',
    link:['https://espectre.dev/tools/flash/','ESPectre 굽기 페이지'],
-   more:[['Scheme','mqtt'],['Host','이 PC의 LAN 주소 (start.ps1이 알려 줍니다)'],['Port','1883'],['사용자','lab']],
+   more:[['Scheme','mqtt'],['Host','@LAN'],['Port','1883'],['사용자','lab']],
    help:'보드는 2.4GHz 와이파이에만 붙습니다. 값이 오지 않으면 Windows 방화벽의 개인 네트워크에서 TCP 1883 인바운드가 막혀 있을 수 있습니다. 보안 설정이므로 직접 판단해서 바꾸세요.'},
   {k:'session',t:'움직임 검증 세션 한 번 기록하기',d:'움직임 화면에서 세션을 시작하고, 보드와 공유기 사이를 세 번 이상 지나가는 동안 L 키를 누릅니다.',go:['motion','움직임 화면으로']},
   {k:'rooms',t:'S3 보드 ②③과 C3에 ESPresense 굽기',d:'세 대 모두 같은 설치 페이지에서 굽고, 방 이름을 서로 다르게 줍니다.',
    link:['https://espresense.com/firmware','ESPresense 설치 페이지'],
-   more:[['방 이름','office, living, entry'],['MQTT host','이 PC의 LAN 주소'],['Port','1883'],['사용자','lab']],
+   more:[['방 이름','office, living, entry'],['MQTT host','@LAN'],['Port','1883'],['사용자','lab']],
    help:'설치 페이지가 칩에 맞는 펌웨어를 고릅니다. 굽고 나면 보드가 espresense-로 시작하는 와이파이를 띄우니, 거기에 접속해 값을 넣습니다. 가진 보드는 ESPresense 권장 목록에 이름이 없는 일반 보드라서, 거리 값은 직접 재서 확인합니다.'},
   {k:'plan',t:'방 크기와 노드 위치 맞추기',d:'위치 화면에서 방 크기를 넣고, "노드 옮기기"를 켜서 보드를 실제 자리로 끌어다 놓습니다.',go:['presence','위치 화면으로']},
   {k:'cam',t:'ESP32‑CAM에 카메라 펌웨어 굽기',d:'Tasmota 설치 페이지에서 tasmota32-webcam을 골라 굽고, 스트림 주소를 카메라 화면에 넣습니다.',
@@ -149,6 +151,7 @@ const BR=[
   {k:'export',t:'기록 내려받고 검증 요약 복사하기',d:'기록 화면에서 JSONL 파일을 내려받고, 검증 요약을 README에 붙입니다.',go:['evidence','기록 화면으로']}];
 const brDone=k=>{const b=Lab.cfg.bring||{};return k==='rooms'?!!(b.rooms&&b.rooms.list.length>=3):!!b[k];};
 const brNext=()=>BR.find(s=>!brDone(s.k));
+const brOf=s=>window.Desk&&s.desk?Object.assign({},s,s.desk):s,lanText=()=>(window.Desk&&Desk.lan())||'이 PC의 LAN 주소';
 const md=ts=>{const d=new Date(ts);return (d.getMonth()+1)+'월 '+d.getDate()+'일';};
 const LOCKED=[
   ['점퍼선 (F/F, M/F)','센서 핀과 보드 핀을 잇는 선입니다. PIR은 F/F 선 세 가닥이면 브레드보드 없이 연결됩니다.','모든 배선 모듈의 전제'],
@@ -159,15 +162,15 @@ const LOCKED=[
   ['LoRa 보드 2대','와이파이가 닿지 않는 곳에서 값을 나릅니다. 12월 도착 뒤에 엽니다.','LoRa 메시']];
 let noSig='',brSig='',brNx=null;
 function nodes(){if(!every('no',700))return;const tn=now();
-  const bg=Lab.cfg.bring||{},nx=brNext(),bsig=JSON.stringify(bg)+'|'+S.source+'|'+S.simMixed;
+  const bg=Lab.cfg.bring||{},nx=brNext(),bsig=JSON.stringify(bg)+'|'+S.source+'|'+S.simMixed+'|'+(window.Desk?Desk.rev:0);
   if(bsig!==brSig){brSig=bsig;const ol=$('#br-steps'),nk=nx?nx.k:'',n=BR.filter(s=>brDone(s.k)).length;let open=new Set($$('details[open]',ol).map(d=>d.dataset.k));if(nk!==brNx){brNx=nk;open=new Set(nk?[nk]:[]);} // 다음 단계가 바뀌면 그 단계만 펼칩니다
     $('#br-count').textContent=BR.length+'단계 중 '+n+'단계';
     $('#br-bar').innerHTML=BR.map(s=>`<i class="${brDone(s.k)?'done':s===nx?'next':''}"></i>`).join('');
     $('#br-note').textContent=!Lab.canLive?'이 페이지는 데모 전용이라 단계가 채워지지 않습니다. PC에 내려받은 콘솔에서 진행하세요.':S.simMixed?'브로커에 시뮬레이터 값이 섞여 있어서 지금은 단계를 세지 않습니다.':S.source==='live'?'브로커에서 받은 메시지로 단계를 채웁니다. 수신 확인일 뿐이고, 하드웨어 검증 판정은 운영자가 합니다.':'데모와 기록 재생 값은 단계로 세지 않습니다. 브로커에 연결하면 채워지기 시작합니다.';
-    ol.innerHTML=BR.map(s=>{const dn=brDone(s.k),rl=s.k==='rooms'&&bg.rooms?bg.rooms.list.length:0,cls=dn?'done':s===nx?'next':'wait';
-      const chip=dn?`<span class="chip live">확인 · ${md(s.k==='rooms'?bg.rooms.ts:bg[s.k])}</span>`:s.k==='rooms'&&rl?`<span class="chip hot">3대 중 ${rl}대</span>`:s===nx?'<span class="chip hot">지금 할 일</span>':'<span class="chip">대기</span>';
-      const more=s.more?'<dl>'+s.more.map(m=>`<dt>${m[0]}</dt><dd>${esc(m[1])}</dd>`).join('')+'</dl>':'';
-      const acts=(s.link?`<a class="btn" href="${s.link[0]}" target="_blank" rel="noopener">${s.link[1]}</a>`:'')+(s.go?`<button class="btn${s===nx?' primary':''}" type="button" data-go="${s.go[0]}">${s.go[1]}</button>`:'');
+    ol.innerHTML=BR.map(s0=>{const s=brOf(s0),dn=brDone(s.k),rl=s.k==='rooms'&&bg.rooms?bg.rooms.list.length:0,cls=dn?'done':s.k===nk?'next':'wait';
+      const chip=dn?`<span class="chip live">확인 · ${md(s.k==='rooms'?bg.rooms.ts:bg[s.k])}</span>`:s.k==='rooms'&&rl?`<span class="chip hot">3대 중 ${rl}대</span>`:s.k===nk?'<span class="chip hot">지금 할 일</span>':'<span class="chip">대기</span>';
+      const more=s.more?'<dl>'+s.more.map(m=>`<dt>${m[0]}</dt><dd>${esc(m[1]==='@LAN'?lanText():m[1])}</dd>`).join('')+'</dl>':'';
+      const acts=(s.link?`<a class="btn" href="${s.link[0]}" target="_blank" rel="noopener">${s.link[1]}</a>`:'')+(s.go?`<button class="btn${s.k===nk?' primary':''}" type="button" data-go="${s.go[0]}">${s.go[1]}</button>`:'');
       return `<li class="step ${cls}"><h3>${s.t}</h3>${chip}<p>${s.d}</p><details data-k="${s.k}"${open.has(s.k)?' open':''}><summary>넣을 값과 막힐 때</summary>${more}${s.help?`<p class="help">${s.help}</p>`:''}<div class="acts">${acts}</div></details></li>`;}).join('');}
   const tb=$('#no-found tbody');const sig=S.ver+'|'+S.source;if(sig!==noSig&&!tb.contains(document.activeElement)){noSig=sig;
     tb.innerHTML=Lab.cfg.nodes.map(n=>`<tr data-k="${esc(n.key)}"><td><input class="alias" value="${esc(n.alias)}" aria-label="${esc(n.alias)} 이름"></td><td>${{csi:'Wi‑Fi 움직임',ble:'BLE 위치',cam:'카메라',led:'LED'}[n.type]}</td><td class="n">${esc(Lab.mask(n.key))}</td><td class="n" data-f="seen"></td></tr>`).join('');}

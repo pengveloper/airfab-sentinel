@@ -1,0 +1,23 @@
+// The only bridge between the window and the main process. The window gets a small,
+// fixed set of functions; it never receives ipcRenderer, Node or Electron objects.
+const { contextBridge, ipcRenderer } = require('electron');
+
+const listen = channel => handler => {
+  const fn = (_event, data) => handler(data);
+  ipcRenderer.on(channel, fn);
+  return () => ipcRenderer.removeListener(channel, fn);
+};
+
+contextBridge.exposeInMainWorld('desktop', Object.freeze({
+  info: () => ipcRenderer.invoke('app:info'),
+  status: () => ipcRenderer.invoke('broker:status'),
+  suggestPassword: () => ipcRenderer.invoke('broker:suggest'),
+  setup: password => ipcRenderer.invoke('broker:setup', password),
+  revealPassword: () => ipcRenderer.invoke('broker:reveal'),
+  restart: () => ipcRenderer.invoke('broker:restart'),
+  replayRetained: () => ipcRenderer.invoke('mqtt:replay'),
+  publish: (topic, payload) => ipcRenderer.invoke('mqtt:publish', { topic, payload }),
+  copy: text => ipcRenderer.invoke('clipboard:write', text),
+  onMessage: listen('mqtt:message'),
+  onBroker: listen('broker:state'),
+}));

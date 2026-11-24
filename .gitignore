@@ -1,4 +1,7 @@
 node_modules/
+dist/
+console/fonts/
+console/css/fonts.css
 *.jsonl
 passwd
 .env

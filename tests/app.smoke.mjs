@@ -69,7 +69,11 @@ try {
 
   // 4. 보드 메시지가 화면까지
   await win.waitForFunction(() => Lab.S.source === 'live', null, { timeout: 10_000 });
-  await win.waitForSelector('#sp-empty:not([hidden])'); await shot(win, '03-waiting.png');
+  await win.waitForSelector('#sp-empty:not([hidden])', { state: 'attached', timeout: 20_000 });
+  const box = await win.evaluate(() => { const r = document.querySelector('#sp-empty').getBoundingClientRect(), v = document.querySelector('#v-space').getBoundingClientRect(); return { empty: [Math.round(r.width), Math.round(r.height)], view: [Math.round(v.width), Math.round(v.height)], hash: location.hash, visibility: document.visibilityState }; });
+  console.log('note waiting-state layout:', JSON.stringify(box));
+  assert.ok(box.empty[0] > 0 && box.empty[1] > 0, 'the waiting-for-boards message must have a size');
+  await shot(win, '03-waiting.png');
   board.publish(`espectre/v1/devices/${ID}/sensing`, JSON.stringify({ threshold: 0.5 }), { retain: true });
   for (const r of ['office', 'living', 'entry']) board.publish(`espresense/rooms/${r}/status`, 'online');
   let t = 0; const timer = setInterval(() => { t += 0.2; const burst = (t % 6) > 3;
@@ -102,7 +106,7 @@ try {
 
 } catch (e) { failed = true; console.error(e);
   // 실패했을 때 원인을 좁힐 수 있도록 창의 상태를 남깁니다.
-  try { const w = await app.firstWindow(); console.log('state at failure:', JSON.stringify(await w.evaluate(() => ({ setupHidden: document.querySelector('#setup').hidden, deskHidden: document.querySelector('#desk').hidden, source: window.Lab && Lab.S.source, status: window.Desk && window.Desk.status(), size: [innerWidth, innerHeight], visibility: document.visibilityState, body: document.body.className })))); } catch { /* ignore */ }
+  try { const w = await app.firstWindow(); console.log('state at failure:', JSON.stringify(await w.evaluate(() => ({ setupHidden: document.querySelector('#setup').hidden, emptyHidden: document.querySelector('#sp-empty').hidden, csi: window.Lab && Lab.S.csi.size, rooms: window.Lab && Lab.S.rooms.size, devs: window.Lab && Lab.S.devs.size, deskHidden: document.querySelector('#desk').hidden, source: window.Lab && Lab.S.source, status: window.Desk && window.Desk.status(), size: [innerWidth, innerHeight], visibility: document.visibilityState, body: document.body.className })))); } catch { /* ignore */ }
   try { await (await app.firstWindow()).screenshot({ path: path.join(out, 'failure.png') }); } catch { /* ignore */ } }
 await app.close().catch(() => {});
 await new Promise(r => setTimeout(r, 1000));

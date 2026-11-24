@@ -91,5 +91,6 @@ try {
 
 } catch (e) { failed = true; console.error(e); try { await (await app.firstWindow()).screenshot({ path: path.join(out, 'failure.png') }); } catch { /* ignore */ } }
 await app.close().catch(() => {});
-fs.rmSync(userData, { recursive: true, force: true });
+await new Promise(r => setTimeout(r, 1000));
+try { fs.rmSync(userData, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch { /* 임시 폴더는 운영체제가 치웁니다 */ }
 process.exit(failed ? 1 : 0);

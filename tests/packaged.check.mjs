@@ -1,7 +1,7 @@
 // 묶은 실행 파일이 실제로 뜨는지 확인합니다. 디버깅 포트(--inspect)는 빌드에서 꺼 두었기 때문에,
 // 창 쪽의 원격 디버깅으로만 붙어 주소와 격리 상태를 읽습니다.
 // 실행:  node tests/packaged.check.mjs <실행 파일 경로>
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -27,6 +27,8 @@ try {
   console.log('ok   packaged app starts, loads app://sentinel, is isolated, and waits for a password before starting the broker');
   await browser.close().catch(() => {}); code = 0;
 } catch (e) { console.error('FAIL', e.message); }
-child.kill(); await new Promise(r => setTimeout(r, 800));
-fs.rmSync(userData, { recursive: true, force: true });
+// Windows에서는 창 프로세스들이 파일을 잠시 더 붙잡고 있어서, 프로세스 트리를 끝내고 정리는 실패해도 넘어갑니다.
+if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], { stdio: 'ignore' }); else child.kill();
+await new Promise(r => setTimeout(r, 1500));
+try { fs.rmSync(userData, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch { /* 임시 폴더는 운영체제가 치웁니다 */ }
 process.exit(code);

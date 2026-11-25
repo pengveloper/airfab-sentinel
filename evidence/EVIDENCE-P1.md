@@ -10,6 +10,17 @@
 | EVD-P1-006 | `broker/`의 compose와 설정으로 eclipse-mosquitto:2 (Mosquitto 2.1.4)가 뜨고, 올바른 비밀번호만 받으며, 콘솔이 WebSocket 9001로 받고 자동화 명령이 1883 구독자에게 도달 | SOFTWARE_VERIFIED | 2026-11-23 클라우드 Linux 작업 환경의 Docker. Windows에서의 실행은 EVD-P1-002 |
 | EVD-P1-007 | 첫 실측 순서가 브로커의 새 메시지로만 채워지고, 보관(retained) 메시지와 시뮬레이터 값으로는 채워지지 않음 | SOFTWARE_VERIFIED | 2026-11-23 같은 환경, 시험용 발행기. 실제 보드 아님 |
 | EVD-P1-008 | 데이터 계층 자동 시험 T-CON-001 ~ 010 통과 (식별자 가림, 감지 구간, 세션 통계, 위치 추정, PIR 정답, 보관 메시지, 규칙 발행) | SOFTWARE_VERIFIED | 2026-11-23 Node.js 22, `npm test`. 가짜 시계와 가짜 MQTT 클라이언트 사용 |
+| EVD-P1-009 | 내장 브로커 자동 시험 T-HUB-001 ~ 009 통과 (사설망만 수락, 인증, 반복 실패 차단, 예약 토픽과 큰 메시지 거절, 가린 상태 정보) | SOFTWARE_VERIFIED | 2026-11-24 Node.js 22, `npm test`. 실제 TCP 소켓 사용 |
+| EVD-P1-010 | 데스크톱 앱 연기 시험 7단계 통과 (창 격리, 첫 실행, 비밀번호 비평문 저장, 인증, 메시지 수신, 규칙 명령 전달, 이동 차단), 묶은 실행 파일 기동 확인 | SOFTWARE_VERIFIED | 2026-11-24 Linux 작업 환경, Electron 45.4.1, 가상 화면. 보드는 시험용 MQTT 클라이언트 |
+| EVD-P1-011 | 자동 시험, 실제 앱 연기 시험(알림 단계, 영어 실행, 언어 버튼 포함), MSIX·zip 빌드, 묶은 실행 파일 확인, Defender 검사가 Windows에서 통과 | SOFTWARE_VERIFIED | 2026-11-25 GitHub Actions `windows-latest`, 커밋 0159f51의 세 실행(45532472584, 45532472655, 45532482766) 모두 통과, 패키지 0.3.0. Defender는 appx·zip·win-unpacked에서 위협을 찾지 못함. 빌드 서버 결과이며 운영자 PC가 아님. 그 앞 커밋들에서는 같은 시험이 Windows에서 실행마다 다른 단계에서 가끔 멈췄음. 창의 상태는 정상이었고 시험 도구의 누르기·기다림이 끝나지 않은 것이어서, 창 안에서 직접 실행하는 방식으로 바꾸고 첫 화면 대기 시간을 늘린 뒤의 결과임 |
+| EVD-P1-012 | Microsoft Store로 설치했을 때 게시자 경고 없이 설치되고 실행됨 | OPERATOR_REQUIRED | Store 제출 뒤 실제 PC에서 확인 |
+| EVD-P1-013 | 알림 채널 자동 시험 T-CON-011 ~ 014 통과 (v1 형식, 식별자 가림, 출처 표시, 세션 시작·통과·결과 안내, 예전 설정 옮김) | SOFTWARE_VERIFIED | 2026-11-24 Node.js 22, `npm test`. 가짜 시계와 가짜 MQTT 클라이언트 |
+| EVD-P1-014 | 내장 브로커에서 알림 토픽은 앱만 발행 (T-HUB-010). 실제 앱에서 구독자에게 알림이 도착하고, 기기가 꾸민 알림은 거절되며, 안경 화면이 열리고 닫힘 (연기 시험 알림 단계) | SOFTWARE_VERIFIED | 2026-11-24 Linux, xvfb. 시험용 MQTT 클라이언트가 구독자 역할. 실제 안경·휴대폰 아님 |
+| EVD-P1-015 | 실제 안경 또는 휴대폰 앱에 알림이 표시됨 | OPERATOR_REQUIRED | 받는 쪽 앱이 아직 없음. 형식은 docs/NOTIFY.md |
+| EVD-P1-017 | 화면 언어 자동 시험 통과: 모든 한국어 문장의 영어 문장 존재, 자리표와 마크업 유지(T-I18N-001, 002), 언어 결정과 전환(T-I18N-003), 기본 이름의 언어 따라가기(T-I18N-004), 영어에서의 알림·규칙 이름·기록 안내문(T-CON-017, 018) | SOFTWARE_VERIFIED | 2026-11-25 Node.js 22, `npm test` 32건 통과. 문장 420개 |
+| EVD-P1-018 | 실제 앱에서 버튼으로 영어로 바꾼 뒤 일곱 화면, 안경 화면, 리포트에 한글이 남지 않고 사전에 없는 문장이 없음. 빈 표의 안내 줄이 제목 줄 아래에 놓임 (연기 시험 영어 단계) | SOFTWARE_VERIFIED | 2026-11-25 Linux(xvfb)와 GitHub Actions `windows-latest`(커밋 0159f51)에서 통과 |
+| EVD-P1-019 | 코드 리뷰 지적 수정: 데스크톱 앱에서 규칙이 보낸 LED 명령이 화면의 LED 표시와 기록에 남음 (T-CON-019, 연기 시험 규칙 단계). 수정 전 코드로 같은 시험을 돌리면 이 단계가 실패하는 것도 확인 | SOFTWARE_VERIFIED | 2026-11-25 Linux, xvfb, `npm test` 33건과 연기 시험 통과 |
+| EVD-P1-016 | 코드 리뷰에서 나온 세 가지를 고치고 시험으로 고정: 조용함 규칙의 규칙별 시간(T-CON-015), 내보낸 기록 머리말의 세션 노드 식별자 가림과 출처 표기(T-CON-016) | SOFTWARE_VERIFIED | 2026-11-25 Node.js 22, `npm test` 26건 통과. 가짜 시계와 가짜 MQTT 클라이언트 |
 
 ## HARDWARE_VERIFIED로 바꿀 때 적을 것
 

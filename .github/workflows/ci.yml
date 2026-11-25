@@ -1,0 +1,81 @@
+name: ci
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Dependency audit (runtime dependencies)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Data layer and broker tests
+        run: npm test
+      - name: Desktop smoke test
+        run: xvfb-run -a npm run test:app
+
+  windows:
+    name: Build and verify (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Data layer and broker tests
+        run: npm test
+      - name: Desktop smoke test (real window, DPAPI)
+        run: npm run test:app
+      - name: Package (Store MSIX and portable zip)
+        run: npm run dist
+        env:
+          APPX_IDENTITY_NAME: ${{ vars.APPX_IDENTITY_NAME }}
+          APPX_PUBLISHER: ${{ vars.APPX_PUBLISHER }}
+          APPX_PUBLISHER_DISPLAY_NAME: ${{ vars.APPX_PUBLISHER_DISPLAY_NAME }}
+      - name: Packaged app starts
+        run: node tests/packaged.check.mjs "dist/win-unpacked/Sentinel Lab.exe"
+      - name: Microsoft Defender scan of the build output
+        shell: pwsh
+        run: |
+          $mp = Join-Path $env:ProgramFiles 'Windows Defender\MpCmdRun.exe'
+          $report = 'dist/defender-scan.txt'
+          if (-not (Test-Path $mp)) { 'Defender command line scanner not found on this runner; scan not run.' | Tee-Object $report; exit 0 }
+          & $mp -SignatureUpdate *> $null
+          $threat = $false; $ran = $false
+          $targets = @(Get-ChildItem dist -File | Where-Object { $_.Extension -in '.appx', '.zip' } | ForEach-Object FullName) + (Resolve-Path 'dist/win-unpacked').Path
+          foreach ($t in $targets) {
+            $o = & $mp -Scan -ScanType 3 -File $t -DisableRemediation 2>&1 | Out-String
+            "== $(Split-Path $t -Leaf) (exit $LASTEXITCODE)`n$o" | Tee-Object $report -Append
+            if ($LASTEXITCODE -eq 0) { $ran = $true } elseif ($LASTEXITCODE -eq 2) { $ran = $true; $threat = $true }
+          }
+          if (-not $ran) { 'The scanner could not run on this runner; result: NOT RUN.' | Tee-Object $report -Append }
+          if ($threat) { Write-Error 'Defender reported a threat in the build output.'; exit 1 }
+      - name: Checksums
+        shell: pwsh
+        run: |
+          Get-ChildItem dist -File | Where-Object { $_.Extension -in '.appx', '.zip' } | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" } | Tee-Object dist/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sentinel-lab-windows
+          path: |
+            dist/*.appx
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            dist/defender-scan.txt
+            dist/smoke/
+          if-no-files-found: warn

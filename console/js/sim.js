@@ -17,12 +17,12 @@ function step(){const cfg=Lab.cfg,W=cfg.room.w,H=cfg.room.h;t+=0.2;tick++;
    if(near!==pir){pir=near;emit('espresense/rooms/living/input_1',near?'ON':'OFF');}}
   if(tick%5===0){for(const r of ROOMS){const bn=Lab.node('ble:'+r);if(!bn)continue;
       const pub=(id,name,p)=>{const d=Math.hypot(p.x-bn.x,p.y-bn.y)*(1+(Math.random()-0.5)*0.24)+0.15;emit('espresense/devices/'+id+'/'+r,{id,name,distance:+d.toFixed(2),rssi:Math.round(-50-d*6.5)});};
-      pub('sim:phone','내 휴대폰 (가상)',person);pub('sim:keys','열쇠 태그 (가상)',keys);
+      pub('sim:phone',L('내 휴대폰 (가상)'),person);pub('sim:keys',L('열쇠 태그 (가상)'),keys);
       if(r==='living')emit('espresense/devices/a4c1380011ff/living',{id:'a4c1380011ff',distance:+(3.6+Math.random()*0.5).toFixed(2),rssi:-78});}}
 }
 function start(){stop();t=Math.random()*40;burst=0;hits=0;state='idle';truth=false;tick=0;pir=false;person.on=true;
   emit('espectre/v1/devices/'+ID+'/sensing',{enabled:true,ready:true,calibrating:false,mode:'sensing',detector:'lightweight',threshold:0.5,motion_on_hits:3,motion_off_hits:5});
-  emit('espectre/v1/devices/'+ID+'/health',{status:'online'});const n=Lab.node('csi:'+ID);if(n&&n.alias.startsWith('CSI ')){n.alias='거실 CSI';}
+  emit('espectre/v1/devices/'+ID+'/health',{status:'online'});const n=Lab.node('csi:'+ID);if(n&&n.alias.startsWith('CSI ')){n.alias=L('거실 CSI');}
   ROOMS.forEach(r=>emit('espresense/rooms/'+r+'/status','online'));emit('espresense/rooms/living/input_1','OFF');
   timer=setInterval(step,200);for(let i=0;i<8;i++)step();}
 function stop(){if(timer){clearInterval(timer);timer=null;}person.on=false;}

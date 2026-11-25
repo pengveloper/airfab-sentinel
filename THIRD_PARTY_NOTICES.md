@@ -4,12 +4,13 @@
 
 | Component | Version | License | Location |
 |---|---|---|---|
+| Electron | 45 | MIT, Copyright Electron contributors and GitHub Inc. The runtime also contains Chromium and Node.js under their own licenses, listed in `LICENSES.chromium.html` inside the app | desktop app runtime |
+| aedes | 1.2 | MIT, Copyright aedes contributors | embedded MQTT broker in the desktop app |
+| Archivo, IBM Plex Sans KR, IBM Plex Mono | via Fontsource 5.3 | SIL Open Font License 1.1 | copied into `console/fonts` at install time and shipped inside the desktop app |
 | three.js | r149 | MIT, Copyright 2010-2023 Three.js Authors | `console/vendor/three.min.js` |
 | MQTT.js | 5.10.1 | MIT, Copyright MQTT.js contributors | `console/vendor/mqtt.min.js`, license text in `console/vendor/MQTTJS-LICENSE.md` |
 
-The console loads the Archivo, IBM Plex Sans KR and IBM Plex Mono typefaces from Google Fonts
-at run time (SIL Open Font License 1.1). They are not stored in this repository. Without a
-network connection the console falls back to system fonts.
+The typefaces are not committed to this repository. `npm install` copies them from the Fontsource packages, and the desktop build bundles them, so the app never requests fonts over the network. Opened straight from a clone without `npm install`, the console falls back to system fonts.
 
 ### three.js (MIT)
 

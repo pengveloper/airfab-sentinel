@@ -2,139 +2,142 @@
 
 English: [README.md](README.md)
 
-ESP32 보드 여러 대의 오픈소스 펌웨어(ESPectre, ESPresense, 카메라 웹서버, WLED)를 MQTT로 한 콘솔에 모아
-하나씩 시험하는 플랫폼입니다. Windows + pwsh 7 기준입니다.
+오픈소스 ESP32 감지 펌웨어를 보드별로 올려 놓고 한 화면에서 시험하는 데스크톱 앱입니다.
+앱이 보드용 MQTT 허브를 직접 띄우고, 보드가 보낸 값을 한 콘솔에 모으고, 감지 결과를 정답과
+맞춰 보며, 시뮬레이션 값과 실측을 엄격히 구분합니다.
+
+![3D 공간: Wi‑Fi 감지 링크와 프레넬 영역, 링크 위의 움직임 점수, BLE 노드와 기기](docs/screenshots/space.webp)
+
+이 문서의 화면에 보이는 값은 모두 내장 시뮬레이터가 만든 것입니다. 이 저장소는 아직 어떤
+하드웨어 결과도 주장하지 않습니다. [지금 상태](#지금-상태)를 보세요.
+
+## 무엇을 하나
+
+- **앱 하나로 끝.** 앱을 켜면 MQTT 허브가 함께 켜집니다. Docker도 스크립트도 필요 없습니다. 첫 실행 화면에서 허브 비밀번호 하나만 정하면, 보드에 넣을 값을 보여 줍니다.
+- **보드 한 대에 펌웨어 하나, 원본 그대로.** ESPectre는 Wi‑Fi 채널 상태 정보로 움직임을, ESPresense는 방마다 블루투스 거리를, Tasmota는 ESP32‑CAM 영상을 맡습니다. 각자의 웹 설치 페이지에서 굽고 MQTT로 보고합니다.
+- **원리를 보여 주는 화면.** 3D 공간은 Wi‑Fi 링크의 감지 구역(프레넬 영역)을 바닥에 그리고, 최근 14초의 움직임 점수를 링크 위에 막으로 세웁니다. 임계값을 넘은 부분은 금색이 됩니다.
+- **느낌이 아니라 검증.** 세션은 사람이 실제로 링크를 지나간 시간을 기록해 펌웨어의 감지와 맞춰 봅니다. 감지, 놓침, 오탐, 재현율이 나옵니다. 정답은 키를 누르거나, PIR 센서로, 데모에서는 시뮬레이터로 기록합니다.
+- **넘겨줄 수 있는 증거.** 메시지 기록을 내려받고, 나중에 재생하고, 세션별 점수 곡선이 든 HTML 리포트를 만듭니다.
+- **한국어와 영어.** 화면은 기기 언어를 따르고 버튼 하나로 바꿉니다. 번역이 빠진 문장이 하나라도 있으면 시험이 실패합니다.
+- **안경·휴대폰 알림.** 규칙과 검증 세션이 짧은 문장을 토픽 하나로 내보냅니다. 이 토픽에는 앱만 쓸 수 있어서, 받는 쪽 앱은 MQTT 구독만 하면 됩니다. 검은 바탕의 전체 화면에서 안경에 뜰 모습을 미리 봅니다. 실제 안경에서는 아직 확인하지 않았습니다. 형식: [docs/NOTIFY.md](docs/NOTIFY.md).
+
+| 첫 실행 | 허브 정보 |
+|---|---|
+| ![허브 비밀번호를 정하는 첫 실행 화면](docs/screenshots/first-run.webp) | ![보드에 넣을 주소, 포트, 사용자를 보여 주는 창](docs/screenshots/broker.webp) |
+
+| 규칙과 알림 미리보기 | 안경 화면 |
+|---|---|
+| ![규칙 목록과 렌즈 모양의 최근 알림 미리보기](docs/screenshots/rules.webp) | ![움직임 상태, 점수, 최근 알림을 검은 바탕에 띄운 전체 화면](docs/screenshots/glass.webp) |
+
+## 실행
+
+```powershell
+npm ci
+npm start
+```
+
+Node.js 22가 필요합니다. 첫 실행에서 허브 비밀번호를 정한 뒤 "노드" 화면의 순서를 따라갑니다.
+시뮬레이터로 콘솔만 보려면 `console/index.html`을 Chrome이나 Edge로 엽니다.
+데스크톱 앱 없이 쓰는 Docker용 Mosquitto 구성은 `broker/`에 있습니다.
+
+## 데모와 개인정보 처리방침 페이지
+
+저장소가 공개되면 `pages` 워크플로가 시뮬레이터 데모와 개인정보 처리방침을 GitHub Pages에 올립니다.
+주소는 `https://pengveloper.github.io/airfab-sentinel/` 과 `/privacy/` 이고, 아직 실행된 적은 없습니다.
+
+## 실측 순서
+
+앱의 "노드" 화면에 같은 순서가 있고, 보드의 메시지를 받으면 단계가 자동으로 채워집니다.
+
+1. **허브 켜기.** 앱을 켜고 비밀번호를 정합니다. "브로커" 창에 보드에 넣을 Host, Port, 사용자가 나옵니다.
+2. **보드 ① ESPectre.** https://espectre.dev/tools/flash/ 에서 굽고 와이파이를 넣은 뒤, Device settings의 MQTT에 위 값을 넣습니다. Scheme은 `mqtt`입니다.
+3. **검증 세션.** "움직임" 화면에서 세션을 시작하고, 보드와 공유기 사이를 지나가는 동안 L 키를 누릅니다.
+4. **보드 ②③과 C3 ESPresense.** https://espresense.com/firmware 에서 굽습니다. 보드가 `espresense-`로 시작하는 와이파이를 띄우면 접속해 방 이름(office, living, entry)과 MQTT 값을 넣습니다.
+5. **배치 맞추기.** "위치" 화면에서 방 크기를 넣고 노드를 실제 자리로 끌어다 놓습니다.
+6. **ESP32‑CAM.** https://tasmota.github.io/install/ 에서 tasmota32-webcam을 골라 굽고, "카메라" 화면에 `http://카메라주소:81/stream`을 넣습니다.
+7. **기록.** "기록" 화면에서 JSONL을 내려받고 리포트를 만듭니다.
+
+보드는 2.4GHz 와이파이에만 붙습니다. 보드가 허브에 붙지 않으면 Windows가 처음 띄운 방화벽
+창에서 개인 네트워크를 허용했는지 확인하세요. 앱은 방화벽 설정을 바꾸지 않습니다.
+
+### PIR 정답 센서 (HC‑SR501)
+
+ESPresense 보드 한 대에 연결합니다. USB를 뽑은 상태에서 배선합니다.
+
+| PIR 핀 | 보드 핀 |
+|---|---|
+| VCC | 5V |
+| GND | GND |
+| OUT | 비어 있는 GPIO 하나 |
+
+ESPresense 웹 화면의 Hardware에서 Inputs에 Role을 Motion으로 추가하면
+`espresense/rooms/{room}/input_1`에 `ON`/`OFF`가 옵니다. "움직임" 화면의 정답 출처에서
+"PIR 입력"을 고릅니다.
+
+## 보안
+
+앱이 집 안 망에서 포트를 열기 때문에 방어적으로 만들었습니다.
+
+- **창 격리.** 창은 샌드박스 안에서 앱에 들어 있는 파일만 불러오고, 검증된 호출 11개로만 시스템에 닿습니다. 다른 주소로 이동하거나 새 창을 열 수 없습니다.
+- **허브 보호.** 비밀번호가 있어야 붙고, 사설망 주소만 받으며, 로그인 실패 횟수와 연결 수, 메시지 크기를 제한합니다.
+- **비밀 저장.** 허브 비밀번호는 Windows 자격 증명 보호(DPAPI)로 암호화해 저장합니다.
+- **빌드.** 실행 파일은 Electron fuse로 잠그고, CI가 의존성 감사와 Microsoft Defender 검사를 돌립니다.
+
+무엇을 막지 못하는지까지 [SECURITY.md](SECURITY.md)에 적었습니다. 집 안 망의 MQTT는 암호화되지 않습니다.
+
+## Windows 경고 없이 설치하기
+
+Windows는 코드 내용이 아니라 서명과 평판으로 경고 여부를 정합니다. 그래서 이것은 설계만으로
+해결되지 않고 배포 경로의 문제입니다.
+
+- **경고가 없는 경로는 Microsoft Store입니다.** Microsoft가 패키지에 직접 서명하고, 개인 개발자 등록은 무료입니다. Store용 패키지는 지금 CI에서 빌드되고, 제출은 아직입니다.
+- **CI가 만드는 zip은 서명이 없어서** 처음 실행할 때 Windows가 경고합니다. 체크섬으로 확인할 수 있는 개발자용입니다.
+
+경로별 비교, Store 제출 순서, 백신 관련 조치는 [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)에 있습니다.
 
 ## 지금 상태
 
 | 항목 | 상태 |
 |---|---|
-| 콘솔의 일곱 화면 (공간, 움직임, 위치, 카메라, 자동화, 노드, 기록) | 내장 시뮬레이터로 동작 확인 (SIMULATED) |
-| PIR 정답 입력, 기록 재생, 검증 요약 | 내장 시뮬레이터로 동작 확인 (SIMULATED) |
-| 브로커 설정 (인증, 1883과 9001 리스너), 콘솔 실시간 경로, 자동화 명령 전송 | eclipse-mosquitto:2 (2.1.4) 컨테이너와 시험용 발행기로 확인 (SOFTWARE_VERIFIED, Linux 작업 환경) |
-| 첫 실측 순서의 자동 채움 | 같은 컨테이너와 시험용 발행기로 확인 (SOFTWARE_VERIFIED) |
-| 데이터 계층 (가림, 감지 구간, 세션 통계, 위치 추정, 보관 메시지 처리, 규칙) | 자동 시험 10건 통과, `npm test` (SOFTWARE_VERIFIED) |
-| 검증 리포트, 발표 모드 | 내장 시뮬레이터로 동작 확인 (SIMULATED) |
-| Windows Docker Desktop에서의 실행, `start.ps1` | 아직 아무도 실행하지 않음 (OPERATOR_REQUIRED) |
-| 실제 보드 다섯 대 | 아직 아무도 확인하지 않음 (OPERATOR_REQUIRED) |
+| 콘솔 화면, PIR 정답 입력, 기록 재생, 리포트, 발표 모드, 알림 미리보기, 안경 화면 | 내장 시뮬레이터로 확인 (SIMULATED) |
+| 데이터 계층 (가림, 감지 구간, 세션 통계, 위치 추정, 보관 메시지, 규칙) | 자동 시험 19건 통과 (SOFTWARE_VERIFIED) |
+| 내장 허브 (사설망만 수락, 인증, 로그인 제한, 예약 토픽과 앱 전용 토픽, 크기 제한) | 실제 소켓으로 자동 시험 10건 통과 (SOFTWARE_VERIFIED) |
+| 데스크톱 앱 (창 격리, 첫 실행, 비밀번호 저장, 메시지 흐름, 규칙 전달, 알림 전달, 이동 차단) | Linux에서 실제 앱 연기 시험 통과, 묶은 빌드 기동 확인 (SOFTWARE_VERIFIED) |
+| Windows 빌드, DPAPI, MSIX 패키징, Defender 검사 | GitHub Actions `windows-latest`에서 통과 (EVD-P1-011). 최신 실행 결과 참고 |
+| 영어 화면 (모든 문장 번역, 화면과 리포트에 한글이 남지 않음) | 자동 시험 4건과 실제 앱 영어 단계 통과 (SOFTWARE_VERIFIED) |
+| 실제 안경이나 휴대폰 앱에 알림 표시 | 아직 안 함 (OPERATOR_REQUIRED) |
+| Microsoft Store로 경고 없이 설치 | 아직 안 함 (OPERATOR_REQUIRED) |
+| 실제 보드 | 아직 측정 안 함 (OPERATOR_REQUIRED) |
 
-## 바로 열어 보기
+요구사항, 시험, 증거의 연결은 [docs/TRACEABILITY.md](docs/TRACEABILITY.md), 증거표는
+[evidence/EVIDENCE-P1.md](evidence/EVIDENCE-P1.md)에 있습니다.
 
-`console/index.html`을 Chrome이나 Edge로 엽니다. 브로커가 없어도 데모(내장 시뮬레이터)로 시작합니다.
-설치나 빌드는 필요 없습니다. "노드" 화면의 첫 실측 순서를 위에서부터 따라가면 됩니다.
-
-## 보드 배정 (가진 보드 기준)
-
-| 보드 | 역할 | 펌웨어 | 굽는 곳 |
-|---|---|---|---|
-| ESP32‑S3 N16R8 ① | Wi‑Fi 움직임 감지 | ESPectre | https://espectre.dev/tools/flash/ |
-| ESP32‑S3 N16R8 ② | BLE 위치, 작업실 | ESPresense | https://espresense.com/firmware |
-| ESP32‑S3 N16R8 ③ | BLE 위치, 거실 | ESPresense | 같음 |
-| ESP32‑C3 Super Mini | BLE 위치, 현관 | ESPresense | 같음 |
-| ESP32‑CAM + 어댑터 | 현장 영상 | Tasmota (tasmota32-webcam) | https://tasmota.github.io/install/ |
-
-- 굽는 페이지는 모두 PC의 Chrome이나 Edge에서 엽니다. 컴파일은 필요 없습니다.
-- S3 보드에 USB‑C가 두 개면 UART 또는 COM이라고 적힌 쪽에 꽂습니다. 포트가 보이지 않으면 보드의 USB 변환 칩 드라이버가 필요할 수 있습니다.
-- ESPresense는 S3와 C3를 지원하고, 설치 페이지가 칩에 맞는 펌웨어를 고릅니다. 다만 가진 보드는 ESPresense 권장 목록에 이름이 없는 일반 보드라서, 거리 값은 직접 재서 확인합니다.
-- ESP32‑CAM을 직접 빌드해서 쓰려면 https://github.com/easytarget/esp32-cam-webserver 가 대안입니다.
-
-## 실측 순서
-
-콘솔 "노드" 화면에 같은 순서가 있고, 콘솔이 보드의 메시지를 받으면 단계가 자동으로 채워집니다.
-
-1. **브로커 켜기.** `broker` 폴더에서 `start.ps1`을 실행합니다. 비밀번호를 직접 정하게 되고, 끝나면 보드에 넣을 이 PC의 LAN 주소를 알려 준 뒤 콘솔을 엽니다.
-   ```powershell
-   cd broker
-   ./start.ps1
-   ```
-   내려받은 스크립트라서 실행이 막히면, 파일 내용을 읽어 본 뒤 `Unblock-File ./start.ps1`을 하거나 아래 명령을 직접 실행합니다.
-   ```powershell
-   docker compose run --rm mosquitto sh -c 'mosquitto_passwd -c /mosquitto/auth/passwd lab && chown mosquitto:mosquitto /mosquitto/auth/passwd'
-   docker compose up -d
-   ```
-   비밀번호 해시는 Docker 볼륨(`sentinel-lab_mqauth`)에만 저장되고 이 폴더에는 남지 않습니다. 끌 때는 `docker compose down`입니다.
-2. **콘솔 연결.** 오른쪽 위 "브로커 연결"에서 `ws://localhost:9001`, 사용자 `lab`, 정한 비밀번호.
-3. **보드 ① ESPectre.** 굽고 와이파이를 넣은 뒤 Device settings에서 MQTT를 `mqtt`, 이 PC의 LAN 주소, `1883`, 사용자 `lab`으로 설정합니다. 보드는 2.4GHz 와이파이에만 붙습니다.
-4. **검증 세션.** "움직임" 화면에서 세션을 시작하고, 보드와 공유기 사이를 지나가는 동안 버튼이나 L 키를 누릅니다.
-5. **보드 ②③과 C3 ESPresense.** 굽고 나면 보드가 `espresense-`로 시작하는 와이파이를 띄웁니다. 접속해서 방 이름(office, living, entry)과 MQTT 값을 넣습니다.
-6. **배치 맞추기.** "위치" 화면에서 방 크기를 넣고, 노드를 실제 자리로 끌어다 놓습니다.
-7. **ESP32‑CAM.** Tasmota 설치 페이지에서 tasmota32-webcam을 골라 굽고, "카메라" 화면에 `http://카메라주소:81/stream`을 넣습니다. 영상이 나오지 않으면 Tasmota의 Configure Other에서 AI‑Thinker ESP32‑CAM 템플릿(https://templates.blakadder.com/ai-thinker_ESP32-CAM.html)을 적용합니다.
-8. **기록.** "기록" 화면에서 JSONL을 내려받고 검증 요약을 복사합니다.
-
-### 보드가 브로커에 붙지 않을 때
-
-- 보드와 PC가 같은 공유기의 2.4GHz 망에 있는지 확인합니다.
-- Windows 방화벽이 TCP 1883 인바운드를 막고 있을 수 있습니다. 보안 설정이므로 직접 판단해서 바꾸세요. 집 안 망에만 여는 규칙의 예는 다음과 같습니다 (관리자 PowerShell).
-  ```powershell
-  New-NetFirewallRule -DisplayName 'Sentinel Lab MQTT 1883' -Direction Inbound -Protocol TCP -LocalPort 1883 -Profile Private -RemoteAddress LocalSubnet -Action Allow
-  ```
-- 9001 포트는 이 PC 안에서만 열리므로 방화벽과 무관합니다.
-
-### 보드 없이 브로커 경로만 먼저 확인하기
-
-`tools/broker-sim.html`을 다른 탭에서 엽니다. 콘솔에 "시뮬레이터 포함" 표시가 뜨고, 그동안에는 첫 실측 순서가 채워지지 않습니다.
-
-## PIR 정답 센서 (HC‑SR501)
-
-Wi‑Fi 감지가 맞았는지 버튼 대신 센서로 기록합니다. ESPresense를 구운 보드 한 대에 연결합니다.
-
-| PIR 핀 | 보드 핀 | 비고 |
-|---|---|---|
-| VCC | 5V | HC‑SR501은 4.5~20V 전원이 필요합니다 |
-| GND | GND | |
-| OUT | 비어 있는 GPIO 하나 | 출력은 3.3V 레벨입니다 |
-
-F/F 점퍼선 세 가닥이면 브레드보드 없이 연결됩니다. 배선은 USB를 뽑은 상태에서 합니다.
-
-1. ESPresense 노드의 웹 화면 Hardware에서 Inputs에 입력을 추가하고 Role을 Motion, 핀을 연결한 GPIO, 타입을 Pulldown 또는 Floating으로 둡니다.
-2. 노드는 `espresense/rooms/{room}/input_1`에 `ON`/`OFF`를 보냅니다.
-3. 콘솔 "움직임" 화면의 정답 출처에 "PIR 입력"이 나타납니다. 고르고 세션을 시작합니다.
-
-PIR은 보는 범위가 넓습니다. 센서가 보드와 공유기 사이 구간을 보도록 두세요. 전원을 넣고 1분쯤은 감지가 불안정합니다.
-
-## 기록 재생
-
-"기록" 화면에서 내려받은 JSONL 파일을 고르면 같은 수신 경로로 다시 흘려보냅니다. 실측 뒤에 화면을 다시 보여 주거나 영상을 찍을 때 씁니다. 재생 중에는 상단에 "재생"으로 표시됩니다.
-
-## 검증 리포트와 발표 모드
-
-- "기록" 화면의 "리포트 만들기"는 끝낸 세션을 HTML 한 장으로 만듭니다. 세션마다 점수 곡선, 정답 구간, 감지 구간, 통계가 들어가고, 데이터가 브로커 수신인지 SIMULATED인지 표시됩니다. 혼자 열리는 파일이라 포트폴리오에 그대로 올릴 수 있고, 인쇄하면 밝은 배경으로 바뀝니다.
-- "공간" 화면의 "발표 모드"는 3D 화면만 가득 채웁니다. 영상을 찍을 때 씁니다. 데이터 출처 표시는 화면에 남습니다. Esc로 나옵니다.
-
-## 자동 시험
-
-Node.js 20 이상에서 의존성 없이 실행합니다.
+## 시험
 
 ```powershell
-npm test
+npm test            # 데이터 계층 (T-CON-001~019), 허브 (T-HUB-001~010), 화면 언어 (T-I18N-001~004)
+npm run test:app    # 실제 앱을 띄워 격리, 첫 실행, 인증, 메시지 흐름 확인
 ```
 
-`tests/core.test.mjs`가 콘솔의 데이터 계층을 가짜 시계와 가짜 MQTT 클라이언트로 시험합니다 (T-CON-001 ~ 010).
+## 지키는 것
 
-## 콘솔이 듣는 토픽
-
-- `espectre/v1/devices/{id}/motion`, `/sensing`, `/health`
-- `espresense/devices/{id}/{room}`, `espresense/rooms/{room}/status`, `/telemetry`, `/input_{n}`
-- LED 명령은 `wled/lab/api`로 WLED JSON 형식을 보냅니다 (자동화 화면에서 변경).
-
-## 지켜야 할 것
-
-- 브로커 비밀번호, Wi‑Fi 정보, 가리지 않은 MAC이 든 캡처는 저장소에 올리지 않습니다.
-- 내려받는 기록은 식별자를 앞 4자만 남기고 가립니다.
-- 콘솔 안의 배너 사진 두 장은 연출용 이미지이며 실제 실험 장비 사진이 아닙니다.
+- 허브 비밀번호, Wi‑Fi 정보, 가리지 않은 MAC이 든 캡처는 저장소에 올리지 않습니다.
+- 화면과 내보낸 기록에서 기기 식별자는 앞 4자만 남깁니다.
 - 시뮬레이터 값이 섞인 기록은 SIMULATED로 표시되며 하드웨어 결과로 쓰지 않습니다.
-- 브로커가 보관(retained)하고 있던 예전 메시지는 첫 실측 순서의 확인으로 세지 않습니다.
+- 허브가 보관(retained)하고 있던 예전 메시지는 첫 실측 순서의 확인으로 세지 않습니다.
 - 콘솔의 "확인" 표시는 메시지를 받았다는 뜻입니다. HARDWARE_VERIFIED 판정은 `evidence/` 양식에 사람이 적습니다.
+- 콘솔 안의 배너 사진 두 장은 연출용 이미지이며 실제 실험 장비 사진이 아닙니다.
+- 네트워크를 공격하거나 방해하는 도구는 다루지 않습니다.
 
 ## 폴더
 
-- `console/` 콘솔 (정적 파일, three.js r149와 MQTT.js 포함)
-- `broker/` Mosquitto 설정과 시작 스크립트 (`start.ps1`, macOS와 Linux는 `start.sh`)
-- `tools/broker-sim.html` 브로커를 거치는 가짜 발행기
-- `tests/` 데이터 계층 자동 시험
-- `evidence/` 기록 양식
-- `docs/` 스크린샷과 요구사항 추적표 (`docs/TRACEABILITY.md`)
+- `desktop/` Electron 메인 프로세스, 내장 허브, preload, 패키징 설정
+- `console/` 콘솔 (데스크톱 창 안에서도, 정적 페이지로도 동작)
+- `tests/` 데이터 계층, 허브, 앱 연기 시험, 묶은 빌드 확인
+- `broker/` 데스크톱 앱 없이 쓰는 Mosquitto 구성
+- `tools/` 실제 브로커로 시뮬레이션 메시지를 보내는 도구
+- `evidence/`, `docs/` 증거표, 스크린샷, 추적표, 배포 문서
 
 ## 라이선스
 
-[MIT](LICENSE). 포함한 라이브러리와 연동하는 펌웨어는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 있습니다.
+[MIT](LICENSE). 포함한 라이브러리와 연동하는 펌웨어는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), 개인정보는 [PRIVACY.md](PRIVACY.md)에 있습니다.

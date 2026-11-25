@@ -1,0 +1,16 @@
+# 실행 순서는 README 1단계에 있습니다.
+#   1) 비밀번호 만들기 (한 번만)   2) docker compose up -d
+# 비밀번호 해시는 이 폴더가 아니라 Docker 볼륨(sentinel-lab_mqauth)에 저장됩니다.
+name: sentinel-lab
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports:
+      - "1883:1883"            # 보드용 (LAN)
+      - "127.0.0.1:9001:9001"  # 콘솔용 (이 PC에서만)
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mqauth:/mosquitto/auth
+volumes:
+  mqauth:

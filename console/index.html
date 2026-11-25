@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sentinel Lab Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="boot" id="boot" aria-hidden="true"><img src="img/hero.webp" alt=""><div class="boot-in"><p class="boot-w" id="boot-w">Sentinel Lab</p><p class="boot-s">ESP32 시험 플랫폼 콘솔</p><div class="boot-bar"><i></i></div></div></div>
+<div class="sheet" id="rp" role="dialog" aria-modal="true" aria-labelledby="rp-t" hidden><div class="sheet-h"><h2 id="rp-t">검증 리포트</h2><span class="kv" id="rp-note"></span><button class="btn primary" id="rp-save" type="button">HTML로 내려받기</button><button class="btn" id="rp-close" type="button">닫기</button></div><iframe id="rp-frame" title="검증 리포트 미리보기" sandbox=""></iframe></div>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<div class="app">
+  <nav class="rail" aria-label="화면">
+    <a class="mark" href="#space" aria-label="Sentinel Lab 공간 화면"><i aria-hidden="true"></i><span>SL</span></a>
+    <div class="tabs" role="tablist" id="nav"></div>
+  </nav>
+
+  <header class="top">
+    <h1 id="vtitle">공간</h1>
+    <div class="status">
+      <span class="chip" id="src">대기</span>
+      <span class="chip warn" id="mixed" hidden>시뮬레이터 포함</span>
+      <span class="kv" id="rate">0 msg/s</span>
+      <span class="kv" id="clock">--:--:--</span>
+      <button class="btn" id="openConn" type="button">브로커 연결</button>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+    <!-- 공간 -->
+    <section class="view" id="v-space" data-title="공간">
+      <div class="space" id="space3d">
+        <div class="hud hud-tl">
+          <p class="now" id="sp-now">조용함</p>
+          <p class="sub" id="sp-sub"></p>
+        </div>
+        <div class="hud hud-bl">
+          <h2>방금 일어난 일</h2>
+          <ol class="feed" id="sp-feed"></ol>
+        </div>
+        <p class="hud hud-hint">끌어서 돌려 보세요</p>
+        <div class="hud hud-tr"><span class="chip" id="sp-src"></span><button class="btn" id="sp-present" type="button" aria-pressed="false">발표 모드</button></div>
+      </div>
+      <aside class="side" id="sp-cards" aria-label="노드 상태"></aside>
+    </section>
+
+    <!-- 움직임 -->
+    <section class="view" id="v-motion" data-title="움직임" hidden>
+      <div class="cols">
+        <div class="panel grow">
+          <div class="ph"><h2 id="mo-name">Wi‑Fi 움직임</h2><div class="seg" id="mo-tabs"></div><span class="chip" id="mo-state">조용함</span></div>
+          <div class="scopebox"><canvas id="mo-scope" role="img" aria-label="최근 2분 움직임 점수와 임계값"></canvas></div>
+          <div class="tiles" id="mo-tiles"></div>
+        </div>
+        <div class="panel w360">
+          <div class="ph"><h2>감지 검증</h2><span class="chip" id="va-chip">세션 없음</span></div>
+          <div class="pb">
+            <p class="muted" id="va-help">세션을 시작하고, 사람이 보드와 공유기 사이를 지나가는 동안 아래 버튼을 누르고 있으면 정답 구간이 기록됩니다. 키보드 L 키도 같습니다.</p>
+            <label for="va-src">정답 출처<select id="va-src"></select></label>
+            <div class="row"><button class="btn primary" id="va-start" type="button">세션 시작</button><button class="btn hold" id="va-label" type="button" disabled>지금 지나가는 중 (누르고 있기)</button></div>
+            <dl class="stats" id="va-stats"></dl>
+          </div>
+        </div>
+      </div>
+      <div class="cols">
+        <div class="panel grow">
+          <div class="ph"><h2>감지 기록</h2></div>
+          <div class="tw"><table id="mo-events"><thead><tr><th>시작</th><th>지속</th><th>최고 점수</th><th>정답과 일치</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="panel w360">
+          <div class="ph"><h2>현장 영상</h2></div>
+          <div class="cambox small" id="mo-cam"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 위치 -->
+    <section class="view" id="v-presence" data-title="위치" hidden>
+      <div class="cols">
+        <div class="panel grow">
+          <div class="ph"><h2>평면도</h2>
+            <label class="inl"><input type="checkbox" id="pl-edit"> 배치 편집</label>
+            <label class="inl" for="pl-w">가로 <input id="pl-w" type="number" min="3" max="30" step="0.5"> m</label>
+            <label class="inl" for="pl-h">세로 <input id="pl-h" type="number" min="3" max="30" step="0.5"> m</label>
+          </div>
+          <div class="planbox"><canvas id="pl-canvas" role="img" aria-label="노드와 기기 위치를 그린 평면도"></canvas></div>
+          <p class="foot" id="pl-foot">노드가 세 대 이상이면 거리 세 개로 위치를 계산합니다. BLE 신호 세기는 벽과 몸에 크게 흔들려서 방 단위 판정이 현실적인 목표입니다.</p>
+        </div>
+        <div class="panel w420">
+          <div class="ph"><h2>기기</h2><label class="inl grow" for="pr-filter"><input id="pr-filter" placeholder="이름으로 찾기"></label></div>
+          <div class="tw"><table id="pr-table"><thead><tr><th>고정</th><th>기기</th><th>방</th><th>거리</th></tr></thead><tbody></tbody></table></div>
+          <p class="foot">고정한 기기만 평면도에 이름이 표시되고 자동화의 대상이 됩니다.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 카메라 -->
+    <section class="view" id="v-camera" data-title="카메라" hidden>
+      <div class="cols">
+        <div class="panel grow">
+          <div class="ph"><h2>현장 영상</h2><span class="chip" id="cam-chip">연결 안 됨</span></div>
+          <div class="cambox" id="cam-main"></div>
+          <form class="row pad" id="cam-form">
+            <label class="grow" for="cam-url">스트림 주소<input id="cam-url" placeholder="http://192.168.0.50:81/stream"></label>
+            <button class="btn" type="submit">저장</button>
+          </form>
+        </div>
+        <div class="panel w420">
+          <div class="ph"><h2>ESP32‑CAM을 쓰는 두 가지 방법</h2></div>
+          <div class="pb prose">
+            <h3>정답 영상 (먼저 권장)</h3>
+            <p>카메라 웹서버 펌웨어를 굽고 스트림 주소를 넣으면, 움직임 그래프 옆에 실제 장면이 나란히 보입니다. Wi‑Fi 감지가 맞았는지 눈으로 확인하는 용도입니다. Espressif 예제와 esp32-cam-webserver는 81번 포트의 /stream으로 영상을 보냅니다.</p>
+            <h3>계량기 판독</h3>
+            <p>AI-on-the-edge 펌웨어는 숫자 계량기를 읽어 MQTT로 값을 보냅니다. microSD 카드가 필요하고, 상업 이용은 별도 라이선스입니다.</p>
+            <p class="muted">영상은 이 PC의 브라우저와 카메라 사이에서만 흐르고 콘솔은 저장하지 않습니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 자동화 -->
+    <section class="view" id="v-rules" data-title="자동화" hidden>
+      <div class="cols">
+        <div class="panel grow">
+          <div class="ph"><h2>규칙</h2><span class="kv" id="ru-count"></span></div>
+          <ul class="rules" id="ru-list"></ul>
+          <form class="rulef" id="ru-form">
+            <h3>규칙 추가</h3>
+            <div class="row">
+              <label for="ru-when">언제<select id="ru-when"><option value="motion">움직임이 시작되면</option><option value="enter">고정한 기기가 방에 들어오면</option><option value="quiet">일정 시간 조용하면</option></select></label>
+              <label for="ru-arg" id="ru-arg-l">대상<select id="ru-arg"></select></label>
+              <label for="ru-then">무엇을<select id="ru-then"><option value="led">LED 색 바꾸기</option><option value="publish">MQTT로 보내기</option></select></label>
+              <label for="ru-color" id="ru-color-l">색<input id="ru-color" type="color" value="#5fd3a2"></label>
+              <label for="ru-topic" id="ru-topic-l" hidden>토픽<input id="ru-topic" value="lab/notify"></label>
+              <button class="btn primary" type="submit">추가</button>
+            </div>
+          </form>
+        </div>
+        <div class="panel w360">
+          <div class="ph"><h2>실행 기록</h2></div>
+          <ol class="feed pad" id="ru-fires"></ol>
+          <div class="pb"><label for="led-topic">LED 명령 토픽<input id="led-topic"></label>
+          <p class="muted">LED 명령은 WLED의 JSON 형식으로 보냅니다. 보드에 WLED를 굽고 MQTT 토픽을 맞추면 보드의 RGB LED가 그대로 반응합니다.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 노드 -->
+    <section class="view" id="v-nodes" data-title="노드" hidden>
+      <div class="banner"><img src="img/bench.webp" alt="" width="1376" height="768" loading="lazy"><div><h2>가진 보드 다섯 대로 하는 첫 실측</h2><p>위에서부터 차례로 합니다. 콘솔이 보드의 메시지를 받으면 해당 단계가 자동으로 채워집니다.</p></div></div>
+      <div class="panel" id="bring">
+        <div class="ph"><h2>첫 실측 순서</h2><span class="kv" id="br-count"></span><button class="btn" id="br-clear" type="button">순서 기록 지우기</button></div>
+        <div class="br-bar" id="br-bar" aria-hidden="true"></div>
+        <p class="pad muted" id="br-note"></p>
+        <ol class="steps" id="br-steps"></ol>
+      </div>
+      <div class="cols">
+        <div class="panel grow">
+          <div class="ph"><h2>발견된 노드</h2><button class="btn" id="no-reset" type="button">배치와 규칙 초기화</button></div>
+          <div class="tw"><table id="no-found"><thead><tr><th>이름</th><th>종류</th><th>식별자</th><th>마지막 수신</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="panel w420">
+          <div class="ph"><h2>부품을 더하면 열리는 모듈</h2></div>
+          <ul class="locked" id="no-locked"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 기록 -->
+    <section class="view" id="v-evidence" data-title="기록" hidden>
+      <div class="cols">
+        <div class="panel grow">
+          <div class="ph"><h2>검증 상태</h2><button class="btn primary" id="ev-export" type="button">기록 내려받기</button></div>
+          <div class="tw"><table id="ev-status"><tbody></tbody></table></div>
+          <div class="row pad replay"><label for="ev-file">기록 파일 재생<input type="file" id="ev-file" accept=".jsonl,.txt,.ndjson"></label><label for="ev-speed">속도<select id="ev-speed"><option value="1">1배</option><option value="4" selected>4배</option><option value="16">16배</option></select></label><span class="kv" id="ev-rp"></span></div>
+          <div class="ph"><h2>검증 세션</h2><button class="btn" id="ev-report" type="button">검증 요약 복사</button><button class="btn primary" id="ev-html" type="button">리포트 만들기</button></div>
+          <div class="tw"><table id="ev-sessions"><thead><tr><th>시작</th><th>노드</th><th>길이</th><th>정답</th><th>감지</th><th>놓침</th><th>오탐</th><th>재현율</th><th>정답 출처</th><th>데이터</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="panel w420">
+          <div class="ph"><h2>수신 메시지</h2><span class="kv" id="ev-count"></span></div>
+          <pre class="logtail" id="ev-log" tabindex="0" aria-label="최근 수신 메시지"></pre>
+          <p class="foot">내려받는 파일과 이 화면 모두 식별자를 앞 4자만 남기고 가립니다.</p>
+        </div>
+      </div>
+      <textarea id="ev-out" class="out" readonly hidden aria-label="기록 내용"></textarea>
+    </section>
+  </main>
+</div>
+
+<div class="drawer" id="conn" hidden>
+  <form id="conn-form" aria-labelledby="conn-h">
+    <h2 id="conn-h">브로커 연결</h2>
+    <p class="muted" id="conn-note">PC에서 Mosquitto를 켠 뒤 연결합니다. 비밀번호는 이 탭의 메모리에만 둡니다.</p>
+    <label for="c-url">WebSocket 주소<input id="c-url"></label>
+    <label for="c-user">사용자<input id="c-user" autocomplete="username"></label>
+    <label for="c-pass">비밀번호<input id="c-pass" type="password" autocomplete="current-password"></label>
+    <div class="row"><button class="btn primary" type="submit" id="c-go">연결</button><button class="btn" type="button" id="c-demo">데모로 보기</button><button class="btn" type="button" id="c-close">닫기</button></div>
+  </form>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/mqtt.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/report.js"></script>
+<script src="js/sim.js"></script>
+<script src="js/space.js"></script>
+<script src="js/views.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

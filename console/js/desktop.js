@@ -23,17 +23,17 @@ if(!D)return;
 document.body.classList.add('desktop');
 let st=null,shown=null,shownT=0;
 const setup=$('#setup'),drawer=$('#desk'),note=$('#su-note'),NOTE0=note.textContent;
-const Desk=window.Desk={rev:0,lan:()=>st&&st.addresses.length?st.addresses.map(a=>a.address).join(' 또는 '):null,open,status:()=>st};
+const Desk=window.Desk={rev:0,lan:()=>st&&st.addresses.length?st.addresses.map(a=>a.address).join(L(' 또는 ')):null,open,status:()=>st};
 const live=()=>Lab.connect('desktop','lab','',err=>{if(err)open();});
 
 function draw(){if(!st||drawer.hidden)return;const state=$('#dk-state'),err=st.error;
-  state.className='chip '+(st.running?'live':'bad');state.textContent=st.running?'켜짐 · 포트 '+st.port:err==='PORT_IN_USE'?'꺼짐 · 포트 사용 중':'꺼짐';
-  $('#dk-count').textContent=st.running?`메시지 ${st.counts.messages.toLocaleString('en-US')}건 · 거절한 로그인 ${st.counts.authRejected}건`:'';
-  $('#dk-note').textContent=err==='PORT_IN_USE'?'1883 포트를 다른 프로그램이 쓰고 있습니다. 실행 중인 Mosquitto나 Docker 컨테이너를 끄고 "브로커 다시 켜기"를 누르세요.':!st.addresses.length?'연결된 집 안 망을 찾지 못했습니다. PC가 공유기에 연결돼 있는지 확인하세요.':'보드가 붙지 않으면 Windows가 처음 띄운 방화벽 창에서 개인 네트워크를 허용했는지 확인하세요.';
-  const hosts=st.addresses.length?st.addresses.map(a=>`<span class="val">${esc(a.address)}<button class="mini" type="button" data-copy="${esc(a.address)}">복사</button><small>${esc(a.name)}</small></span>`).join(''):'<span class="val">찾지 못함</span>';
-  const pw=shown&&Lab.now()-shownT<20000?`<span class="val">${esc(shown)}<button class="mini" type="button" data-copy="@pw">복사</button><button class="mini" type="button" data-pw="hide">가리기</button></span>`:'<span class="val">••••••••••<button class="mini" type="button" data-pw="show">보기</button><button class="mini" type="button" data-copy="@pw">복사</button></span>';
-  $('#dk-vals').innerHTML=`<dt>Host</dt><dd>${hosts}</dd><dt>Port</dt><dd><span class="val">${st.port}</span></dd><dt>사용자</dt><dd><span class="val">${esc(st.user)}</span></dd><dt>비밀번호</dt><dd>${pw}</dd><dt>Scheme</dt><dd><span class="val">mqtt</span></dd>`;
-  $('#dk-clients').innerHTML=st.clients.length?st.clients.map(c=>`<li><b>${esc(c.id)}</b><span class="kv">${esc(c.address)}</span></li>`).join(''):'<li class="none">아직 붙은 기기가 없습니다.</li>';
+  state.className='chip '+(st.running?'live':'bad');state.textContent=st.running?L`켜짐 · 포트 ${st.port}`:err==='PORT_IN_USE'?L('꺼짐 · 포트 사용 중'):L('꺼짐');
+  $('#dk-count').textContent=st.running?L`메시지 ${st.counts.messages.toLocaleString('en-US')}건 · 거절한 로그인 ${st.counts.authRejected}건`:'';
+  $('#dk-note').textContent=err==='PORT_IN_USE'?L('1883 포트를 다른 프로그램이 쓰고 있습니다. 실행 중인 Mosquitto나 Docker 컨테이너를 끄고 "브로커 다시 켜기"를 누르세요.'):!st.addresses.length?L('연결된 집 안 망을 찾지 못했습니다. PC가 공유기에 연결돼 있는지 확인하세요.'):L('보드가 붙지 않으면 Windows가 처음 띄운 방화벽 창에서 개인 네트워크를 허용했는지 확인하세요.');
+  const hosts=st.addresses.length?st.addresses.map(a=>`<span class="val">${esc(a.address)}<button class="mini" type="button" data-copy="${esc(a.address)}">${L`복사`}</button><small>${esc(a.name)}</small></span>`).join(''):L('<span class="val">찾지 못함</span>');
+  const pw=shown&&Lab.now()-shownT<20000?`<span class="val">${esc(shown)}<button class="mini" type="button" data-copy="@pw">${L`복사`}</button><button class="mini" type="button" data-pw="hide">${L`가리기`}</button></span>`:L('<span class="val">••••••••••<button class="mini" type="button" data-pw="show">보기</button><button class="mini" type="button" data-copy="@pw">복사</button></span>');
+  $('#dk-vals').innerHTML=`<dt>Host</dt><dd>${hosts}</dd><dt>Port</dt><dd><span class="val">${st.port}</span></dd><dt>${L`사용자`}</dt><dd><span class="val">${esc(st.user)}</span></dd><dt>${L`비밀번호`}</dt><dd>${pw}</dd><dt>Scheme</dt><dd><span class="val">mqtt</span></dd>`;
+  $('#dk-clients').innerHTML=st.clients.length?st.clients.map(c=>`<li><b>${esc(c.id)}</b><span class="kv">${esc(c.address)}</span></li>`).join(''):L('<li class="none">아직 붙은 기기가 없습니다.</li>');
   $('#dk-live').hidden=S.source==='live';$('#dk-demo').hidden=S.source==='demo';}
 function open(){drawer.hidden=false;D.status().then(apply);$('#dk-close').focus();}
 function close(){drawer.hidden=true;shown=null;}
@@ -46,13 +46,13 @@ D.status().then(s=>{apply(s);if(!s.hasPassword)openSetup();else live();});
 $('#su-gen').addEventListener('click',()=>D.suggestPassword().then(v=>{$('#su-pass').value=v;}));
 $('#su-demo').addEventListener('click',()=>{setup.hidden=true;});
 $('#su-form').addEventListener('submit',e=>{e.preventDefault();const v=$('#su-pass').value;
-  if(!/^[A-Za-z0-9!@#$%^&*_\-+=.]{10,64}$/.test(v)){note.className='muted err';note.textContent='쓸 수 없는 값입니다. 영문, 숫자, 기호(!@#$%^&*_-+=.)로 10자 이상 64자 이하로 정해 주세요.';return;}
+  if(!/^[A-Za-z0-9!@#$%^&*_\-+=.]{10,64}$/.test(v)){note.className='muted err';note.textContent=L('쓸 수 없는 값입니다. 영문, 숫자, 기호(!@#$%^&*_-+=.)로 10자 이상 64자 이하로 정해 주세요.');return;}
   $('#su-go').disabled=true;D.setup(v).then(s=>{$('#su-go').disabled=false;apply(s);
-    if(s.error==='NO_SECURE_STORAGE'||s.error==='INVALID'){note.className='muted err';note.textContent=s.error==='INVALID'?'쓸 수 없는 값입니다.':'이 PC에서 암호화 저장소를 쓸 수 없어 비밀번호를 저장하지 못했습니다.';return;}
+    if(s.error==='NO_SECURE_STORAGE'||s.error==='INVALID'){note.className='muted err';note.textContent=s.error==='INVALID'?L('쓸 수 없는 값입니다.'):L('이 PC에서 암호화 저장소를 쓸 수 없어 비밀번호를 저장하지 못했습니다.');return;}
     $('#su-pass').value='';setup.hidden=true;live();open();});});
 
 drawer.addEventListener('click',e=>{if(e.target===drawer){close();return;}const b=e.target.closest('button');if(!b)return;
-  if(b.dataset.copy){const done=()=>{b.textContent='복사됨';setTimeout(()=>{b.textContent='복사';},1400);};
+  if(b.dataset.copy){const done=()=>{b.textContent=L('복사됨');setTimeout(()=>{b.textContent=L('복사');},1400);};
     if(b.dataset.copy==='@pw')D.revealPassword().then(p=>p&&D.copy(p)).then(done);else D.copy(b.dataset.copy).then(done);}
   else if(b.dataset.pw==='show')D.revealPassword().then(p=>{shown=p;shownT=Lab.now();draw();setTimeout(draw,20500);});
   else if(b.dataset.pw==='hide'){shown=null;draw();}});

@@ -40,7 +40,8 @@ Progress:
 | Package identity | `Pengveloper.SentinelLab`, set in `desktop/builder.config.js`; CI builds the package with it |
 | Submission draft: pricing and availability | Done: free, all markets, public |
 | Submission draft: properties | Done: Developer tools; declares that the app handles personal information (device names and identifiers from the user's own boards, processed locally); privacy policy entered as text hosted by Microsoft; OneDrive backup of app data turned off |
-| Submission draft: age rating | Questionnaire answered (all ages in every system). The account owner still has to tick the IARC terms box and save |
+| Submission draft: age rating | Done: all ages in every system |
+| Submission draft: submission options | Done: published only when "Publish now" is pressed after certification; reviewer notes entered under Additional testing information |
 | Submission draft: package | Not uploaded. The file comes from the CI artifact |
 | Submission draft: Store listing | Waiting for the package (listing languages appear after upload). Text is prepared in [STORE_LISTING.md](STORE_LISTING.md) |
 | Certification and first Store install | Not done |
@@ -71,7 +72,7 @@ The Store package has the strongest position: Microsoft scans it during certific
 ## Verifying a download
 
 ```powershell
-Get-FileHash .\SentinelLab-0.2.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\SentinelLab-0.3.0-win-x64.zip -Algorithm SHA256
 ```
 
 Compare the result with `SHA256SUMS.txt` from the same CI run or release.

@@ -66,10 +66,10 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opa
 .hud-bl{background:var(--glass);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);border-color:var(--edge);border-radius:3px;box-shadow:0 30px 60px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05)}
 .feed li:first-child{animation:feedin .5s var(--ease)} /* 새로 들어온 맨 윗줄만 움직입니다 */
 @keyframes feedin{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
-.empty{left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 44px));text-align:center;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--edge);border-radius:4px;padding:30px 28px}
-.empty h2{font-family:var(--display);font-variation-settings:"wdth" 94;font-weight:800;font-size:26px;line-height:1.15;letter-spacing:-.015em}
-.empty p{color:var(--muted);margin:10px auto 18px;max-width:34em}
-.empty .row{justify-content:center}
+#sp-empty{left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 44px));text-align:center;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--edge);border-radius:4px;padding:30px 28px}
+#sp-empty h2{font-family:var(--display);font-variation-settings:"wdth" 94;font-weight:800;font-size:26px;line-height:1.15;letter-spacing:-.015em}
+#sp-empty p{color:var(--muted);margin:10px auto 18px;max-width:34em}
+#sp-empty .row{justify-content:center}
 @media (min-width:1100px){
   #v-space{display:block;position:relative}
   #v-space .space{position:absolute;inset:0}
@@ -201,3 +201,9 @@ body.desktop .gl-top{padding-right:150px}
 /* 공간 화면 오른쪽 위 버튼이 둘이 되어, 제목 줄이 그 밑으로 들어가지 않게 자리를 더 비웁니다. 좁은 화면에서는 자동화 화면의 버튼으로 엽니다. */
 @media (max-width:1099px){.hud-tl{padding-right:262px}}
 @media (max-width:700px){#sp-glass{display:none}.hud-tl{padding-right:150px}}
+
+/* ---------- 언어 바꾸기, 규칙의 색 표시 ---------- */
+.btn.lang{padding:6px 9px;font-family:var(--data);font-size:12px;color:var(--muted);background:transparent;border-color:var(--line2);box-shadow:none}
+.btn.lang:hover,.btn.lang:focus-visible{color:var(--text);border-color:var(--edge)}
+.rules .sw{display:inline-block;margin-right:9px;vertical-align:-1px;width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 1px rgba(255,255,255,.18),0 0 10px -1px currentColor}
+@media (max-width:700px){.top .btn.lang{padding:6px 7px}}

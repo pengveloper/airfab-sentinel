@@ -31,6 +31,10 @@ Status words: SIMULATED, SOFTWARE_VERIFIED, HARDWARE_VERIFIED, OPERATOR_REQUIRED
 | REQ-SL-024 | On the embedded hub only the app can publish alerts. Devices can subscribe but cannot forge one. | T-HUB-010, app smoke test, alert step | EVD-P1-014 | SOFTWARE_VERIFIED |
 | REQ-SL-026 | Each quiet rule fires only after its own duration, once per quiet period. | T-CON-015 | EVD-P1-016 | SOFTWARE_VERIFIED |
 | REQ-SL-027 | An exported log holds messages from one origin only, states that origin, and masks node identifiers in session records too. | T-CON-010, T-CON-016 | EVD-P1-016 | SOFTWARE_VERIFIED |
+| REQ-SL-028 | Every Korean sentence in the console has an English sentence that keeps its placeholders and markup. No Korean literal bypasses the language layer and no logic depends on displayed text. | T-I18N-001, T-I18N-002 | EVD-P1-017 | SOFTWARE_VERIFIED |
+| REQ-SL-029 | The language follows the address, then the saved choice, then the system language, and can be switched from the top bar and the first-run screen. | T-I18N-003, app smoke test, English step | EVD-P1-017, EVD-P1-018 | SOFTWARE_VERIFIED |
+| REQ-SL-030 | Rule names, alerts, the exported log note and default node names follow the language. Names the user typed are left alone. | T-CON-017, T-CON-018, T-I18N-004 | EVD-P1-017 | SOFTWARE_VERIFIED |
+| REQ-SL-031 | In English no Korean text is left on any screen, in the glasses screen or in the report. | app smoke test, English step | EVD-P1-018 | SOFTWARE_VERIFIED |
 | REQ-SL-025 | Alerts are shown on real glasses or in a phone app. | a receiver app ([NOTIFY.md](NOTIFY.md)) | EVD-P1-015 | OPERATOR_REQUIRED (no receiver built yet) |
 
 Hardware results are added only with the board, firmware version, operator and time recorded.

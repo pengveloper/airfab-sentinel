@@ -26,6 +26,7 @@
       <span class="chip warn" id="mixed" hidden>시뮬레이터 포함</span>
       <span class="kv" id="rate">0 msg/s</span>
       <span class="kv" id="clock">--:--:--</span>
+      <button class="btn lang" id="lang" type="button"></button>
       <button class="btn" id="openConn" type="button">브로커 연결</button>
     </div>
   </header>
@@ -230,7 +231,7 @@
     <label for="su-pass">브로커 비밀번호</label>
     <div class="setup-row"><input id="su-pass" type="text" autocomplete="off" spellcheck="false" minlength="10" maxlength="64" required><button class="btn" type="button" id="su-gen">추천 값 만들기</button></div>
     <p class="muted" id="su-note">영문, 숫자, 기호(!@#$%^&amp;*_-+=.)로 10자 이상. 암호화해서 이 PC에만 저장합니다.</p>
-    <div class="row"><button class="btn primary" type="submit" id="su-go">브로커 켜기</button><button class="btn" type="button" id="su-demo">데모 먼저 보기</button></div>
+    <div class="row"><button class="btn primary" type="submit" id="su-go">브로커 켜기</button><button class="btn" type="button" id="su-demo">데모 먼저 보기</button><button class="btn lang" type="button" id="su-lang"></button></div>
   </form>
 </div>
 <div class="drawer" id="desk" hidden>
@@ -258,6 +259,8 @@
   <div class="gl-note" id="gl-note" aria-live="polite"><p class="gl-title" id="gl-title"></p><p class="gl-body" id="gl-body"></p><i id="gl-ttl"></i></div>
   <p class="gl-ctl"><button class="btn sm" type="button" id="gl-mono" aria-pressed="false">단색으로 보기</button><button class="btn sm" type="button" id="gl-close">닫기</button></p>
 </div>
+<script src="js/i18n-en.js"></script>
+<script src="js/i18n.js"></script>
 <script src="vendor/three.min.js"></script>
 <script src="vendor/mqtt.min.js"></script>
 <script src="js/core.js"></script>

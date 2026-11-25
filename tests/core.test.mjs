@@ -6,10 +6,11 @@ import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const SRC = readFileSync(fileURLToPath(new URL('../console/js/core.js', import.meta.url)), 'utf8');
+const read = f => readFileSync(fileURLToPath(new URL('../console/js/' + f, import.meta.url)), 'utf8');
+const SRC = read('core.js'), I18N = read('i18n-en.js') + '\n' + read('i18n.js');   // 언어 층이 먼저 올라와야 core.js가 L을 씁니다
 const ID = 'a1b2c3d4e5f60718';
 
-function boot(saved) {
+function boot(saved, language = 'ko-KR') {
   const clock = { t: 1_800_000_000_000 };
   class FakeDate extends Date {
     constructor(...a) { if (a.length) super(...a); else super(clock.t); }
@@ -27,12 +28,13 @@ function boot(saved) {
   const ctx = {
     console, JSON, Math, Map, Set, Object, Array, String, Number, isNaN, parseInt, Date: FakeDate,
     setInterval: () => 0, setTimeout: () => 0, clearTimeout() {},
-    location: { protocol: 'file:', hostname: '' },
+    location: { protocol: 'file:', hostname: '', search: '' }, navigator: { language }, URLSearchParams,
     localStorage: { getItem: k => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)) },
     mqtt: { connect: () => client },
   };
   ctx.window = ctx;
   vm.createContext(ctx);
+  vm.runInContext(I18N, ctx);
   vm.runInContext(SRC, ctx);
   const Lab = ctx.Lab;
   const emit = (ev, ...a) => (handlers[ev] || []).forEach(f => f(...a));
@@ -227,4 +229,25 @@ test('T-CON-016 내보낸 기록의 머리말: 세션의 노드 식별자를 가
   assert.ok(text.trim().split('\n').slice(1).every(l => JSON.parse(l).src === 'live'), '시뮬레이터 줄이 실측 기록에 섞이지 않는다');
   Lab.disconnect();
   assert.equal(JSON.parse(Lab.exportLog().split('\n')[0]).data_source, 'broker', '연결을 끊은 뒤에 내려받아도 출처는 그대로');
+});
+
+test('T-CON-017 영어 화면에서는 알림, 규칙 이름, 내보낸 기록의 안내문이 영어로 나간다', () => {
+  const { Lab, goLive, motion, tick, sent } = boot(null, 'en-US'); goLive();
+  motion('idle', 0.1); tick(200); motion('motion', 1.23);
+  const n = notes(sent)[0];
+  assert.equal(n.title, 'CSI a1b2: motion'); assert.match(n.body, /^Score 1\.23/);
+  assert.equal(Lab.ruleName(Lab.cfg.rules[0]), 'When motion starts, change the LED color');
+  assert.equal(Lab.ruleName(Lab.cfg.rules[1]), 'When a pinned device enters Office, change the LED color');
+  assert.equal(Lab.ruleName(Lab.cfg.rules[2]), 'When it is quiet for 5 min, send an alert');
+  assert.equal(JSON.parse(Lab.exportLog().split('\n')[0]).note, 'Identifiers are masked to their first 4 characters.');
+  assert.ok(!/[\u3131-\u318e\uac00-\ud7a3]/.test(JSON.stringify([Lab.S.notes, Lab.S.feed, Lab.report()])), 'no Korean text in alerts, events or the summary');
+});
+
+test('T-CON-018 규칙 이름은 저장한 글자가 아니라 규칙의 내용에서 만들고, 기본 이름은 언어를 따라간다', () => {
+  const saved = { room: { w: 10, h: 7 }, nodes: [{ key: 'cam', type: 'cam', alias: '카메라', x: 5, y: 1 }, { key: 'led', type: 'led', alias: '책상 조명', x: 2, y: 1 }], pinned: [], cam: { url: '' }, led: { topic: 'wled/lab/api' }, broker: { url: 'x', user: 'lab' }, bring: {}, notify: { session: true },
+    rules: [{ id: 'rx', on: true, name: '예전에 저장된 이름', when: { t: 'quiet', node: '*', sec: 60 }, then: { t: 'publish', topic: 'my/topic', payload: '{}' }, fired: 0, last: 0 }] };
+  const ko = boot(saved).Lab, en = boot(saved, 'en-US').Lab;
+  assert.equal(ko.ruleName(ko.cfg.rules[0]), '1분 동안 조용하면 my/topic 토픽으로 보내기');
+  assert.equal(en.ruleName(en.cfg.rules[0]), 'When it is quiet for 1 min, publish to my/topic');
+  assert.equal(en.node('cam').alias, 'Camera'); assert.equal(en.node('led').alias, '책상 조명'); assert.equal(ko.node('cam').alias, '카메라');
 });

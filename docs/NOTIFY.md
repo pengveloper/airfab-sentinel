@@ -49,7 +49,7 @@ mistaken for a measurement (T-CON-012).
 ## Trying it without glasses
 
 - The 자동화 view shows the latest alert in a lens-shaped preview.
-- "안경 화면 열기" opens a full-screen page on a black background with the current state, the score against the threshold, the session progress and the latest alert. On see-through displays black is transparent, so this page can be mirrored to display glasses as it is. `M` switches to a single colour to preview monochrome displays, `Esc` closes it.
+- "안경 화면 열기" opens a full-screen page on a black background with the current state, the score against the threshold, the session progress and the latest alert. On see-through displays black is transparent, so this page can be mirrored to display glasses as it is. `M` switches to a single color to preview monochrome displays, `Esc` closes it.
 - Any MQTT client on the same network can watch the topic:
 
 ```sh

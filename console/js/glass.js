@@ -4,21 +4,21 @@
 window.Glass=(()=>{'use strict';
 const $=s=>document.querySelector(s),S=Lab.S,el=$('#glass');
 const two=x=>String(x).padStart(2,'0'),hms=t=>{const d=new Date(t);return two(d.getHours())+':'+two(d.getMinutes())+':'+two(d.getSeconds());};
-const SRC={broker:'실측',broker_with_simulator:'실측 + 시뮬레이터',replay:'기록 재생',built_in_simulator:'시뮬레이션 값'};
-const srcNow=()=>S.source==='live'?(S.simEver||S.simMixed?SRC.broker_with_simulator:SRC.broker):S.source==='demo'?SRC.built_in_simulator:S.source==='replay'?SRC.replay:'대기';
+const SRC={broker:L('실측'),broker_with_simulator:L('실측 + 시뮬레이터'),replay:L('기록 재생'),built_in_simulator:L('시뮬레이션 값')};
+const srcNow=()=>S.source==='live'?(S.simEver||S.simMixed?SRC.broker_with_simulator:SRC.broker):S.source==='demo'?SRC.built_in_simulator:S.source==='replay'?SRC.replay:L('대기');
 let open=false,back=null,ownFs=false,shown='',last=0,idle=0;
 /* 지금 보여 줄 링크: 움직이는 곳이 있으면 그곳, 없으면 가장 최근에 값을 보낸 곳 */
 function pick(){const list=[...S.csi.values()].filter(n=>Lab.node(n.key));return list.find(n=>n.state==='motion')||list.sort((a,b)=>b.ts-a.ts)[0]||null;}
 function update(){const t=Lab.now();if(!open||t-last<120)return;last=t;
   $('#gl-clock').textContent=hms(t);$('#gl-src').textContent=srcNow();
   const n=pick(),st=$('#gl-state'),m=$('#gl-meter');
-  if(!n){st.textContent=S.source==='idle'?'연결을 기다리는 중':'보드를 기다리는 중';st.className='gl-state wait';$('#gl-link').textContent='';m.hidden=true;$('#gl-num').textContent='';}
+  if(!n){st.textContent=S.source==='idle'?L('연결을 기다리는 중'):L('보드를 기다리는 중');st.className='gl-state wait';$('#gl-link').textContent='';m.hidden=true;$('#gl-num').textContent='';}
   else{const hot=n.state==='motion',thr=n.thr||0.5,max=Math.max(thr*2.4,1),v=n.last==null?0:n.last;
-    st.textContent=hot?'움직임':'조용함';st.className='gl-state'+(hot?' hot':'');$('#gl-link').textContent=Lab.node(n.key).alias;
+    st.textContent=hot?L('움직임'):L('조용함');st.className='gl-state'+(hot?' hot':'');$('#gl-link').textContent=Lab.node(n.key).alias;
     m.hidden=false;m.classList.toggle('hot',hot);m.firstElementChild.style.transform='scaleX('+Math.min(1,v/max).toFixed(3)+')';m.lastElementChild.style.left=(thr/max*100).toFixed(1)+'%';
-    $('#gl-num').textContent='점수 '+v.toFixed(2)+' · 임계값 '+thr;}
+    $('#gl-num').textContent=L`점수 ${v.toFixed(2)} · 임계값 ${thr}`;}
   const ss=S.session,se=$('#gl-session');
-  if(ss&&!ss.end){const s=Lab.sessionStats(ss),d=Math.floor(s.dur);se.hidden=false;se.textContent='검증 중 '+two(Math.floor(d/60))+':'+two(d%60)+' · 통과 '+s.labels+' · 감지 '+s.hits+(ss.cur?' · 지나가는 중':'');}
+  if(ss&&!ss.end){const s=Lab.sessionStats(ss),d=Math.floor(s.dur);se.hidden=false;const tm=two(Math.floor(d/60))+':'+two(d%60);se.textContent=ss.cur?L`검증 중 ${tm} · 통과 ${s.labels} · 감지 ${s.hits} · 지나가는 중`:L`검증 중 ${tm} · 통과 ${s.labels} · 감지 ${s.hits}`;}
   else se.hidden=true;
   const nt=S.notes[0],box=$('#gl-note'),age=nt?(t-nt.ts)/1000:1e9;
   if(nt&&age<nt.ttl){if(shown!==nt.id){shown=nt.id;$('#gl-title').textContent=nt.title;$('#gl-body').textContent=nt.body;box.className='gl-note on '+nt.level;
@@ -32,7 +32,7 @@ function show(){if(open)return;back=document.activeElement;open=true;shown='';la
 function hide(){if(!open)return;open=false;el.hidden=true;
   try{if(ownFs&&document.fullscreenElement)document.exitFullscreen().catch(()=>{});}catch(e){}ownFs=false;
   if(back&&back.focus)back.focus({preventScroll:true});back=null;}
-function mono(on){el.classList.toggle('mono',on);const b=$('#gl-mono');b.setAttribute('aria-pressed',String(on));b.textContent=on?'색으로 보기':'단색으로 보기';}
+function mono(on){el.classList.toggle('mono',on);const b=$('#gl-mono');b.setAttribute('aria-pressed',String(on));b.textContent=on?L('색으로 보기'):L('단색으로 보기');}
 $('#gl-close').addEventListener('click',hide);
 $('#gl-mono').addEventListener('click',()=>mono(!el.classList.contains('mono')));
 el.addEventListener('pointermove',wake);el.addEventListener('pointerdown',wake);

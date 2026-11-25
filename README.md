@@ -6,7 +6,7 @@ ground truth, and keeps simulated data and real measurements strictly apart.
 
 한국어 문서: [README.ko.md](README.ko.md)
 
-![3D room: a Wi-Fi sensing link with its Fresnel zone, the live motion score along the link, BLE nodes and tracked devices](docs/screenshots/space.webp)
+![3D room: a Wi-Fi sensing link with its Fresnel zone, the live motion score along the link, BLE nodes and tracked devices](docs/screenshots/en/space.webp)
 
 Every value in these screenshots comes from the built-in simulator. No hardware result is
 claimed in this repository yet. See [Status](#status).
@@ -18,19 +18,20 @@ claimed in this repository yet. See [Status](#status).
 - **A console that explains the physics.** The 3D view draws the sensing region of each Wi-Fi link (its Fresnel zones) on the floor and raises the last 14 seconds of motion score as a ribbon along the link. The part above the detection threshold turns gold.
 - **Validation, not vibes.** A session records when a person really crossed the link and matches that against the firmware's detections: hits, misses, false detections, recall. Ground truth comes from a held key, a PIR sensor, or (demo only) the simulator.
 - **Evidence you can hand over.** Export the message log, replay it later, and generate a standalone HTML report with the score curve of every session.
+- **English and Korean.** The interface follows the system language and switches with one button. A test fails the build if any sentence lacks a translation.
 - **Alerts for glasses and phones.** Rules and validation sessions publish one short sentence at a time on a single topic that only the app can write to, so a wearable app needs nothing but an MQTT subscription. A full-screen black page previews what the glasses would show. No receiver has been tested on real glasses yet. Format: [docs/NOTIFY.md](docs/NOTIFY.md).
 
 | First run | Hub panel |
 |---|---|
-| ![First-run screen asking for the hub password](docs/screenshots/first-run.webp) | ![Panel listing the address, port and user to enter on each board](docs/screenshots/broker.webp) |
+| ![First-run screen asking for the hub password](docs/screenshots/en/first-run.webp) | ![Panel listing the address, port and user to enter on each board](docs/screenshots/broker.webp) |
 
 | Motion and validation | First-measurement guide |
 |---|---|
-| ![Score timeline with a validation session](docs/screenshots/motion.webp) | ![Seven-step guide that fills in as boards report](docs/screenshots/nodes.webp) |
+| ![Score timeline with a validation session](docs/screenshots/en/motion.webp) | ![Seven-step guide that fills in as boards report](docs/screenshots/en/nodes.webp) |
 
 | Rules and alert preview | Glasses screen |
 |---|---|
-| ![Rules list with a lens-shaped preview of the latest alert](docs/screenshots/rules.webp) | ![Full-screen black page with the motion state, score and latest alert](docs/screenshots/glass.webp) |
+| ![Rules list with a lens-shaped preview of the latest alert](docs/screenshots/en/rules.webp) | ![Full-screen black page with the motion state, score and latest alert](docs/screenshots/en/glass.webp) |
 
 ## Architecture
 
@@ -117,10 +118,11 @@ None of these firmwares is included or modified here. Each keeps its own license
 | Item | Status |
 |---|---|
 | Console views, PIR ground truth, replay, report, presentation mode, alert preview, glasses screen | Checked with the built-in simulator (SIMULATED) |
-| Data layer: masking, detection intervals, session statistics, trilateration, retained-message handling, rules | 16 automated tests pass (SOFTWARE_VERIFIED) |
+| Data layer: masking, detection intervals, session statistics, trilateration, retained-message handling, rules | 18 automated tests pass (SOFTWARE_VERIFIED) |
 | Embedded hub: private addresses only, authentication, login throttling, reserved and app-only topics, size limits | 10 automated tests over real TCP sockets pass (SOFTWARE_VERIFIED) |
 | Desktop app: window isolation, first run, password storage, message flow, rule delivery, alert delivery, navigation lock | Smoke test of the real app passes on Linux; packaged build starts (SOFTWARE_VERIFIED) |
 | Windows build, DPAPI path, MSIX packaging, Defender scan | Passes in GitHub Actions on `windows-latest` (EVD-P1-011); see the latest run |
+| English interface: every sentence translated, no Korean left on any screen or in the report | 4 automated tests and an English pass in the app smoke test (SOFTWARE_VERIFIED) |
 | Alerts shown on real glasses or a phone app | Not done yet (OPERATOR_REQUIRED) |
 | Installing from the Microsoft Store without a warning | Not done yet (OPERATOR_REQUIRED) |
 | Real boards | Not measured yet (OPERATOR_REQUIRED) |
@@ -131,8 +133,8 @@ The evidence table is in [evidence/EVIDENCE-P1.md](evidence/EVIDENCE-P1.md).
 ## Tests
 
 ```sh
-npm test            # data layer (T-CON-001..016) and hub (T-HUB-001..010)
-npm run test:app    # starts the real app: isolation, first run, auth, message flow, alerts
+npm test            # data layer (T-CON-001..018), hub (T-HUB-001..010), language (T-I18N-001..004)
+npm run test:app    # starts the real app: isolation, first run, auth, message flow, alerts, English
 ```
 
 On Linux the app test needs a display: `xvfb-run -a npm run test:app`.

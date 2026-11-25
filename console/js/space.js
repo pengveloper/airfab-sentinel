@@ -100,7 +100,7 @@ function build(){const T=THREE,cfg=Lab.cfg,W=cfg.room.w,H=cfg.room.h;ver=Lab.S.v
     const hl=halo(color,size*5.5,0.7);hl.position.copy(p).setY(h);root.add(hl);const base=halo(color,size*7,0.28);base.position.copy(p).setY(0.03);root.add(base);return{m,hl};};
   const rp=P(cfg.router.x,cfg.router.y);stem(rp,0.62,PAPER);board(rp,0.62,PAPER,0.2);
   [-0.12,0,0.12].forEach(dx=>root.add(line([rp.clone().add(new T.Vector3(dx,0.66,0)),rp.clone().add(new T.Vector3(dx*1.5,1.0,0))],PAPER,0.8)));
-  objs.nodes.push({el:lbl('공유기','sys'),pos:rp.clone().setY(1.2)});
+  objs.nodes.push({el:lbl(L('공유기'),'sys'),pos:rp.clone().setY(1.2)});
   for(const n of cfg.nodes){const p=P(n.x,n.y);
     if(n.type==='csi'){stem(p,0.55,GOLD);const b=board(p,0.55,GOLD,0.17);objs.nodes.push({el:lbl(n.alias,'csi'),pos:p.clone().setY(1.05),key:n.key});
       const a0=p.clone().setY(0),b0=rp.clone().setY(0),cur=curtain(a0,b0);root.add(cur);
@@ -121,7 +121,7 @@ function build(){const T=THREE,cfg=Lab.cfg,W=cfg.room.w,H=cfg.room.h;ver=Lab.S.v
   bm.opacity=0.62;const cy=new T.Mesh(new T.CylinderGeometry(0.1,0.15,0.92,20),bm);cy.position.y=0.46;const hd=new T.Mesh(new T.SphereGeometry(0.125,20,14),bm);hd.position.y=1.1;
   const fr=new T.LineLoop(new T.BufferGeometry().setFromPoints(Array.from({length:48},(_,i)=>new T.Vector3(Math.cos(i/48*6.2832)*0.42,0.03,Math.sin(i/48*6.2832)*0.42))),new T.LineBasicMaterial({color:PAPER,transparent:true,opacity:0.6}));body.add(fr);
   const aura=halo(PAPER,1.5,0.35);aura.position.y=0.6;const foot=halo(PAPER,1.3,0.3);foot.position.y=0.03;body.add(cy,hd,aura,foot);body.visible=false;root.add(body);
-  objs.person={g:body,el:lbl('가상의 사람','ghost')};}
+  objs.person={g:body,el:lbl(L('가상의 사람'),'ghost')};}
 
 function devMarker(d,pinned){const T=THREE;let o=objs.devs.get(d.id);if(o)return o;
   const m=new T.Mesh(new T.SphereGeometry(pinned?0.11:0.06,14,10),new T.MeshBasicMaterial({color:pinned?GOLD:0x8c9db3,transparent:true,opacity:pinned?1:0.6}));root.add(m);
@@ -142,9 +142,9 @@ function render(t){if(!ok)return;const S=Lab.S,cfg=Lab.cfg,w=host.clientWidth,h=
   cam.position.set(Math.sin(ya)*Math.cos(pi)*dist,Math.sin(pi)*dist,Math.cos(ya)*Math.cos(pi)*dist);cam.lookAt(0,0.45,0);
   const u=floor.material.uniforms,tn=Lab.now();u.uT.value=reduced?2:t;let i=0;
   for(const n of S.csi.values()){const nd=Lab.node(n.key);if(!nd||i>=6)continue;const thr=n.thr||0.5,e=Lab.clamp(((n.last||0)-thr*0.35)/(thr*1.2),0,1);n._e=(n._e||0)+(e-(n._e||0))*0.12;u.uN.value[i++].set(nd.x,nd.y,n._e);}
-  u.uCnt.value=i;const L=objs.led;
-  if(L){const c=S.led.color;if(c){u.uLed.value.set(L.n.x,L.n.y,1);u.uLedCol.value.set(c[0]/255,c[1]/255,c[2]/255);L.m.material.color.setRGB(c[0]/255,c[1]/255,c[2]/255);L.hl.material.color.copy(L.m.material.color);L.hl.material.opacity=0.85;L.hl.scale.setScalar(1.7+0.2*Math.sin(t*6));}
-    else{u.uLed.value.z=0;L.m.material.color.setHex(0x334155);L.hl.material.opacity=0;}}
+  u.uCnt.value=i;const led=objs.led;
+  if(led){const c=S.led.color;if(c){u.uLed.value.set(led.n.x,led.n.y,1);u.uLedCol.value.set(c[0]/255,c[1]/255,c[2]/255);led.m.material.color.setRGB(c[0]/255,c[1]/255,c[2]/255);led.hl.material.color.copy(led.m.material.color);led.hl.material.opacity=0.85;led.hl.scale.setScalar(1.7+0.2*Math.sin(t*6));}
+    else{u.uLed.value.z=0;led.m.material.color.setHex(0x334155);led.hl.material.opacity=0;}}
   for(const K of objs.links){const n=S.csi.get(K.key.slice(4)),e=n?(n._e||0):0,hot=!!n&&n.state==='motion',col=hot?GOLD:BLUE;
     K.los.material.color.setHex(col);K.los.material.opacity=0.28+e*0.6;K.hl.scale.setScalar(0.95+e*1.1);
     K.dots.forEach((s,k)=>{const f=((reduced?0.3:t*(0.22+e*0.55))+k/K.dots.length)%1;s.position.lerpVectors(K.a,K.b,f);s.material.color.setHex(col);s.scale.setScalar(0.16+e*0.22);s.material.opacity=Math.sin(f*Math.PI)*0.95;});

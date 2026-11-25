@@ -29,7 +29,10 @@ let failed = false;
 try {
   const win = await app.firstWindow();
   await win.waitForLoadState('domcontentloaded');
-  await win.waitForFunction(() => window.Lab && window.Desk && window.Desk.status(), null, { timeout: 20_000 });
+  const ready = () => win.waitForFunction(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, { timeout: 20_000 });
+  await ready();
+  // 화면 언어는 기기 언어를 따릅니다. 아래 단계는 한국어 문장을 확인하므로, 영어로 뜬 환경(빌드 서버)에서는 먼저 한국어로 바꿉니다.
+  if (await win.evaluate(() => I18N.lang) !== 'ko') { await win.evaluate(() => I18N.set('ko')); await win.waitForFunction(() => window.I18N && I18N.lang === 'ko', null, { timeout: 20_000 }); await ready(); console.log('note started in English, switched to Korean'); }
 
   // 1. 창의 격리 상태
   const iso = await win.evaluate(async () => ({ url: location.href, require: typeof window.require, process: typeof window.process, bridge: Object.keys(window.desktop).sort(),
@@ -115,6 +118,28 @@ try {
   assert.equal(dim, 1, 'event list rows stay fully visible between updates');   // 같은 내용을 다시 그려 목록이 깜빡이던 문제의 재발 방지
   for (const v of ['motion', 'presence', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(1200); await shot(win, `06-${v}.png`); }
   step('demo views open without errors');
+
+  // 6-1. 영어 화면: 버튼으로 언어를 바꾸면 모든 화면에 한글이 남지 않고, 사전에 없는 문장도 없다
+  await win.click('#tab-space'); await win.click('#lang');
+  await win.waitForFunction(() => window.I18N && I18N.lang === 'en' && window.Desk && window.Desk.status(), null, { timeout: 20_000 }); await win.waitForTimeout(1500);
+  assert.equal(await win.evaluate(() => document.documentElement.lang), 'en');
+  await win.click('#openConn'); await win.click('#dk-demo'); await win.waitForTimeout(4000);
+  const leftover = () => win.evaluate(() => { const H = /[\u3131-\u318e\uac00-\ud7a3]/, seen = [];
+    const w = document.createTreeWalker(document.body, 4, { acceptNode: n => /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName) || n.parentNode.closest('.lang') ? 2 : 1 });
+    for (let n; (n = w.nextNode());) if (H.test(n.nodeValue)) seen.push(n.nodeValue.trim().slice(0, 60));
+    for (const el of document.querySelectorAll('[title],[aria-label],[placeholder],[alt]')) if (!el.closest('.lang')) for (const a of ['title', 'aria-label', 'placeholder', 'alt']) { const v = el.getAttribute(a); if (v && H.test(v)) seen.push('@' + a + ' ' + v.slice(0, 50)); }
+    return seen; });
+  const korean = [];
+  for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
+  await win.evaluate(() => Glass.open()); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.keyboard.press('Escape'); await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000 });
+  const report = await win.evaluate(() => Report.build().replace(/<style[\s\S]*?<\/style>/, ''));
+  assert.deepEqual(korean, [], 'no Korean text is left on any English screen');
+  assert.ok(!/[\u3131-\u318e\uac00-\ud7a3]/.test(report), 'the English report holds no Korean text');
+  assert.deepEqual(await win.evaluate(() => [...I18N.missing]), [], 'every sentence shown has a translation');
+  // 빈 표의 안내 줄은 제목 줄 아래, 표 안에 있어야 한다 (다른 화면의 스타일이 새어 들어와 제목 줄을 가리던 문제의 재발 방지)
+  const emptyRow = await win.evaluate(() => { const td = document.querySelector('#ev-sessions tr.empty td'), th = document.querySelector('#ev-sessions th'); if (!td) return null; const a = td.getBoundingClientRect(), b = th.getBoundingClientRect(); return { left: a.left - b.left, below: a.top >= b.bottom - 1 }; });
+  assert.ok(emptyRow && Math.abs(emptyRow.left) < 2 && emptyRow.below, 'the empty-table row sits under its header: ' + JSON.stringify(emptyRow));
+  step('English: switching language leaves no Korean text on any screen or in the report');
   // 7. 창은 밖으로 나가지 못한다
   await win.evaluate(() => { try { location.href = 'https://example.com/'; } catch (e) { /* blocked */ } }); await win.waitForTimeout(800);
   assert.equal(win.url().startsWith('app://sentinel/'), true);

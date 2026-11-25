@@ -19,11 +19,14 @@ does not install drivers or services, and does not start with Windows.
 
 ## Notes for certification
 
-No hardware or account is needed to review the app. On first launch choose "데모 먼저 보기"
-(View the demo first). Every screen then runs on a built-in simulator and is labelled as
-simulated data. To see the broker start, press "추천 값 만들기" and then "브로커 켜기" on the
-first screen; Windows may ask whether to allow the app on private networks.
-The app makes no connection to the internet.
+No hardware or account is needed to review the app. On first launch choose "See the demo first"
+("데모 먼저 보기" when Windows is set to Korean). Every screen then runs on a built-in simulator
+and is labelled as simulated data. To see the broker start, press "Suggest one" and then
+"Start broker" on the first screen; Windows may ask whether to allow the app on private networks.
+The app itself makes no connection to the internet.
+
+The interface is in English and Korean. It follows the Windows display language and can be
+switched with the EN / 한국어 button in the top bar.
 
 ## English (en-us)
 
@@ -45,6 +48,7 @@ What you get
 - A floor plan with Bluetooth device positions, a camera view, and simple rules such as "when motion starts, turn the light gold".
 - Log export, replay, and a standalone report for each test.
 - A demo mode with a built-in simulator, clearly labelled, so you can explore before you own a board.
+- English and Korean, following your Windows language.
 
 Built carefully
 

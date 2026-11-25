@@ -27,14 +27,19 @@ const tryConnect = password => new Promise(resolve => {
 const app = await _electron.launch({ args, cwd: root, env: { ...process.env, SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
 let failed = false;
 try {
-  const win = await app.firstWindow();
+  let win = await app.firstWindow();
   await win.waitForLoadState('domcontentloaded');
-  const ready = () => win.waitForFunction(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, { timeout: 20_000 });
+  const ready = () => win.waitForFunction(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, { timeout: 20_000, polling: 100 });
+  // 언어를 바꾸면 화면이 새로 열립니다. Windows에서는 그 뒤로 처음 잡아 둔 창 객체의 기다림이 끝나지 않는 일이 있어,
+  // 열려 있는 창을 직접 물어 원하는 언어로 돌아온 창을 다시 잡습니다.
+  const settle = async lang => { const end = Date.now() + 45_000;
+    for (;;) { for (const w of app.windows()) { try { if (await w.evaluate(l => !!(window.I18N && I18N.lang === l && window.Lab && window.Desk && window.Desk.status()), lang)) return w; } catch { /* 다시 여는 중 */ } }
+      if (Date.now() > end) throw new Error('the window did not come back in ' + lang); await new Promise(r => setTimeout(r, 300)); } };
   await ready();
   // 화면 언어는 기기 언어를 따릅니다. 아래 단계는 한국어 문장을 확인하므로, 영어로 뜬 환경(빌드 서버)에서는 먼저 한국어로 바꿉니다.
   const langState = () => win.evaluate(() => ({ lang: window.I18N && I18N.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable: ' + e.name; } })(), system: navigator.language, search: location.search }));
   if ((await langState()).lang !== 'ko') {
-    await Promise.all([win.waitForEvent('load', { timeout: 30_000 }), win.evaluate(() => { I18N.set('ko'); })]); await ready();
+    await win.evaluate(() => { I18N.set('ko'); }).catch(() => {}); win = await settle('ko');
     const st = await langState(); console.log('note started in English, switched to Korean: ' + JSON.stringify(st));
     assert.equal(st.lang, 'ko'); assert.equal(st.search, '', 'the language parameter is removed from the address once applied');
   }
@@ -52,10 +57,10 @@ try {
   assert.equal((await win.evaluate(() => window.desktop.status())).running, false);
   assert.equal(await tryConnect('anything-at-all'), null);
   await win.waitForTimeout(2600); await shot(win, '01-setup.png');
-  await win.click('#su-gen'); await win.waitForFunction(() => document.querySelector('#su-pass').value.length === 20);
+  await win.click('#su-gen'); await win.waitForFunction(() => document.querySelector('#su-pass').value.length === 20, null, { polling: 100 });
   const password = await win.inputValue('#su-pass');
   await win.click('#su-go');
-  await win.waitForFunction(() => window.Desk.status() && window.Desk.status().running, null, { timeout: 15_000 });
+  await win.waitForFunction(() => window.Desk.status() && window.Desk.status().running, null, { timeout: 15_000, polling: 100 });
   await win.waitForSelector('#desk:not([hidden])'); await win.waitForTimeout(600); await shot(win, '02-broker.png');
   const saved = fs.readFileSync(path.join(userData, 'settings.json'), 'utf8');
   assert.ok(!saved.includes(password), 'the password must not be stored in clear text');
@@ -76,7 +81,7 @@ try {
   step(`top bar fits a ${fit.width}px wide window`);
 
   // 4. 보드 메시지가 화면까지
-  await win.waitForFunction(() => Lab.S.source === 'live', null, { timeout: 10_000 });
+  await win.waitForFunction(() => Lab.S.source === 'live', null, { timeout: 10_000, polling: 100 });
   await win.waitForSelector('#sp-empty:not([hidden])', { state: 'attached', timeout: 20_000 });
   const box = await win.evaluate(() => { const r = document.querySelector('#sp-empty').getBoundingClientRect(), v = document.querySelector('#v-space').getBoundingClientRect(); return { empty: [Math.round(r.width), Math.round(r.height)], view: [Math.round(v.width), Math.round(v.height)], hash: location.hash, visibility: document.visibilityState }; });
   console.log('note waiting-state layout:', JSON.stringify(box));
@@ -87,7 +92,7 @@ try {
   let t = 0; const timer = setInterval(() => { t += 0.2; const burst = (t % 6) > 3;
     board.publish(`espectre/v1/devices/${ID}/motion`, JSON.stringify({ timestamp_ms: Math.round(t * 1000), state: burst ? 'motion' : 'idle', score: burst ? 1.2 + Math.random() * 0.2 : 0.1 + Math.random() * 0.05 }));
     ['office', 'living', 'entry'].forEach((r, i) => board.publish(`espresense/devices/tag1/${r}`, JSON.stringify({ id: 'tag1', name: 'tag', distance: 2 + i, rssi: -60 }))); }, 200);
-  await win.waitForFunction(() => Lab.S.csi.size === 1 && Lab.S.rooms.size === 3 && Lab.cfg.bring.csi && Lab.cfg.bring.rooms && Lab.cfg.bring.rooms.list.length === 3, null, { timeout: 15_000 });
+  await win.waitForFunction(() => Lab.S.csi.size === 1 && Lab.S.rooms.size === 3 && Lab.cfg.bring.csi && Lab.cfg.bring.rooms && Lab.cfg.bring.rooms.list.length === 3, null, { timeout: 15_000, polling: 100 });
   const seen = await win.evaluate(() => ({ source: Lab.S.source, sim: Lab.S.simEver, bring: Object.keys(Lab.cfg.bring).sort(), clients: window.Desk.status().clients }));
   assert.equal(seen.source, 'live'); assert.equal(seen.sim, false); assert.deepEqual(seen.bring, ['broker', 'csi', 'rooms']);
   assert.equal(seen.clients[0].id, 'espres…');
@@ -107,12 +112,12 @@ try {
   assert.ok(!alerts[0].includes(ID), 'the alert carries no full device id');
   const before = alerts.length; board.publish('lab/out/notify', JSON.stringify({ v: 1, title: 'forged' })); await new Promise(r => setTimeout(r, 600));
   assert.ok(!alerts.slice(before).some(a => a.includes('forged')), 'a device cannot publish an alert');
-  await win.click('#tab-rules'); await win.waitForFunction(() => /움직임$/.test(document.querySelector('#ntl-title').textContent), null, { timeout: 5000 });   // 자동화 화면의 미리보기에도 같은 문장이 뜬다
+  await win.click('#tab-rules'); await win.waitForFunction(() => /움직임$/.test(document.querySelector('#ntl-title').textContent), null, { timeout: 5000, polling: 100 });   // 자동화 화면의 미리보기에도 같은 문장이 뜬다
   await win.evaluate(() => Glass.open()); await win.waitForTimeout(500);
   const glass = await win.evaluate(() => ({ open: Glass.isOpen(), state: document.querySelector('#gl-state').textContent, src: document.querySelector('#gl-src').textContent }));
   assert.equal(glass.open, true); assert.ok(['움직임', '조용함'].includes(glass.state)); assert.equal(glass.src, '실측');
   await shot(win, '04-glass.png'); await win.keyboard.press('Escape');
-  await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000 });
+  await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000, polling: 100 });
   step('alerts reach a subscriber as v1 JSON, cannot be forged by a device, and the glasses screen opens and closes');
   clearInterval(timer); board.end(true);
 
@@ -125,7 +130,7 @@ try {
   step('demo views open without errors');
 
   // 6-1. 영어 화면: 버튼으로 언어를 바꾸면 모든 화면에 한글이 남지 않고, 사전에 없는 문장도 없다
-  await win.click('#tab-space'); await Promise.all([win.waitForEvent('load', { timeout: 30_000 }), win.click('#lang')]); await ready();
+  await win.click('#tab-space'); await win.click('#lang'); win = await settle('en');
   console.log('note switched with the button: ' + JSON.stringify(await langState()));
   assert.equal(await win.evaluate(() => I18N.lang), 'en'); await win.waitForTimeout(1500);
   assert.equal(await win.evaluate(() => document.documentElement.lang), 'en');
@@ -137,7 +142,7 @@ try {
     return seen; });
   const korean = [];
   for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
-  await win.evaluate(() => Glass.open()); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.keyboard.press('Escape'); await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000 });
+  await win.evaluate(() => Glass.open()); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.keyboard.press('Escape'); await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000, polling: 100 });
   const report = await win.evaluate(() => Report.build().replace(/<style[\s\S]*?<\/style>/, ''));
   assert.deepEqual(korean, [], 'no Korean text is left on any English screen');
   assert.ok(!/[\u3131-\u318e\uac00-\ud7a3]/.test(report), 'the English report holds no Korean text');

@@ -198,3 +198,33 @@ test('T-CON-014 예전에 저장한 설정은 알림 규칙을 새 형식으로 
   assert.ok(r.some(x => x.when.t === 'motion' && x.then.t === 'notify'));
   assert.equal(Lab.cfg.notify.session, true);
 });
+
+test('T-CON-015 조용함 규칙은 규칙마다 정한 시간이 지났을 때 그 규칙만 실행된다', () => {
+  const { Lab, goLive, motion, tick } = boot(); goLive();
+  Lab.cfg.rules.length = 0;
+  Lab.cfg.rules.push({ id: 'q1', on: true, name: '1분', when: { t: 'quiet', node: '*', sec: 60 }, then: { t: 'notify', level: 'info' }, fired: 0, last: 0 },
+    { id: 'q5', on: true, name: '5분', when: { t: 'quiet', node: '*', sec: 300 }, then: { t: 'notify', level: 'info' }, fired: 0, last: 0 });
+  const fired = () => Lab.cfg.rules.map(r => r.fired).join(',');
+  motion('motion', 1.2); tick(1000); motion('idle', 0.1);                           // 조용해진 순간부터 잽니다
+  tick(59000); Lab.quietTick(); assert.equal(fired(), '0,0');
+  tick(2000); Lab.quietTick(); assert.equal(fired(), '1,0', '1분 규칙만 실행');
+  tick(60000); Lab.quietTick(); assert.equal(fired(), '1,0', '같은 조용한 구간에서 다시 실행되지 않는다');
+  tick(180000); Lab.quietTick(); assert.equal(fired(), '1,1', '5분이 지나면 5분 규칙이 실행');
+  motion('motion', 1.2); tick(1000); motion('idle', 0.1); tick(61000); Lab.quietTick();
+  assert.equal(fired(), '2,1', '움직임이 한 번 있은 뒤에는 다시 잰다');
+});
+
+test('T-CON-016 내보낸 기록의 머리말: 세션의 노드 식별자를 가리고, 출처는 기록에 담긴 대로 적는다', () => {
+  const { Lab, goLive, motion, tick } = boot();
+  Lab.demo(); Lab.ingest('espectre/v1/devices/' + ID + '/motion', JSON.stringify({ state: 'idle', score: 0.1, threshold: 0.5 }), 'sim');
+  assert.equal(JSON.parse(Lab.exportLog().split('\n')[0]).data_source, 'built_in_simulator');
+  goLive(); motion('idle', 0.1);                                                    // 데모를 보다가 연결: 실측 기록은 새로 시작
+  Lab.sessionStart('csi:' + ID, 'manual'); tick(1000); Lab.label(true); motion('motion', 1.2); tick(1500); motion('idle', 0.1); Lab.label(false); tick(500); Lab.sessionStop();
+  const text = Lab.exportLog(), head = JSON.parse(text.split('\n')[0]);
+  assert.ok(!text.includes(ID), '전체 식별자가 어디에도 없어야 한다');
+  assert.equal(head.sessions.length, 1); assert.equal(head.sessions[0].node, 'csi:a1b2…');
+  assert.equal(head.data_source, 'broker'); assert.equal(head.verification, 'OPERATOR_TO_CONFIRM');
+  assert.ok(text.trim().split('\n').slice(1).every(l => JSON.parse(l).src === 'live'), '시뮬레이터 줄이 실측 기록에 섞이지 않는다');
+  Lab.disconnect();
+  assert.equal(JSON.parse(Lab.exportLog().split('\n')[0]).data_source, 'broker', '연결을 끊은 뒤에 내려받아도 출처는 그대로');
+});

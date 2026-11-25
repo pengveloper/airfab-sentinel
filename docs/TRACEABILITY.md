@@ -29,6 +29,8 @@ Status words: SIMULATED, SOFTWARE_VERIFIED, HARDWARE_VERIFIED, OPERATOR_REQUIRED
 | REQ-SL-022 | A validation session announces its start, each pass as detected or missed, and its result. | T-CON-013 | EVD-P1-013 | SOFTWARE_VERIFIED |
 | REQ-SL-023 | Settings saved before the alert channel existed are migrated without changing the user's own rules. | T-CON-014 | EVD-P1-013 | SOFTWARE_VERIFIED |
 | REQ-SL-024 | On the embedded hub only the app can publish alerts. Devices can subscribe but cannot forge one. | T-HUB-010, app smoke test, alert step | EVD-P1-014 | SOFTWARE_VERIFIED |
+| REQ-SL-026 | Each quiet rule fires only after its own duration, once per quiet period. | T-CON-015 | EVD-P1-016 | SOFTWARE_VERIFIED |
+| REQ-SL-027 | An exported log holds messages from one origin only, states that origin, and masks node identifiers in session records too. | T-CON-010, T-CON-016 | EVD-P1-016 | SOFTWARE_VERIFIED |
 | REQ-SL-025 | Alerts are shown on real glasses or in a phone app. | a receiver app ([NOTIFY.md](NOTIFY.md)) | EVD-P1-015 | OPERATOR_REQUIRED (no receiver built yet) |
 
 Hardware results are added only with the board, firmware version, operator and time recorded.

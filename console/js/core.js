@@ -62,6 +62,7 @@ const roomName=r=>{const n=node('ble:'+r);return n?n.alias:(ROOM_KO[r]||r);};
 /* ---- 수신 ---- */
 const subs=[];
 function ingest(topic,text,src,retained){S.count++;_c++;S.lastTs=now();const fresh=src==='live'&&!retained; // 보관(retained) 메시지는 예전 값일 수 있어 단계 확인에 쓰지 않습니다
+  if(S.log.length&&S.log[S.log.length-1].src!==src)S.log.length=0; // 기록 한 벌에는 한 출처만 담습니다. 데모를 보다가 브로커에 연결하면 실측 기록이 새로 시작됩니다
   const le={t:new Date().toISOString(),src,topic:mask(topic),payload:mask(text)};if(retained)le.retained=true;S.log.push(le);if(S.log.length>8000)S.log.shift();
   if(topic==='lab/sim/active'){S.simMixed=text==='1'&&src==='live';if(text==='1')S.simEver=true;return;}
   let j=null;try{j=JSON.parse(text);}catch(e){}
@@ -73,7 +74,7 @@ function ingest(topic,text,src,retained){S.count++;_c++;S.lastTs=now();const fre
       for(const k of['sensing','health']){const v=pend.get(id+'/'+k);if(v!=null){pend.delete(id+'/'+k);ingest('espectre/v1/devices/'+id+'/'+k,v,'pend');S.count--;S.log.pop();}}}
     if(kind==='motion'&&j){const t=now();if(fresh)mark('csi');n.last=+j.score;n.ts=t;n.score.push({t,v:+j.score});if(n.score.length>6000)n.score.shift();
       if(j.state!==n.state){n.state=j.state;if(j.state==='motion'){n.events.push({s:t,e:0,peak:+j.score});if(n.events.length>300)n.events.shift();feed(node(n.key).alias+': 움직임 시작','motion');trigger({t:'motion',node:n.key});}
-        else{const ev=n.events[n.events.length-1];if(ev&&!ev.e){ev.e=t;feed(node(n.key).alias+': 움직임 끝 ('+((ev.e-ev.s)/1000).toFixed(1)+'초)','idle');}n.quietSince=t;n.quietFired=false;}}
+        else{const ev=n.events[n.events.length-1];if(ev&&!ev.e){ev.e=t;feed(node(n.key).alias+': 움직임 끝 ('+((ev.e-ev.s)/1000).toFixed(1)+'초)','idle');}n.quietSince=t;n.quietDone=null;}}
       else if(n.state==='motion'){const ev=n.events[n.events.length-1];if(ev&&+j.score>ev.peak)ev.peak=+j.score;}}
     else if(kind==='sensing'&&j){if(typeof j.threshold==='number')n.thr=j.threshold;n.detector=j.detector;n.calibrating=!!j.calibrating;}
     else if(kind==='health'){n.health=j&&j.status?String(j.status):text.slice(0,24);}
@@ -117,7 +118,7 @@ function hexRgb(h){return[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));}
 function trigger(ev){const t=now();for(const r of cfg.rules){if(!r.on||r.when.t!==ev.t)continue;
   if(ev.t==='motion'&&r.when.node!=='*'&&r.when.node!==ev.node)continue;
   if(ev.t==='enter'&&r.when.room!==ev.room)continue;
-  if(ev.t==='quiet'&&r.when.node!=='*'&&r.when.node!==ev.node)continue;
+  if(ev.t==='quiet'&&(ev.rule!==r.id||(r.when.node!=='*'&&r.when.node!==ev.node)))continue;
   if(t-r.last<3000)continue;r.last=t;r.fired++;run(r,ev);S.fires.unshift({t,name:r.name});if(S.fires.length>30)S.fires.pop();feed('자동화 실행: '+r.name,'rule');}}
 function run(r,ev){const a=r.then;if(a.t==='led'){publish(cfg.led.topic,JSON.stringify({on:true,bri:160,seg:[{col:[hexRgb(a.color)]}],_sec:a.sec}));}
   else if(a.t==='notify'){const m=noteOf(r,ev||{t:r.when.t,node:r.when.node,room:r.when.room});note(r.when.t,a.level||'alert',m[0],m[1]);}
@@ -133,7 +134,10 @@ function noteOf(r,ev){const alias=k=>{const n=k&&k!=='*'&&node(k);return n?n.ali
   if(ev.t==='motion'){const n=ev.node&&S.csi.get(ev.node.slice(4));return[alias(ev.node)+': 움직임','점수 '+(n&&n.last!=null?n.last.toFixed(2):'-')+(n&&n.thr!=null?' · 임계값 '+n.thr:'')];}
   if(ev.t==='enter'){const d=ev.dev&&S.devs.get(ev.dev);return[roomName(ev.room)+'에 들어옴',(d&&d.name)||(ev.dev?mask(ev.dev):'고정한 기기')];}
   const m=Math.round(((r.when&&r.when.sec)||0)/60);return[alias(ev.node)+': 조용함',(m>=1?m+'분':((r.when&&r.when.sec)||0)+'초')+' 동안 움직임이 없습니다'];}
-setInterval(()=>{const t=now();for(const n of S.csi.values()){if(n.state==='idle'&&n.quietSince&&!n.quietFired){for(const r of cfg.rules){if(r.on&&r.when.t==='quiet'&&t-n.quietSince>r.when.sec*1000){n.quietFired=true;trigger({t:'quiet',node:n.key});break;}}}}
+/* 조용함 규칙은 규칙마다 정한 시간이 따로 지나야 합니다. 1분 규칙이 울렸다고 5분 규칙까지 함께 울리면 안 됩니다. */
+function quietTick(){const t=now();for(const n of S.csi.values()){if(n.state!=='idle'||!n.quietSince)continue;const done=n.quietDone||(n.quietDone=new Set());
+    for(const r of cfg.rules){if(!r.on||r.when.t!=='quiet'||done.has(r.id)||t-n.quietSince<=r.when.sec*1000)continue;if(r.when.node!=='*'&&r.when.node!==n.key)continue;done.add(r.id);trigger({t:'quiet',node:n.key,rule:r.id});}}}
+setInterval(()=>{quietTick();const t=now();
   if(S.led.color&&t>S.led.until)S.led={color:null,until:0};},1000);
 
 /* ---- 검증 세션 ---- */
@@ -167,9 +171,11 @@ function replay(text,speed,cb){const rows=[];let head=null;for(const ln of Strin
 function report(){const L=['| 시작 | 노드 | 길이 | 정답 구간 | 감지 | 놓침 | 오탐 | 재현율 | 정답 출처 | 데이터 |','|---|---|---|---|---|---|---|---|---|---|'];
   for(const s of S.sessions){L.push('| '+new Date(s.start).toISOString().slice(0,19).replace('T',' ')+' | '+(s.alias||mask(s.node))+' | '+Math.round(s.dur)+'초 | '+s.labels+' | '+s.hits+' | '+s.miss+' | '+s.falses+' | '+(s.recall==null?'-':Math.round(s.recall*100)+'%')+' | '+(s.truth==='manual'?'버튼':s.truth==='sim'?'시뮬레이터':'PIR 입력')+' | '+(s.source==='live'&&!(s.sim??S.simEver)?'브로커 수신 (운영자 확인 필요)':'SIMULATED')+' |');}
   return L.join('\n');}
-function exportLog(){const sim=S.source!=='live'||S.simEver;if(!sim)mark('export');
-  const head={kind:'sentinel-lab-log',exported_at:new Date().toISOString(),data_source:S.source==='live'?(S.simEver?'broker_with_simulator':'broker'):S.source==='replay'?'replay':'built_in_simulator',verification:sim?'SIMULATED':'OPERATOR_TO_CONFIRM',messages:S.log.length,sessions:S.sessions,note:'식별자는 앞 4자만 남기고 가렸습니다.'};
+function exportLog(){const o=S.log.length?S.log[0].src:S.source==='live'?'live':S.source==='replay'?'replay':'sim'; // 지금 화면이 아니라 기록에 실제로 담긴 출처를 적습니다
+  const sim=o!=='live'||S.simEver||S.simMixed||S.log.some(l=>l.src!==o);if(!sim)mark('export');
+  const head={kind:'sentinel-lab-log',exported_at:new Date().toISOString(),data_source:o==='live'?(sim?'broker_with_simulator':'broker'):o==='replay'?'replay':'built_in_simulator',verification:sim?'SIMULATED':'OPERATOR_TO_CONFIRM',messages:S.log.length,
+    sessions:S.sessions.map(x=>Object.assign({},x,{node:mask(x.node)})),note:'식별자는 앞 4자만 남기고 가렸습니다.'};
   return JSON.stringify(head)+'\n'+S.log.map(l=>JSON.stringify(l)).join('\n')+'\n';}
 return{S,get cfg(){return cfg;},canLive,now,clamp,mask,save,reset,node,roomName,ingest,publish,connect,disconnect,demo,on:f=>subs.push(f),feed,
-  sessionStart,sessionStop,sessionStats,label,exportLog,replay,stopReplay,report,mark,clearBring,hexRgb,ROOM_KO,note,passCheck,NOTIFY};
+  sessionStart,sessionStop,sessionStats,label,exportLog,replay,stopReplay,report,mark,clearBring,hexRgb,ROOM_KO,note,passCheck,NOTIFY,quietTick};
 })();

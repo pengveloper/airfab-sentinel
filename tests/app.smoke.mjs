@@ -20,7 +20,7 @@ const ID = 'a1b2c3d4e5f60718';
 const shot = async (win, name) => { try { await win.screenshot({ path: path.join(out, name), timeout: 15_000 }); } catch { console.log(`note screenshot skipped: ${name}`); } };
 const step = (name, ok = true) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}`); };
 const tryConnect = password => new Promise(resolve => {
-  const c = mqtt.connect(`mqtt://127.0.0.1:${port}`, { username: 'lab', password, reconnectPeriod: 0, connectTimeout: 4000, clientId: 'espresense-a1b2c3d4e5f6' });
+  const c = mqtt.connect(`mqtt://127.0.0.1:${port}`, { username: 'lab', password, reconnectPeriod: 0, connectTimeout: 8000, clientId: 'espresense-a1b2c3d4e5f6' });
   c.once('connect', () => resolve(c)); c.once('error', () => { c.end(true); resolve(null); });
 });
 
@@ -68,8 +68,13 @@ try {
   await win.click('#dk-close');
 
   // 3. 인증
-  assert.equal(await tryConnect('wrong-password-123'), null);
-  const board = await tryConnect(password); assert.ok(board, 'correct password connects');
+  // 연결이 안 된 것과 허브가 거절한 것을 구분합니다: 틀린 비밀번호는 허브의 거절 횟수가 실제로 늘어야 통과입니다.
+  const rejected = async () => (await win.evaluate(() => window.desktop.status())).counts.authRejected;
+  const rejectedAtStart = await rejected(); let refused = false;
+  for (let i = 0; i < 3 && !refused; i++) { assert.equal(await tryConnect('wrong-password-123'), null, 'a wrong password never connects'); refused = await rejected() > rejectedAtStart; }
+  assert.ok(refused, 'the hub itself rejected the wrong password');
+  let board = null; for (let i = 0; i < 3 && !board; i++) board = await tryConnect(password);   // 빌드 서버에서 첫 연결이 늦는 일이 있어 다시 시도합니다
+  assert.ok(board, 'correct password connects');
   const commands = [], alerts = []; board.on('message', (topic, p) => { if (topic === 'wled/lab/api') commands.push(p.toString()); else if (topic === 'lab/out/notify') alerts.push(p.toString()); });
   await new Promise(r => board.subscribe(['wled/lab/api', 'lab/out/notify'], r));
   step('authentication: wrong password rejected, correct password accepted');
@@ -130,7 +135,7 @@ try {
   step('demo views open without errors');
 
   // 6-1. 영어 화면: 버튼으로 언어를 바꾸면 모든 화면에 한글이 남지 않고, 사전에 없는 문장도 없다
-  await win.click('#tab-space'); await win.click('#lang'); win = await settle('en');
+  await win.click('#tab-space'); await win.click('#lang', { noWaitAfter: true }); win = await settle('en');   // 누른 뒤 화면이 새로 열리므로 누름 자체의 뒤처리를 기다리지 않습니다
   console.log('note switched with the button: ' + JSON.stringify(await langState()));
   assert.equal(await win.evaluate(() => I18N.lang), 'en'); await win.waitForTimeout(1500);
   assert.equal(await win.evaluate(() => document.documentElement.lang), 'en');

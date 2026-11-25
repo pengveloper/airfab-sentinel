@@ -46,8 +46,8 @@ const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LAN
 let failed = false;
 try {
   let win = await app.firstWindow(); const ui = drive(() => win);
-  await ui.until(() => document.readyState !== 'loading');
-  const ready = () => ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 20_000);
+  await ui.until(() => document.readyState !== 'loading', null, 90_000);   // 빌드 서버에서는 첫 화면(3D 장면 준비 포함)이 뜨는 데 오래 걸릴 때가 있습니다
+  const ready = () => ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 90_000);
   // 언어를 바꾸면 화면이 새로 열립니다. Windows에서는 그 뒤로 처음 잡아 둔 창 객체의 기다림이 끝나지 않는 일이 있어,
   // 열려 있는 창을 직접 물어 원하는 언어로 돌아온 창을 다시 잡습니다.
   const settle = async lang => { const end = Date.now() + 45_000;
@@ -174,8 +174,8 @@ async function english() {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-en-'));
   const app2 = await _electron.launch({ args: [...common, '--lang=en-US', root, `--user-data-dir=${profile}`], cwd: root, env: { ...process.env, LANGUAGE: 'en', SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
   try {
-    let win = await app2.firstWindow(); const ui = drive(() => win); await ui.until(() => document.readyState !== 'loading');
-    await ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 20_000);
+    let win = await app2.firstWindow(); const ui = drive(() => win); await ui.until(() => document.readyState !== 'loading', null, 90_000);   // 빌드 서버에서는 첫 화면(3D 장면 준비 포함)이 뜨는 데 오래 걸릴 때가 있습니다
+    await ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 90_000);
     const state = w => w.evaluate(() => ({ lang: I18N.lang, doc: document.documentElement.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable'; } })(), search: location.search }));
     const st = await state(win); assert.equal(st.lang, 'en', 'an English system starts in English: ' + JSON.stringify(st)); assert.equal(st.doc, 'en');
     const leftover = () => win.evaluate(() => { const H = /[\u3131-\u318e\uac00-\ud7a3]/, seen = [];

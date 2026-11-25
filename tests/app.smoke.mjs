@@ -14,12 +14,26 @@ const out = path.join(root, 'dist', 'smoke'); fs.mkdirSync(out, { recursive: tru
 const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-'));
 const port = await new Promise(r => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); });
 const linux = process.platform === 'linux';
-// Linux에서는 소프트웨어 WebGL을 켜서 3D 장면까지 돌립니다. Windows 빌드 서버에는 GPU가 없고, 거기서 3D를 소프트웨어로 그리면
-// 화면 그리기가 밀려 창을 다루는 동작이 가끔 끝나지 않았습니다. 그래서 Windows에서는 WebGL을 강제로 켜지 않고,
-// WebGL이 없을 때 앱이 쓰는 평면 그림으로 돌립니다. Windows 실행이 확인하려는 것은 DPAPI, 창 격리, 패키징입니다.
-const common = linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : [];
+const common = [...(linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader'] : []), '--enable-unsafe-swiftshader'];
 const args = [...common, '--lang=ko', root, `--user-data-dir=${userData}`];   // 화면 언어는 기기 언어를 따르므로, 한국어 문장을 확인하는 첫 실행은 한국어로 띄웁니다
 const ID = 'a1b2c3d4e5f60718';
+// 창을 다루는 동작은 모두 창 안에서 직접 실행합니다.
+// Windows 빌드 서버에서는 시험 도구가 창이 열리는 순간을 놓치는 일이 있었고, 그러면 도구의 누르기와 기다림이 창은 멀쩡한데도 끝나지 않았습니다.
+// 창 안에서 식을 실행하는 길은 그때도 동작했으므로, 조건 기다리기와 누르기를 그 길 위에 다시 만들었습니다.
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const drive = page => ({
+  async until(fn, arg, timeout = 20_000) { const end = Date.now() + timeout; let last = null;
+    for (;;) { try { const v = await page().evaluate(fn, arg); if (v) return v; } catch (e) { last = e; }
+      if (Date.now() > end) throw new Error('timed out waiting for ' + String(fn).replace(/\s+/g, ' ').slice(0, 160) + (arg == null ? '' : ' with ' + JSON.stringify(arg)) + (last ? ' (' + String(last.message).slice(0, 120) + ')' : ''));
+      await sleep(150); } },
+  present(sel, timeout) { return this.until(q => !!document.querySelector(q), sel, timeout); },
+  // 누르기 전에, 그 자리에 정말 그 요소가 보이고 다른 것에 가려지지 않았는지 확인합니다
+  async click(sel) {
+    await this.until(q => { const e = document.querySelector(q); if (!e || e.disabled) return false; e.scrollIntoView({ block: 'nearest' }); const b = e.getBoundingClientRect(); if (!b.width || !b.height) return false;
+      const top = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2); return top === e || e.contains(top); }, sel, 30_000);
+    await page().evaluate(q => { document.querySelector(q).click(); }, sel).catch(() => { /* 누르면 화면이 새로 열리는 버튼 */ }); },
+  key(k) { return page().evaluate(key => { (document.activeElement || document.body).dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true })); }, k); },
+});
 // 화면 기록은 참고용입니다. GPU가 없는 빌드 서버에서는 3D 장면 캡처가 느릴 수 있어, 실패해도 시험 결과에는 넣지 않습니다.
 const shot = async (win, name) => { try { await win.screenshot({ path: path.join(out, name), timeout: 15_000 }); } catch { console.log(`note screenshot skipped: ${name}`); } };
 const step = (name, ok = true) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}`); };
@@ -31,9 +45,9 @@ const tryConnect = password => new Promise(resolve => {
 const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LANGUAGE: 'ko', SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
 let failed = false;
 try {
-  let win = await app.firstWindow();
-  await win.waitForLoadState('domcontentloaded');
-  const ready = () => win.waitForFunction(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, { timeout: 20_000, polling: 100 });
+  let win = await app.firstWindow(); const ui = drive(() => win);
+  await ui.until(() => document.readyState !== 'loading');
+  const ready = () => ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 20_000);
   // 언어를 바꾸면 화면이 새로 열립니다. Windows에서는 그 뒤로 처음 잡아 둔 창 객체의 기다림이 끝나지 않는 일이 있어,
   // 열려 있는 창을 직접 물어 원하는 언어로 돌아온 창을 다시 잡습니다.
   const settle = async lang => { const end = Date.now() + 45_000;
@@ -58,19 +72,19 @@ try {
   step('window is isolated: no Node, fixed bridge, CSP header, no path escape');
 
   // 2. 첫 실행: 비밀번호를 정하기 전에는 브로커가 꺼져 있다
-  await win.waitForSelector('#setup:not([hidden])', { state: 'attached', timeout: 20_000 });
+  await ui.present('#setup:not([hidden])', 20_000);
   assert.equal((await win.evaluate(() => window.desktop.status())).running, false);
   assert.equal(await tryConnect('anything-at-all'), null);
-  await win.waitForTimeout(2600); await shot(win, '01-setup.png');
-  await win.click('#su-gen'); await win.waitForFunction(() => document.querySelector('#su-pass').value.length === 20, null, { polling: 100 });
-  const password = await win.inputValue('#su-pass');
-  await win.click('#su-go');
-  await win.waitForFunction(() => window.Desk.status() && window.Desk.status().running, null, { timeout: 15_000, polling: 100 });
-  await win.waitForSelector('#desk:not([hidden])'); await win.waitForTimeout(600); await shot(win, '02-broker.png');
+  await sleep(2600); await shot(win, '01-setup.png');
+  await ui.click('#su-gen'); await ui.until(() => document.querySelector('#su-pass').value.length === 20);
+  const password = await win.evaluate(() => document.querySelector('#su-pass').value);
+  await ui.click('#su-go');
+  await ui.until(() => window.Desk.status() && window.Desk.status().running, null, 15_000);
+  await ui.present('#desk:not([hidden])'); await sleep(600); await shot(win, '02-broker.png');
   const saved = fs.readFileSync(path.join(userData, 'settings.json'), 'utf8');
   assert.ok(!saved.includes(password), 'the password must not be stored in clear text');
   step('first run: broker starts only after a password is set, and the password is not stored in clear text');
-  await win.click('#dk-close');
+  await ui.click('#dk-close');
 
   // 3. 인증
   // 연결이 안 된 것과 허브가 거절한 것을 구분합니다: 틀린 비밀번호는 허브의 거절 횟수가 실제로 늘어야 통과입니다.
@@ -91,8 +105,8 @@ try {
   step(`top bar fits a ${fit.width}px wide window`);
 
   // 4. 보드 메시지가 화면까지
-  await win.waitForFunction(() => Lab.S.source === 'live', null, { timeout: 10_000, polling: 100 });
-  await win.waitForSelector('#sp-empty:not([hidden])', { state: 'attached', timeout: 20_000 });
+  await ui.until(() => Lab.S.source === 'live', null, 10_000);
+  await ui.present('#sp-empty:not([hidden])', 20_000);
   const box = await win.evaluate(() => { const r = document.querySelector('#sp-empty').getBoundingClientRect(), v = document.querySelector('#v-space').getBoundingClientRect(); return { empty: [Math.round(r.width), Math.round(r.height)], view: [Math.round(v.width), Math.round(v.height)], hash: location.hash, visibility: document.visibilityState }; });
   console.log('note waiting-state layout:', JSON.stringify(box));
   assert.ok(box.empty[0] > 0 && box.empty[1] > 0, 'the waiting-for-boards message must have a size');
@@ -102,11 +116,11 @@ try {
   let t = 0; const timer = setInterval(() => { t += 0.2; const burst = (t % 6) > 3;
     board.publish(`espectre/v1/devices/${ID}/motion`, JSON.stringify({ timestamp_ms: Math.round(t * 1000), state: burst ? 'motion' : 'idle', score: burst ? 1.2 + Math.random() * 0.2 : 0.1 + Math.random() * 0.05 }));
     ['office', 'living', 'entry'].forEach((r, i) => board.publish(`espresense/devices/tag1/${r}`, JSON.stringify({ id: 'tag1', name: 'tag', distance: 2 + i, rssi: -60 }))); }, 200);
-  await win.waitForFunction(() => Lab.S.csi.size === 1 && Lab.S.rooms.size === 3 && Lab.cfg.bring.csi && Lab.cfg.bring.rooms && Lab.cfg.bring.rooms.list.length === 3, null, { timeout: 15_000, polling: 100 });
+  await ui.until(() => Lab.S.csi.size === 1 && Lab.S.rooms.size === 3 && Lab.cfg.bring.csi && Lab.cfg.bring.rooms && Lab.cfg.bring.rooms.list.length === 3, null, 15_000);
   const seen = await win.evaluate(() => ({ source: Lab.S.source, sim: Lab.S.simEver, bring: Object.keys(Lab.cfg.bring).sort(), clients: window.Desk.status().clients }));
   assert.equal(seen.source, 'live'); assert.equal(seen.sim, false); assert.deepEqual(seen.bring, ['broker', 'csi', 'rooms']);
   assert.equal(seen.clients[0].id, 'espres…');
-  await win.waitForTimeout(5000); await shot(win, '04-live.png');
+  await sleep(5000); await shot(win, '04-live.png');
   step('board messages reach the window; first-measurement steps fill in; client id is masked');
 
   // 5. 규칙이 보낸 명령이 기기에게 도달
@@ -122,25 +136,25 @@ try {
   assert.ok(!alerts[0].includes(ID), 'the alert carries no full device id');
   const before = alerts.length; board.publish('lab/out/notify', JSON.stringify({ v: 1, title: 'forged' })); await new Promise(r => setTimeout(r, 600));
   assert.ok(!alerts.slice(before).some(a => a.includes('forged')), 'a device cannot publish an alert');
-  await win.click('#tab-rules'); await win.waitForFunction(() => /움직임$/.test(document.querySelector('#ntl-title').textContent), null, { timeout: 5000, polling: 100 });   // 자동화 화면의 미리보기에도 같은 문장이 뜬다
-  await win.evaluate(() => Glass.open()); await win.waitForTimeout(500);
+  await ui.click('#tab-rules'); await ui.until(() => /움직임$/.test(document.querySelector('#ntl-title').textContent), null, 5000);   // 자동화 화면의 미리보기에도 같은 문장이 뜬다
+  await win.evaluate(() => Glass.open()); await sleep(500);
   const glass = await win.evaluate(() => ({ open: Glass.isOpen(), state: document.querySelector('#gl-state').textContent, src: document.querySelector('#gl-src').textContent }));
   assert.equal(glass.open, true); assert.ok(['움직임', '조용함'].includes(glass.state)); assert.equal(glass.src, '실측');
-  await shot(win, '04-glass.png'); await win.keyboard.press('Escape');
-  await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000, polling: 100 });
+  await shot(win, '04-glass.png'); await ui.key('Escape');
+  await ui.until(() => !Glass.isOpen(), null, 5000);
   step('alerts reach a subscriber as v1 JSON, cannot be forged by a device, and the glasses screen opens and closes');
   clearInterval(timer); board.end(true);
 
   // 6. 화면 기록 (데모)
-  await win.click('#openConn'); await win.click('#dk-demo'); await win.click('#tab-space'); await win.waitForTimeout(9000); await shot(win, '05-demo-space.png');
+  await ui.click('#openConn'); await ui.click('#dk-demo'); await ui.click('#tab-space'); await sleep(9000); await shot(win, '05-demo-space.png');
   assert.ok(await win.evaluate(() => document.querySelectorAll('#sp-feed li').length >= 3 && !document.querySelector('#v-space').hidden), 'the space view is showing its event list');
   const dim = await win.evaluate(async () => { let min = 1; for (let i = 0; i < 8; i++) { for (const li of [...document.querySelectorAll('#sp-feed li')].slice(1, 4)) min = Math.min(min, +getComputedStyle(li).opacity); await new Promise(r => setTimeout(r, 80)); } return min; });
   assert.equal(dim, 1, 'event list rows stay fully visible between updates');   // 같은 내용을 다시 그려 목록이 깜빡이던 문제의 재발 방지
-  for (const v of ['motion', 'presence', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(1200); await shot(win, `06-${v}.png`); }
+  for (const v of ['motion', 'presence', 'rules', 'nodes', 'evidence']) { await ui.click('#tab-' + v); await sleep(1200); await shot(win, `06-${v}.png`); }
   step('demo views open without errors');
   // 7. 창은 밖으로 나가지 못한다
-  await win.evaluate(() => { try { location.href = 'https://example.com/'; } catch (e) { /* blocked */ } }); await win.waitForTimeout(800);
-  assert.equal(win.url().startsWith('app://sentinel/'), true);
+  await win.evaluate(() => { try { location.href = 'https://example.com/'; } catch (e) { /* blocked */ } }); await sleep(800);
+  assert.equal((await win.evaluate(() => location.href)).startsWith('app://sentinel/'), true);
   assert.equal(await win.evaluate(() => window.open('https://example.com/') === null), true);
   assert.equal(app.windows().length, 1);
   step('navigation and new windows are blocked');
@@ -160,8 +174,8 @@ async function english() {
   const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-en-'));
   const app2 = await _electron.launch({ args: [...common, '--lang=en-US', root, `--user-data-dir=${profile}`], cwd: root, env: { ...process.env, LANGUAGE: 'en', SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
   try {
-    let win = await app2.firstWindow(); await win.waitForLoadState('domcontentloaded');
-    await win.waitForFunction(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, { timeout: 20_000, polling: 100 });
+    let win = await app2.firstWindow(); const ui = drive(() => win); await ui.until(() => document.readyState !== 'loading');
+    await ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 20_000);
     const state = w => w.evaluate(() => ({ lang: I18N.lang, doc: document.documentElement.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable'; } })(), search: location.search }));
     const st = await state(win); assert.equal(st.lang, 'en', 'an English system starts in English: ' + JSON.stringify(st)); assert.equal(st.doc, 'en');
     const leftover = () => win.evaluate(() => { const H = /[\u3131-\u318e\uac00-\ud7a3]/, seen = [];
@@ -170,16 +184,16 @@ async function english() {
       for (const el of document.querySelectorAll('[title],[aria-label],[placeholder],[alt]')) if (!el.closest('.lang')) for (const a of ['title', 'aria-label', 'placeholder', 'alt']) { const v = el.getAttribute(a); if (v && H.test(v)) seen.push('@' + a + ' ' + v.slice(0, 50)); }
       return seen; });
     const korean = (await leftover()).map(t => 'first run: ' + t); await shot(win, '07-en-first-run.png');
-    await win.click('#su-demo'); await win.waitForTimeout(4000);
-    for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
-    await win.evaluate(() => Glass.open()); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.evaluate(() => Glass.close());
-    await win.click('#openConn'); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'broker panel: ' + t)); await win.click('#dk-close');
+    await ui.click('#su-demo'); await sleep(4000);
+    for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'nodes', 'evidence']) { await ui.click('#tab-' + v); await sleep(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
+    await win.evaluate(() => Glass.open()); await sleep(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.evaluate(() => Glass.close());
+    await ui.click('#openConn'); await sleep(500); korean.push(...(await leftover()).map(t => 'broker panel: ' + t)); await ui.click('#dk-close');
     const report = await win.evaluate(() => Report.build().replace(/<style[\s\S]*?<\/style>/, ''));
     assert.deepEqual(korean, [], 'no Korean text is left on any English screen');
     assert.ok(!/[\u3131-\u318e\uac00-\ud7a3]/.test(report), 'the English report holds no Korean text');
     assert.deepEqual(await win.evaluate(() => [...I18N.missing]), [], 'every sentence shown has a translation');
     // 빈 표의 안내 줄은 제목 줄 아래, 표 안에 있어야 한다 (다른 화면의 스타일이 새어 들어와 제목 줄을 가리던 문제의 재발 방지)
-    await win.click('#tab-evidence'); await win.waitForTimeout(600);
+    await ui.click('#tab-evidence'); await sleep(600);
     const emptyRow = await win.evaluate(() => { const td = document.querySelector('#ev-sessions tr.empty td'), th = document.querySelector('#ev-sessions th'); if (!td) return null; const a = td.getBoundingClientRect(), b = th.getBoundingClientRect(); return { left: a.left - b.left, below: a.top >= b.bottom - 1 }; });
     assert.ok(emptyRow && Math.abs(emptyRow.left) < 2 && emptyRow.below, 'the empty-table row sits under its header: ' + JSON.stringify(emptyRow));
     step('English: no Korean text on the first-run screen, any view, the glasses screen, the broker panel or the report');

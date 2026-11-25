@@ -14,7 +14,8 @@ const out = path.join(root, 'dist', 'smoke'); fs.mkdirSync(out, { recursive: tru
 const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-'));
 const port = await new Promise(r => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); });
 const linux = process.platform === 'linux';
-const args = [...(linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader'] : []), '--enable-unsafe-swiftshader', root, `--user-data-dir=${userData}`];
+const common = [...(linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader'] : []), '--enable-unsafe-swiftshader'];
+const args = [...common, '--lang=ko', root, `--user-data-dir=${userData}`];   // 화면 언어는 기기 언어를 따르므로, 한국어 문장을 확인하는 첫 실행은 한국어로 띄웁니다
 const ID = 'a1b2c3d4e5f60718';
 // 화면 기록은 참고용입니다. GPU가 없는 빌드 서버에서는 3D 장면 캡처가 느릴 수 있어, 실패해도 시험 결과에는 넣지 않습니다.
 const shot = async (win, name) => { try { await win.screenshot({ path: path.join(out, name), timeout: 15_000 }); } catch { console.log(`note screenshot skipped: ${name}`); } };
@@ -24,7 +25,7 @@ const tryConnect = password => new Promise(resolve => {
   c.once('connect', () => resolve(c)); c.once('error', () => { c.end(true); resolve(null); });
 });
 
-const app = await _electron.launch({ args, cwd: root, env: { ...process.env, SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
+const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LANGUAGE: 'ko', SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
 let failed = false;
 try {
   let win = await app.firstWindow();
@@ -36,7 +37,7 @@ try {
     for (;;) { for (const w of app.windows()) { try { if (await w.evaluate(l => !!(window.I18N && I18N.lang === l && window.Lab && window.Desk && window.Desk.status()), lang)) return w; } catch { /* 다시 여는 중 */ } }
       if (Date.now() > end) throw new Error('the window did not come back in ' + lang); await new Promise(r => setTimeout(r, 300)); } };
   await ready();
-  // 화면 언어는 기기 언어를 따릅니다. 아래 단계는 한국어 문장을 확인하므로, 영어로 뜬 환경(빌드 서버)에서는 먼저 한국어로 바꿉니다.
+  // --lang이 듣지 않는 환경에서는 화면 안에서 한국어로 바꿉니다.
   const langState = () => win.evaluate(() => ({ lang: window.I18N && I18N.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable: ' + e.name; } })(), system: navigator.language, search: location.search }));
   if ((await langState()).lang !== 'ko') {
     await win.evaluate(() => { I18N.set('ko'); }).catch(() => {}); win = await settle('ko');
@@ -133,29 +134,6 @@ try {
   assert.equal(dim, 1, 'event list rows stay fully visible between updates');   // 같은 내용을 다시 그려 목록이 깜빡이던 문제의 재발 방지
   for (const v of ['motion', 'presence', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(1200); await shot(win, `06-${v}.png`); }
   step('demo views open without errors');
-
-  // 6-1. 영어 화면: 버튼으로 언어를 바꾸면 모든 화면에 한글이 남지 않고, 사전에 없는 문장도 없다
-  await win.click('#tab-space'); await win.click('#lang', { noWaitAfter: true }); win = await settle('en');   // 누른 뒤 화면이 새로 열리므로 누름 자체의 뒤처리를 기다리지 않습니다
-  console.log('note switched with the button: ' + JSON.stringify(await langState()));
-  assert.equal(await win.evaluate(() => I18N.lang), 'en'); await win.waitForTimeout(1500);
-  assert.equal(await win.evaluate(() => document.documentElement.lang), 'en');
-  await win.click('#openConn'); await win.click('#dk-demo'); await win.waitForTimeout(4000);
-  const leftover = () => win.evaluate(() => { const H = /[\u3131-\u318e\uac00-\ud7a3]/, seen = [];
-    const w = document.createTreeWalker(document.body, 4, { acceptNode: n => /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName) || n.parentNode.closest('.lang') ? 2 : 1 });
-    for (let n; (n = w.nextNode());) if (H.test(n.nodeValue)) seen.push(n.nodeValue.trim().slice(0, 60));
-    for (const el of document.querySelectorAll('[title],[aria-label],[placeholder],[alt]')) if (!el.closest('.lang')) for (const a of ['title', 'aria-label', 'placeholder', 'alt']) { const v = el.getAttribute(a); if (v && H.test(v)) seen.push('@' + a + ' ' + v.slice(0, 50)); }
-    return seen; });
-  const korean = [];
-  for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
-  await win.evaluate(() => Glass.open()); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.keyboard.press('Escape'); await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000, polling: 100 });
-  const report = await win.evaluate(() => Report.build().replace(/<style[\s\S]*?<\/style>/, ''));
-  assert.deepEqual(korean, [], 'no Korean text is left on any English screen');
-  assert.ok(!/[\u3131-\u318e\uac00-\ud7a3]/.test(report), 'the English report holds no Korean text');
-  assert.deepEqual(await win.evaluate(() => [...I18N.missing]), [], 'every sentence shown has a translation');
-  // 빈 표의 안내 줄은 제목 줄 아래, 표 안에 있어야 한다 (다른 화면의 스타일이 새어 들어와 제목 줄을 가리던 문제의 재발 방지)
-  const emptyRow = await win.evaluate(() => { const td = document.querySelector('#ev-sessions tr.empty td'), th = document.querySelector('#ev-sessions th'); if (!td) return null; const a = td.getBoundingClientRect(), b = th.getBoundingClientRect(); return { left: a.left - b.left, below: a.top >= b.bottom - 1 }; });
-  assert.ok(emptyRow && Math.abs(emptyRow.left) < 2 && emptyRow.below, 'the empty-table row sits under its header: ' + JSON.stringify(emptyRow));
-  step('English: switching language leaves no Korean text on any screen or in the report');
   // 7. 창은 밖으로 나가지 못한다
   await win.evaluate(() => { try { location.href = 'https://example.com/'; } catch (e) { /* blocked */ } }); await win.waitForTimeout(800);
   assert.equal(win.url().startsWith('app://sentinel/'), true);
@@ -170,4 +148,49 @@ try {
 await app.close().catch(() => {});
 await new Promise(r => setTimeout(r, 1000));
 try { fs.rmSync(userData, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch { /* 임시 폴더는 운영체제가 치웁니다 */ }
+
+// ---- 두 번째 실행: 영어. 새 프로필로 띄워 첫 실행 화면부터 영어인지 봅니다. ----
+// 화면 안에서 언어를 바꾸면 페이지가 새로 열리는데, Windows 빌드 서버에서는 그 뒤로 창을 다루는 기다림이 가끔 끝나지 않습니다.
+// 그래서 전체 화면 점검은 처음부터 영어로 띄운 창에서 하고, 언어 버튼은 맨 마지막에 눌러 결과만 확인합니다.
+async function english() {
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-en-'));
+  const app2 = await _electron.launch({ args: [...common, '--lang=en-US', root, `--user-data-dir=${profile}`], cwd: root, env: { ...process.env, LANGUAGE: 'en', SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
+  try {
+    let win = await app2.firstWindow(); await win.waitForLoadState('domcontentloaded');
+    await win.waitForFunction(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, { timeout: 20_000, polling: 100 });
+    const state = w => w.evaluate(() => ({ lang: I18N.lang, doc: document.documentElement.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable'; } })(), search: location.search }));
+    const st = await state(win); assert.equal(st.lang, 'en', 'an English system starts in English: ' + JSON.stringify(st)); assert.equal(st.doc, 'en');
+    const leftover = () => win.evaluate(() => { const H = /[\u3131-\u318e\uac00-\ud7a3]/, seen = [];
+      const w = document.createTreeWalker(document.body, 4, { acceptNode: n => /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName) || n.parentNode.closest('.lang') ? 2 : 1 });
+      for (let n; (n = w.nextNode());) if (H.test(n.nodeValue)) seen.push(n.nodeValue.trim().slice(0, 60));
+      for (const el of document.querySelectorAll('[title],[aria-label],[placeholder],[alt]')) if (!el.closest('.lang')) for (const a of ['title', 'aria-label', 'placeholder', 'alt']) { const v = el.getAttribute(a); if (v && H.test(v)) seen.push('@' + a + ' ' + v.slice(0, 50)); }
+      return seen; });
+    const korean = (await leftover()).map(t => 'first run: ' + t); await shot(win, '07-en-first-run.png');
+    await win.click('#su-demo'); await win.waitForTimeout(4000);
+    for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
+    await win.evaluate(() => Glass.open()); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.evaluate(() => Glass.close());
+    await win.click('#openConn'); await win.waitForTimeout(500); korean.push(...(await leftover()).map(t => 'broker panel: ' + t)); await win.click('#dk-close');
+    const report = await win.evaluate(() => Report.build().replace(/<style[\s\S]*?<\/style>/, ''));
+    assert.deepEqual(korean, [], 'no Korean text is left on any English screen');
+    assert.ok(!/[\u3131-\u318e\uac00-\ud7a3]/.test(report), 'the English report holds no Korean text');
+    assert.deepEqual(await win.evaluate(() => [...I18N.missing]), [], 'every sentence shown has a translation');
+    // 빈 표의 안내 줄은 제목 줄 아래, 표 안에 있어야 한다 (다른 화면의 스타일이 새어 들어와 제목 줄을 가리던 문제의 재발 방지)
+    await win.click('#tab-evidence'); await win.waitForTimeout(600);
+    const emptyRow = await win.evaluate(() => { const td = document.querySelector('#ev-sessions tr.empty td'), th = document.querySelector('#ev-sessions th'); if (!td) return null; const a = td.getBoundingClientRect(), b = th.getBoundingClientRect(); return { left: a.left - b.left, below: a.top >= b.bottom - 1 }; });
+    assert.ok(emptyRow && Math.abs(emptyRow.left) < 2 && emptyRow.below, 'the empty-table row sits under its header: ' + JSON.stringify(emptyRow));
+    step('English: no Korean text on the first-run screen, any view, the glasses screen, the broker panel or the report');
+
+    // 언어 버튼: 누르면 화면이 한국어로 다시 열리고, 선택이 저장되며, 주소에는 흔적이 남지 않는다
+    await win.evaluate(() => { document.querySelector('#lang').click(); }).catch(() => {});
+    let after = null; const end = Date.now() + 45_000;
+    while (!after && Date.now() < end) { for (const w of app2.windows()) { try { const x = await state(w); if (x.lang === 'ko') after = x; } catch { /* 다시 여는 중 */ } } if (!after) await new Promise(r => setTimeout(r, 300)); }
+    assert.ok(after, 'the window comes back in Korean after the language button');
+    assert.equal(after.saved, 'ko'); assert.equal(after.search, ''); assert.equal(after.doc, 'ko');
+    step('language button: the window reopens in the other language and the choice is saved');
+  } catch (e) { failed = true; console.error(e); try { await (await app2.firstWindow()).screenshot({ path: path.join(out, 'failure-en.png'), timeout: 10_000 }); } catch { /* ignore */ } }
+  await app2.close().catch(() => {});
+  await new Promise(r => setTimeout(r, 1000));
+  try { fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 300 }); } catch { /* 임시 폴더는 운영체제가 치웁니다 */ }
+}
+if (!failed) await english();
 process.exit(failed ? 1 : 0);

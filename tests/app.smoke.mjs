@@ -14,7 +14,10 @@ const out = path.join(root, 'dist', 'smoke'); fs.mkdirSync(out, { recursive: tru
 const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-'));
 const port = await new Promise(r => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); });
 const linux = process.platform === 'linux';
-const common = [...(linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader'] : []), '--enable-unsafe-swiftshader'];
+// Linux에서는 소프트웨어 WebGL을 켜서 3D 장면까지 돌립니다. Windows 빌드 서버에는 GPU가 없고, 거기서 3D를 소프트웨어로 그리면
+// 화면 그리기가 밀려 창을 다루는 동작이 가끔 끝나지 않았습니다. 그래서 Windows에서는 WebGL을 강제로 켜지 않고,
+// WebGL이 없을 때 앱이 쓰는 평면 그림으로 돌립니다. Windows 실행이 확인하려는 것은 DPAPI, 창 격리, 패키징입니다.
+const common = linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : [];
 const args = [...common, '--lang=ko', root, `--user-data-dir=${userData}`];   // 화면 언어는 기기 언어를 따르므로, 한국어 문장을 확인하는 첫 실행은 한국어로 띄웁니다
 const ID = 'a1b2c3d4e5f60718';
 // 화면 기록은 참고용입니다. GPU가 없는 빌드 서버에서는 3D 장면 캡처가 느릴 수 있어, 실패해도 시험 결과에는 넣지 않습니다.
@@ -45,6 +48,7 @@ try {
     assert.equal(st.lang, 'ko'); assert.equal(st.search, '', 'the language parameter is removed from the address once applied');
   }
 
+  console.log('note 3D scene: ' + (await win.evaluate(() => (window.Space && Space.ok) ? 'WebGL' : '2D fallback')));
   // 1. 창의 격리 상태
   const iso = await win.evaluate(async () => ({ url: location.href, require: typeof window.require, process: typeof window.process, bridge: Object.keys(window.desktop).sort(),
     csp: (await fetch('index.html')).headers.get('content-security-policy'), outside: await fetch('app://sentinel/../package.json').then(r => r.status, () => 0) }));

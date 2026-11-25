@@ -127,7 +127,10 @@ try {
   for (let i = 0; i < 100 && !commands.length; i++) await new Promise(r => setTimeout(r, 250));   // 규칙은 움직임이 시작될 때 실행됩니다
   const got = commands[0] || null;
   assert.ok(got && JSON.parse(got).seg, 'a rule command arrives as WLED JSON');
-  step('rule engine command is delivered to devices');
+  // 앱이 보낸 명령은 화면의 LED 표시와 기록에도 남아야 한다 (웹 콘솔에서 브로커가 되돌려 줄 때와 같게)
+  const led = await ui.until(() => Lab.S.led.color && Lab.S.log.some(l => l.topic === Lab.cfg.led.topic) ? { color: Lab.S.led.color, logged: Lab.S.log.filter(l => l.topic === Lab.cfg.led.topic).length } : null, null, 5000);
+  assert.equal(led.color.length, 3); assert.ok(led.logged >= 1);
+  step('rule engine command is delivered to devices and shows on the console LED and in the log');
 
   // 5-1. 알림: 구독한 기기(안경·휴대폰 앱 자리)에 정해진 꼴로 도착하고, 기기가 꾸며 낸 알림은 어디에도 가지 않는다
   for (let i = 0; i < 40 && !alerts.length; i++) await new Promise(r => setTimeout(r, 250));

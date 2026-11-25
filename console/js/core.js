@@ -107,8 +107,14 @@ function connect(url,user,pass,cb){if(!canLive){cb(L('이 페이지에서는 브
   client.on('error',e=>{if(S.source!=='live'&&client){try{client.end(true);}catch(x){}client=null;}if(!done){done=true;cb(L`연결하지 못했습니다: ${e&&e.message||L('알 수 없는 오류')}. 브로커가 켜져 있는지, 사용자 이름과 비밀번호가 맞는지 확인하세요.`);}});
   client.on('close',()=>{if(S.source==='live')S.linkDown=true;});client.on('connect',()=>{S.linkDown=false;});}
 /* 데스크톱 앱: MQTT.js 클라이언트와 같은 모양으로, 메인 프로세스의 브로커가 넘겨 주는 메시지를 받습니다. */
-function deskClient(){const h={},em=(e,...a)=>(h[e]||[]).slice().forEach(f=>f(...a)),D=window.desktop;let up=false,offM=null,offB=null;
-  const c={on(e,f){(h[e]||(h[e]=[])).push(f);return c;},subscribe(){},publish(t,p){D.publish(t,String(p));},end(){if(offM)offM();if(offB)offB();offM=offB=null;}};
+/* 토픽 필터 맞춤: MQTT의 + 는 한 단계, # 는 그 아래 전부 */
+function topicMatch(f,t){const a=f.split('/'),b=t.split('/');for(let i=0;i<a.length;i++){if(a[i]==='#')return true;if(i>=b.length||(a[i]!=='+'&&a[i]!==b[i]))return false;}return a.length===b.length;}
+function deskClient(){const h={},em=(e,...a)=>(h[e]||[]).slice().forEach(f=>f(...a)),D=window.desktop,subs=[];let up=false,offM=null,offB=null;
+  /* 내장 허브는 앱이 보낸 메시지를 기기 값으로 되돌려 보내지 않습니다. 보통의 브로커는 구독 중인 토픽이면 보낸 쪽에도 돌려주고,
+     콘솔은 그것을 받아 LED 표시와 기록을 갱신합니다. 같은 동작이 되도록, 허브가 받아들인 메시지 중 구독 중인 토픽은 여기서 돌려줍니다. */
+  const c={on(e,f){(h[e]||(h[e]=[])).push(f);return c;},subscribe(l){for(const f of[].concat(l))if(typeof f==='string'&&!subs.includes(f))subs.push(f);},
+    publish(t,p){const s=String(p);Promise.resolve(D.publish(t,s)).then(ok=>{if(ok&&up&&subs.some(f=>topicMatch(f,t)))em('message',t,s,{retain:false});},()=>{});},
+    end(){if(offM)offM();if(offB)offB();offM=offB=null;}};
   const state=s=>{if(s.running&&!up){up=true;em('connect');D.replayRetained().then(l=>l.forEach(m=>em('message',m.topic,m.payload,{retain:true})));}else if(!s.running&&up){up=false;em('close');}};
   offM=D.onMessage(m=>em('message',m.topic,m.payload,{retain:!!m.retain}));offB=D.onBroker(state);
   D.status().then(s=>{if(s.running)state(s);else em('error',new Error(s.error==='PORT_IN_USE'?L('1883 포트를 다른 프로그램이 쓰고 있습니다'):L('브로커가 꺼져 있습니다')));});return c;}
@@ -185,5 +191,5 @@ function exportLog(){const o=S.log.length?S.log[0].src:S.source==='live'?'live':
     sessions:S.sessions.map(x=>Object.assign({},x,{node:mask(x.node)})),note:L('식별자는 앞 4자만 남기고 가렸습니다.')};
   return JSON.stringify(head)+'\n'+S.log.map(l=>JSON.stringify(l)).join('\n')+'\n';}
 return{S,get cfg(){return cfg;},canLive,now,clamp,mask,save,reset,node,roomName,ingest,publish,connect,disconnect,demo,on:f=>subs.push(f),feed,
-  sessionStart,sessionStop,sessionStats,label,exportLog,replay,stopReplay,report,mark,clearBring,hexRgb,ROOM_KO,note,passCheck,NOTIFY,quietTick,ruleName};
+  sessionStart,sessionStop,sessionStats,label,exportLog,replay,stopReplay,report,mark,clearBring,hexRgb,ROOM_KO,note,passCheck,NOTIFY,quietTick,ruleName,topicMatch};
 })();

@@ -118,7 +118,7 @@ None of these firmwares is included or modified here. Each keeps its own license
 | Item | Status |
 |---|---|
 | Console views, PIR ground truth, replay, report, presentation mode, alert preview, glasses screen | Checked with the built-in simulator (SIMULATED) |
-| Data layer: masking, detection intervals, session statistics, trilateration, retained-message handling, rules | 18 automated tests pass (SOFTWARE_VERIFIED) |
+| Data layer: masking, detection intervals, session statistics, trilateration, retained-message handling, rules | 19 automated tests pass (SOFTWARE_VERIFIED) |
 | Embedded hub: private addresses only, authentication, login throttling, reserved and app-only topics, size limits | 10 automated tests over real TCP sockets pass (SOFTWARE_VERIFIED) |
 | Desktop app: window isolation, first run, password storage, message flow, rule delivery, alert delivery, navigation lock | Smoke test of the real app passes on Linux; packaged build starts (SOFTWARE_VERIFIED) |
 | Windows build, DPAPI path, MSIX packaging, Defender scan | Passes in GitHub Actions on `windows-latest` (EVD-P1-011); see the latest run |
@@ -133,7 +133,7 @@ The evidence table is in [evidence/EVIDENCE-P1.md](evidence/EVIDENCE-P1.md).
 ## Tests
 
 ```sh
-npm test            # data layer (T-CON-001..018), hub (T-HUB-001..010), language (T-I18N-001..004)
+npm test            # data layer (T-CON-001..019), hub (T-HUB-001..010), language (T-I18N-001..004)
 npm run test:app    # starts the real app: isolation, first run, auth, message flow, alerts, English
 ```
 

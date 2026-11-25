@@ -251,3 +251,12 @@ test('T-CON-018 규칙 이름은 저장한 글자가 아니라 규칙의 내용�
   assert.equal(en.ruleName(en.cfg.rules[0]), 'When it is quiet for 1 min, publish to my/topic');
   assert.equal(en.node('cam').alias, 'Camera'); assert.equal(en.node('led').alias, '책상 조명'); assert.equal(ko.node('cam').alias, '카메라');
 });
+
+test('T-CON-019 토픽 필터 맞춤: 데스크톱에서 앱이 보낸 메시지를 구독 중인 토픽에만 돌려줄 때 쓴다', () => {
+  const { Lab } = boot();
+  const m = Lab.topicMatch;
+  assert.equal(m('wled/lab/api', 'wled/lab/api'), true); assert.equal(m('wled/lab/api', 'wled/lab/api/x'), false);
+  assert.equal(m('espresense/devices/#', 'espresense/devices/a/office'), true); assert.equal(m('espresense/devices/#', 'espresense/rooms/office'), false);
+  assert.equal(m('espectre/v1/devices/+/motion', 'espectre/v1/devices/abc/motion'), true); assert.equal(m('espectre/v1/devices/+/motion', 'espectre/v1/devices/abc/health'), false);
+  assert.equal(m('espresense/rooms/+/+', 'espresense/rooms/office'), false); assert.equal(m('lab/sim/active', 'lab/out/notify'), false);
+});

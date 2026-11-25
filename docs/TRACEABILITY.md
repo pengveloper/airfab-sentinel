@@ -35,6 +35,7 @@ Status words: SIMULATED, SOFTWARE_VERIFIED, HARDWARE_VERIFIED, OPERATOR_REQUIRED
 | REQ-SL-029 | The language follows the address, then the saved choice, then the system language, and can be switched from the top bar and the first-run screen. | T-I18N-003, app smoke test, English step | EVD-P1-017, EVD-P1-018 | SOFTWARE_VERIFIED |
 | REQ-SL-030 | Rule names, alerts, the exported log note and default node names follow the language. Names the user typed are left alone. | T-CON-017, T-CON-018, T-I18N-004 | EVD-P1-017 | SOFTWARE_VERIFIED |
 | REQ-SL-031 | In English no Korean text is left on any screen, in the glasses screen or in the report. | app smoke test, English step | EVD-P1-018 | SOFTWARE_VERIFIED |
+| REQ-SL-032 | In the desktop app, a command the app publishes on a topic the console subscribes to (such as the LED topic) also updates the console and the log, as it does with an external broker. | T-CON-019, app smoke test, rule step | EVD-P1-019 | SOFTWARE_VERIFIED |
 | REQ-SL-025 | Alerts are shown on real glasses or in a phone app. | a receiver app ([NOTIFY.md](NOTIFY.md)) | EVD-P1-015 | OPERATOR_REQUIRED (no receiver built yet) |
 
 Hardware results are added only with the board, firmware version, operator and time recorded.

@@ -4,6 +4,8 @@ A desktop app for trying open-source ESP32 sensing firmware side by side. It run
 hub for your boards, shows what they report in one console, checks detections against
 ground truth, and keeps simulated data and real measurements strictly apart.
 
+**Try it in the browser:** [pengveloper.github.io/airfab-sentinel](https://pengveloper.github.io/airfab-sentinel/) (the built-in simulator; no board or install needed)
+
 한국어 문서: [README.ko.md](README.ko.md)
 
 ![3D room: a Wi-Fi sensing link with its Fresnel zone, the live motion score along the link, BLE nodes and tracked devices](docs/screenshots/en/space.webp)
@@ -88,8 +90,10 @@ The full comparison of channels, the Store steps and the antivirus notes are in
 
 ## Demo and privacy page
 
-The `pages` workflow publishes the simulator demo and the privacy policy to GitHub Pages once this
-repository is public: `https://pengveloper.github.io/airfab-sentinel/` and `/privacy/`. It has not run yet.
+The `pages` workflow publishes the simulator demo and the privacy policy to GitHub Pages on every
+push to `main`: [the demo](https://pengveloper.github.io/airfab-sentinel/) and
+[the privacy policy](https://pengveloper.github.io/airfab-sentinel/privacy/). In the browser the demo runs
+on the simulator only; connecting to boards needs the desktop app.
 
 ## Run it
 

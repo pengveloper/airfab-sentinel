@@ -19,6 +19,9 @@ export const LIMITS = Object.freeze({
 });
 
 const RESERVED = ['$', 'lab/console/'];
+// Topics under these prefixes carry what the app itself says (alerts for glasses and phones).
+// Devices may subscribe to them but never publish, so a device cannot forge an alert.
+const HUB_ONLY = ['lab/out/'];
 
 /** True for loopback, RFC 1918, link-local and unique-local addresses. */
 export function isPrivateAddress(addr) {
@@ -50,8 +53,9 @@ export const maskId = id => { const s = String(id || ''); return s.length > 6 ? 
 const sha = s => crypto.createHash('sha256').update(String(s)).digest();
 export const samePassword = (a, b) => a != null && b != null && crypto.timingSafeEqual(sha(a), sha(b));
 
-export function validTopic(t) {
-  return typeof t === 'string' && t.length > 0 && t.length <= LIMITS.maxTopic && !/[#+\u0000]/.test(t) && !RESERVED.some(p => t.startsWith(p));
+export function validTopic(t, fromApp = false) {
+  return typeof t === 'string' && t.length > 0 && t.length <= LIMITS.maxTopic && !/[#+\u0000]/.test(t) && !RESERVED.some(p => t.startsWith(p))
+    && (fromApp || !HUB_ONLY.some(p => t.startsWith(p)));
 }
 
 export class Hub extends EventEmitter {
@@ -145,7 +149,7 @@ export class Hub extends EventEmitter {
 
   /** Publish from the app (rule engine). Returns false when the topic or payload is refused. */
   publish(topic, payload) {
-    if (!this.running || !validTopic(topic) || typeof payload !== 'string' || payload.length > 8192) return false;
+    if (!this.running || !validTopic(topic, true) || typeof payload !== 'string' || payload.length > 8192) return false;
     this.aedes.publish({ cmd: 'publish', topic, payload: Buffer.from(payload, 'utf8'), qos: 0, retain: false, dup: false }, () => {});
     return true;
   }

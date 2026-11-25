@@ -44,7 +44,7 @@
         </div>
         <div class="hud empty" id="sp-empty" hidden><h2>보드의 첫 메시지를 기다리고 있습니다</h2><p>브로커는 켜져 있습니다. 보드에 펌웨어를 굽고 이 PC의 주소를 넣으면 이 공간에 나타납니다.</p><div class="row"><a class="btn primary" href="#nodes">첫 실측 순서 열기</a><button class="btn" type="button" id="sp-demo">데모로 둘러보기</button></div></div>
         <p class="hud hud-hint">끌어서 돌려 보세요</p>
-        <div class="hud hud-tr"><span class="chip" id="sp-src"></span><button class="btn" id="sp-present" type="button" aria-pressed="false">발표 모드</button></div>
+        <div class="hud hud-tr"><span class="chip" id="sp-src"></span><button class="btn" id="sp-glass" type="button">안경 화면</button><button class="btn" id="sp-present" type="button" aria-pressed="false">발표 모드</button></div>
       </div>
       <aside class="side" id="sp-cards" aria-label="노드 상태"></aside>
     </section>
@@ -126,6 +126,23 @@
     <!-- 자동화 -->
     <section class="view" id="v-rules" data-title="자동화" hidden>
       <div class="cols">
+       <div class="stack grow">
+        <div class="panel">
+          <div class="ph"><h2>바깥 화면 알림</h2><span class="kv" id="nt-count"></span></div>
+          <div class="nt">
+            <div class="lens" id="nt-lens">
+              <p class="gl-meta"><span id="ntl-src"></span><time id="ntl-time"></time></p>
+              <p class="gl-title" id="ntl-title"></p>
+              <p class="gl-body" id="ntl-body"></p>
+            </div>
+            <div class="nt-side">
+              <p class="muted">규칙이 울리거나 검증 세션이 진행되면 짧은 문장을 내보냅니다. 같은 망에서 이 토픽을 구독하는 안경·휴대폰 앱이 그대로 받습니다.</p>
+              <p class="nt-topic"><code id="nt-topic">lab/out/notify</code><button class="btn sm" type="button" id="nt-copy">토픽 복사</button></p>
+              <label class="inl" for="nt-session"><input type="checkbox" id="nt-session">검증 세션 안내도 보내기</label>
+              <div class="row"><button class="btn primary" type="button" id="nt-open">안경 화면 열기</button><button class="btn" type="button" id="nt-test">시험 알림 보내기</button></div>
+            </div>
+          </div>
+        </div>
         <div class="panel grow">
           <div class="ph"><h2>규칙</h2><span class="kv" id="ru-count"></span></div>
           <ul class="rules" id="ru-list"></ul>
@@ -134,13 +151,14 @@
             <div class="row">
               <label for="ru-when">언제<select id="ru-when"><option value="motion">움직임이 시작되면</option><option value="enter">고정한 기기가 방에 들어오면</option><option value="quiet">일정 시간 조용하면</option></select></label>
               <label for="ru-arg" id="ru-arg-l">대상<select id="ru-arg"></select></label>
-              <label for="ru-then">무엇을<select id="ru-then"><option value="led">LED 색 바꾸기</option><option value="publish">MQTT로 보내기</option></select></label>
+              <label for="ru-then">무엇을<select id="ru-then"><option value="led">LED 색 바꾸기</option><option value="notify">알림 보내기</option><option value="publish">MQTT로 보내기</option></select></label>
               <label for="ru-color" id="ru-color-l">색<input id="ru-color" type="color" value="#5fd3a2"></label>
-              <label for="ru-topic" id="ru-topic-l" hidden>토픽<input id="ru-topic" value="lab/notify"></label>
+              <label for="ru-topic" id="ru-topic-l" hidden>토픽<input id="ru-topic" value="lab/custom"></label>
               <button class="btn primary" type="submit">추가</button>
             </div>
           </form>
         </div>
+       </div>
         <div class="panel w360">
           <div class="ph"><h2>실행 기록</h2></div>
           <ol class="feed pad" id="ru-fires"></ol>
@@ -228,6 +246,18 @@
   </div>
 </div>
 
+<div class="glass" id="glass" role="dialog" aria-modal="true" aria-label="안경 화면" hidden>
+  <p class="gl-top"><span>Sentinel Lab</span><span id="gl-src"></span><time id="gl-clock"></time></p>
+  <div class="gl-mid">
+    <p class="gl-link" id="gl-link"></p>
+    <p class="gl-state" id="gl-state"></p>
+    <div class="gl-meter" id="gl-meter" hidden><i></i><b></b></div>
+    <p class="gl-num" id="gl-num"></p>
+  </div>
+  <p class="gl-session" id="gl-session" hidden></p>
+  <div class="gl-note" id="gl-note" aria-live="polite"><p class="gl-title" id="gl-title"></p><p class="gl-body" id="gl-body"></p><i id="gl-ttl"></i></div>
+  <p class="gl-ctl"><button class="btn sm" type="button" id="gl-mono" aria-pressed="false">단색으로 보기</button><button class="btn sm" type="button" id="gl-close">닫기</button></p>
+</div>
 <script src="vendor/three.min.js"></script>
 <script src="vendor/mqtt.min.js"></script>
 <script src="js/core.js"></script>
@@ -235,6 +265,7 @@
 <script src="js/sim.js"></script>
 <script src="js/space.js"></script>
 <script src="js/views.js"></script>
+<script src="js/glass.js"></script>
 <script src="js/app.js"></script>
 <script src="js/desktop.js"></script>
 </body>

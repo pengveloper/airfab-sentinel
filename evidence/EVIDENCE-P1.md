@@ -12,8 +12,11 @@
 | EVD-P1-008 | 데이터 계층 자동 시험 T-CON-001 ~ 010 통과 (식별자 가림, 감지 구간, 세션 통계, 위치 추정, PIR 정답, 보관 메시지, 규칙 발행) | SOFTWARE_VERIFIED | 2026-11-23 Node.js 22, `npm test`. 가짜 시계와 가짜 MQTT 클라이언트 사용 |
 | EVD-P1-009 | 내장 브로커 자동 시험 T-HUB-001 ~ 009 통과 (사설망만 수락, 인증, 반복 실패 차단, 예약 토픽과 큰 메시지 거절, 가린 상태 정보) | SOFTWARE_VERIFIED | 2026-11-24 Node.js 22, `npm test`. 실제 TCP 소켓 사용 |
 | EVD-P1-010 | 데스크톱 앱 연기 시험 7단계 통과 (창 격리, 첫 실행, 비밀번호 비평문 저장, 인증, 메시지 수신, 규칙 명령 전달, 이동 차단), 묶은 실행 파일 기동 확인 | SOFTWARE_VERIFIED | 2026-11-24 Linux 작업 환경, Electron 45.4.1, 가상 화면. 보드는 시험용 MQTT 클라이언트 |
-| EVD-P1-011 | 같은 시험과 MSIX·zip 빌드, Defender 검사가 Windows에서 통과 | OPERATOR_REQUIRED | GitHub Actions `windows-latest` 실행 결과로 채움 |
+| EVD-P1-011 | 같은 시험과 MSIX·zip 빌드, 묶은 실행 파일 확인, Defender 검사가 Windows에서 통과 | SOFTWARE_VERIFIED | 2026-11-24 GitHub Actions `windows-latest`, 실행 45342718676, 커밋 c7bcf54. Defender는 appx·zip·win-unpacked에서 위협을 찾지 못함. 빌드 서버 결과이며 운영자 PC가 아님. 그 뒤에 더한 알림 채널 시험(EVD-P1-013, 014)의 Windows 결과는 다음 실행에서 확인 |
 | EVD-P1-012 | Microsoft Store로 설치했을 때 게시자 경고 없이 설치되고 실행됨 | OPERATOR_REQUIRED | Store 제출 뒤 실제 PC에서 확인 |
+| EVD-P1-013 | 알림 채널 자동 시험 T-CON-011 ~ 014 통과 (v1 형식, 식별자 가림, 출처 표시, 세션 시작·통과·결과 안내, 예전 설정 옮김) | SOFTWARE_VERIFIED | 2026-11-24 Node.js 22, `npm test`. 가짜 시계와 가짜 MQTT 클라이언트 |
+| EVD-P1-014 | 내장 브로커에서 알림 토픽은 앱만 발행 (T-HUB-010). 실제 앱에서 구독자에게 알림이 도착하고, 기기가 꾸민 알림은 거절되며, 안경 화면이 열리고 닫힘 (연기 시험 알림 단계) | SOFTWARE_VERIFIED | 2026-11-24 Linux, xvfb. 시험용 MQTT 클라이언트가 구독자 역할. 실제 안경·휴대폰 아님 |
+| EVD-P1-015 | 실제 안경 또는 휴대폰 앱에 알림이 표시됨 | OPERATOR_REQUIRED | 받는 쪽 앱이 아직 없음. 형식은 docs/NOTIFY.md |
 
 ## HARDWARE_VERIFIED로 바꿀 때 적을 것
 

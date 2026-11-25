@@ -6,6 +6,8 @@ const C={gold:'#ecb955',wave:'#9cc6ff',sim:'#b9a8ff',text:'#e8eef6',muted:'#8c9d
 const F='"IBM Plex Sans KR",sans-serif',FM='"IBM Plex Mono",monospace';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hms=t=>{const d=new Date(t);return[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');};
+// 내용이 바뀔 때만 다시 그립니다. 같은 내용을 주기적으로 다시 넣으면 들어오는 애니메이션이 매번 처음부터 돌아 목록이 깜빡입니다.
+const put=(el,html)=>{if(el._html!==html){el._html=html;el.innerHTML=html;}};
 const stamps={};const every=(k,ms)=>{const t=now();if(t-(stamps[k]||0)<ms)return false;stamps[k]=t;return true;};
 function fit(cv){const w=cv.clientWidth,h=cv.clientHeight;if(cv.width!==Math.round(w*DPR)||cv.height!==Math.round(h*DPR)){cv.width=Math.round(w*DPR);cv.height=Math.round(h*DPR);}const c=cv.getContext('2d');c.setTransform(DPR,0,0,DPR,0,0);c.clearRect(0,0,w,h);return[c,w,h];}
 const txt=(c,s,x,y,col,size,font,al)=>{c.font=`${size||12}px ${font||F}`;c.fillStyle=col||C.muted;c.textAlign=al||'left';c.fillText(s,x,y);c.textAlign='left';};
@@ -24,7 +26,7 @@ function space(t){const cfg=Lab.cfg,hot=csiList().filter(n=>n.state==='motion'),
     nowEl.textContent=S.source==='idle'?'연결을 기다리는 중':hot.length?Lab.node(hot[0].key).alias+'에서 움직임':'조용함';nowEl.classList.toggle('hot',hot.length>0);
     const pd=pinnedDevs().filter(d=>d.room);
     $('#sp-sub').textContent=`노드 ${cfg.nodes.length}대, 고정 기기 ${pd.length}개, 켜진 규칙 ${cfg.rules.filter(r=>r.on).length}개`+(pd[0]?` · ${devName(pd[0])}: ${Lab.roomName(pd[0].room)}`:'');
-    $('#sp-feed').innerHTML=S.feed.slice(0,5).map(f=>`<li><time>${hms(f.t)}</time><span class="${f.kind}">${esc(f.txt)}</span></li>`).join('')||'<li><time></time><span class="sys">아직 없습니다</span></li>';
+    put($('#sp-feed'),S.feed.slice(0,5).map(f=>`<li><time>${hms(f.t)}</time><span class="${f.kind}">${esc(f.txt)}</span></li>`).join('')||'<li><time></time><span class="sys">아직 없습니다</span></li>');
     const sig=S.ver+'|'+cfg.pinned.join()+'|'+S.source+'|'+S.csi.size+'|'+S.rooms.size;
     if(sig!==cardSig){cardSig=sig;let h='';const nx=brNext();
       if(Lab.canLive&&nx)h+=`<div class="card nextup"><div class="ct"><b>다음 단계</b><span class="kv">${BR.filter(s=>brDone(s.k)).length} / ${BR.length}</span></div><p>${brOf(nx).t}</p><a class="btn" href="#nodes">순서 보기</a></div>`;
@@ -116,7 +118,7 @@ function presence(){drawPlan($('#pl-canvas'));if(!every('pr',900))return;const t
   tb.innerHTML=list.map(d=>{const ob=d.room&&d.obs[d.room],p=pin.includes(d.id);return `<tr class="${tn-d.ts>20000?'stale':''}"><td><button class="pin" type="button" data-id="${esc(d.id)}" aria-pressed="${p}" aria-label="${esc(devName(d))} 고정">${p?'●':'○'}</button></td><td>${esc(devName(d))}</td><td class="${p?'hot':''}">${d.room?esc(Lab.roomName(d.room)):'—'}</td><td class="n">${ob?ob.d.toFixed(1)+' m':'—'}</td></tr>`;}).join('')||'<tr class="empty"><td colspan="4">아직 보이는 기기가 없습니다.</td></tr>';}
 
 /* ---------- 자동화 ---------- */
-let ruSig='';
+let ruSig='',ntSig='';
 function ruleArgs(){const w=$('#ru-when').value,a=$('#ru-arg'),cfg=Lab.cfg;let o='';
   if(w==='motion')o='<option value="*">모든 CSI 노드</option>'+cfg.nodes.filter(n=>n.type==='csi').map(n=>`<option value="${esc(n.key)}">${esc(n.alias)}</option>`).join('');
   else if(w==='enter')o=cfg.nodes.filter(n=>n.type==='ble').map(n=>`<option value="${esc(n.key.slice(4))}">${esc(n.alias)}</option>`).join('')||'<option value="">BLE 노드 없음</option>';
@@ -126,7 +128,14 @@ function rules(){if(!every('ru',400))return;const cfg=Lab.cfg,tn=now(),ul=$('#ru
   const sig=cfg.rules.map(r=>r.id+r.on+r.fired).join()+S.ver;
   if(sig!==ruSig&&!ul.contains(document.activeElement)){ruSig=sig;ul.innerHTML=cfg.rules.map(r=>`<li data-id="${r.id}" class="${tn-r.last<1200?'flash':''}"><input type="checkbox" ${r.on?'checked':''} aria-label="${esc(r.name)} 켜기"><b>${esc(r.name)}</b><span class="kv">${r.fired}회 실행</span><button class="del" type="button" aria-label="${esc(r.name)} 삭제">삭제</button></li>`).join('')||'<li><span class="muted">규칙이 없습니다. 아래에서 추가하세요.</span></li>';}
   $('#ru-count').textContent=cfg.rules.filter(r=>r.on).length+'개 켜짐';
-  $('#ru-fires').innerHTML=S.fires.slice(0,10).map(f=>`<li><time>${hms(f.t)}</time><span class="rule">${esc(f.name)}</span></li>`).join('')||'<li><time></time><span class="sys">아직 실행된 규칙이 없습니다</span></li>';}
+  // 바깥 화면 알림: 가장 최근에 내보낸 문장을 안경에 뜨는 모양 그대로 작게 보여 줍니다
+  const nt=S.notes[0],ns=(nt?nt.id:'none')+'|'+S.source;
+  if(ns!==ntSig){ntSig=ns;const L=$('#nt-lens');
+    $('#ntl-src').textContent=nt?Glass.SRC[nt.source]||'':'';$('#ntl-time').textContent=nt?hms(nt.ts):'';
+    $('#ntl-title').textContent=nt?nt.title:'아직 보낸 알림이 없습니다';$('#ntl-body').textContent=nt?nt.body:'규칙이 울리면 같은 문장이 여기와 안경 화면에 보입니다';
+    L.className='lens '+(nt?nt.level:'empty');if(nt){void L.offsetWidth;L.classList.add('pop');}
+    $('#nt-count').textContent=S.notes.length?'이번 실행에서 '+S.notes.length+'건':'';}
+  put($('#ru-fires'),S.fires.slice(0,10).map(f=>`<li><time>${hms(f.t)}</time><span class="rule">${esc(f.name)}</span></li>`).join('')||'<li><time></time><span class="sys">아직 실행된 규칙이 없습니다</span></li>');}
 
 /* ---------- 노드 ---------- */
 const BR=[
@@ -214,11 +223,16 @@ function wire(){camMain=CamBox($('#cam-main'),false);camInset=CamBox($('#mo-cam'
   // 카메라
   $('#cam-url').value=Lab.cfg.cam.url;$('#cam-form').addEventListener('submit',e=>{e.preventDefault();const v=$('#cam-url').value.trim();Lab.cfg.cam.url=/^https?:\/\//.test(v)?v:'';$('#cam-url').value=Lab.cfg.cam.url;Lab.save();});
   // 자동화
-  $('#ru-when').addEventListener('change',ruleArgs);$('#ru-then').addEventListener('change',e=>{const led=e.target.value==='led';$('#ru-color-l').hidden=!led;$('#ru-topic-l').hidden=led;});
+  $('#ru-when').addEventListener('change',ruleArgs);$('#ru-then').addEventListener('change',e=>{const v=e.target.value;$('#ru-color-l').hidden=v!=='led';$('#ru-topic-l').hidden=v!=='publish';});
+  // 바깥 화면 알림
+  const ns=$('#nt-session');ns.checked=!!(Lab.cfg.notify&&Lab.cfg.notify.session);ns.addEventListener('change',()=>{Lab.cfg.notify={session:ns.checked};Lab.save();});
+  $('#nt-test').addEventListener('click',()=>Lab.note('test','info','시험 알림','안경 화면과 구독 중인 앱에 이 문장이 보이면 됩니다'));
+  $('#nt-copy').addEventListener('click',e=>{const b=e.currentTarget,done=()=>{b.textContent='복사됨';setTimeout(()=>{b.textContent='토픽 복사';},1400);};
+    try{if(window.desktop){window.desktop.copy(Lab.NOTIFY);done();}else navigator.clipboard.writeText(Lab.NOTIFY).then(done,()=>{});}catch(err){}});
   $('#ru-form').addEventListener('submit',e=>{e.preventDefault();const w=$('#ru-when').value,a=$('#ru-arg').value,th=$('#ru-then').value,cfg=Lab.cfg;if(w==='enter'&&!a)return;
     const when=w==='motion'?{t:w,node:a}:w==='enter'?{t:w,room:a}:{t:w,node:'*',sec:+a};const argTxt=$('#ru-arg').selectedOptions[0].textContent;
-    const then=th==='led'?{t:'led',color:$('#ru-color').value,sec:8}:{t:'publish',topic:$('#ru-topic').value.trim()||'lab/notify',payload:JSON.stringify({rule:w,arg:a})};
-    const name=(w==='motion'?argTxt+'에서 움직임이 시작되면':w==='enter'?'고정한 기기가 '+argTxt+'에 들어오면':argTxt+' 동안 조용하면')+' '+(th==='led'?'LED 색 바꾸기':then.topic+' 토픽으로 보내기');
+    const then=th==='led'?{t:'led',color:$('#ru-color').value,sec:8}:th==='notify'?{t:'notify',level:w==='quiet'?'info':'alert'}:{t:'publish',topic:$('#ru-topic').value.trim()||'lab/custom',payload:JSON.stringify({rule:w,arg:a})};
+    const name=(w==='motion'?argTxt+'에서 움직임이 시작되면':w==='enter'?'고정한 기기가 '+argTxt+'에 들어오면':argTxt+' 동안 조용하면')+' '+(th==='led'?'LED 색 바꾸기':th==='notify'?'알림 보내기':then.topic+' 토픽으로 보내기');
     cfg.rules.push({id:'r'+Date.now().toString(36),on:true,name,when,then,fired:0,last:0});Lab.save();stamps.ru=0;});
   $('#ru-list').addEventListener('change',e=>{const li=e.target.closest('li');if(!li)return;const r=Lab.cfg.rules.find(x=>x.id===li.dataset.id);if(r){r.on=e.target.checked;Lab.save();}});
   $('#ru-list').addEventListener('click',e=>{const b=e.target.closest('.del');if(!b)return;const cfg=Lab.cfg,i=cfg.rules.findIndex(x=>x.id===b.closest('li').dataset.id);if(i>=0){cfg.rules.splice(i,1);Lab.save();b.blur();ruSig='';stamps.ru=0;}});

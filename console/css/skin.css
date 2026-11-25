@@ -64,7 +64,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:90;opa
 .now.hot{text-shadow:0 0 44px rgba(236,185,85,.45)}
 .sub{font-size:14.5px;color:#a9b8cb;text-shadow:0 1px 12px rgba(3,5,9,.9)}
 .hud-bl{background:var(--glass);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);border-color:var(--edge);border-radius:3px;box-shadow:0 30px 60px -30px rgba(0,0,0,.9),inset 0 1px 0 rgba(255,255,255,.05)}
-.feed li{animation:feedin .5s var(--ease)}
+.feed li:first-child{animation:feedin .5s var(--ease)} /* 새로 들어온 맨 윗줄만 움직입니다 */
 @keyframes feedin{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 .empty{left:50%;top:50%;transform:translate(-50%,-50%);width:min(520px,calc(100% - 44px));text-align:center;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--edge);border-radius:4px;padding:30px 28px}
 .empty h2{font-family:var(--display);font-variation-settings:"wdth" 94;font-weight:800;font-size:26px;line-height:1.15;letter-spacing:-.015em}
@@ -137,3 +137,67 @@ body.desktop .boot{-webkit-app-region:drag}
 .status .chip,.status .kv{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .status .btn{flex:none}
 @media (max-width:1180px){body.desktop #rate,body.desktop #clock{display:none}}
+
+/* ---------- 바깥 화면 알림 ---------- */
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+.stack>.grow{flex:1 1 auto}
+.btn.sm{padding:5px 10px;font-size:12.5px}
+.nt{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:26px;padding:20px 20px 22px;align-items:center}
+.nt-side{display:flex;flex-direction:column;gap:13px;align-items:flex-start}
+.nt-topic{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nt-topic code{font-family:var(--data);font-size:13px;color:var(--wave);background:rgba(156,198,255,.07);border:1px solid var(--edge);border-radius:3px;padding:5px 9px}
+/* 렌즈: 안경에 뜨는 문장을 같은 모양으로 작게 봅니다. 아래쪽이 둥근 것은 안경알의 아랫선입니다. */
+.lens{position:relative;min-height:168px;background:#000;border:1px solid var(--line2);border-radius:16px 16px 44% 44%/16px 16px 36% 36%;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:20px 13% 34px;
+  box-shadow:inset 0 46px 60px -52px rgba(156,198,255,.5),inset 0 0 0 1px rgba(255,255,255,.025),0 26px 50px -34px #000}
+.lens::after{content:"";position:absolute;inset:0;background:linear-gradient(112deg,rgba(255,255,255,.075),transparent 24%);pointer-events:none}
+.lens .gl-meta{display:flex;gap:12px;font-family:var(--data);font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:17px}
+.lens .gl-title{font-family:var(--display);font-variation-settings:"wdth" 92;font-weight:700;font-size:clamp(20px,2.1vw,29px);line-height:1.18;letter-spacing:-.01em}
+.lens .gl-body{font-size:14px;color:#b6c4d6}
+.lens.alert .gl-title{color:var(--accent)}
+.lens.empty .gl-title{color:var(--muted);font-weight:600}
+.lens.pop .gl-title,.lens.pop .gl-body,.lens.pop .gl-meta{animation:gl-in .34s var(--ease) both}
+.lens.pop .gl-body{animation-delay:.05s}
+@keyframes gl-in{from{opacity:0;transform:translateY(7px)}}
+
+/* ---------- 안경 화면 ---------- */
+.glass{position:fixed;inset:0;z-index:80;background:#000;color:#f2f6fb;display:flex;flex-direction:column;gap:clamp(8px,1.6vh,18px);padding:clamp(22px,5vh,60px) clamp(24px,10vw,200px) clamp(28px,6vh,72px);cursor:default}
+.gl-top{display:flex;gap:18px;align-items:baseline;font-family:var(--data);font-size:clamp(12px,1.2vw,16px);color:#9fb0c5}
+.gl-top time{margin-left:auto;font-variant-numeric:tabular-nums}
+body.desktop .gl-top{padding-right:150px}
+:fullscreen .gl-top,body.desktop:fullscreen .gl-top{padding-right:0}
+.gl-mid{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:clamp(6px,1.2vh,14px);min-height:0}
+.gl-link{font-size:clamp(15px,1.8vw,26px);color:#9fb0c5;min-height:1.5em}
+.gl-state{font-family:var(--display);font-variation-settings:"wdth" 84;font-weight:800;font-size:clamp(64px,15vw,250px);line-height:.94;letter-spacing:-.02em;align-self:flex-start}
+.gl-state.hot{color:var(--accent)}
+.gl-state.wait{font-size:clamp(32px,5.6vw,84px);font-weight:700;color:#9fb0c5;line-height:1.1}
+.gl-meter{position:relative;height:6px;width:min(100%,780px);background:rgba(255,255,255,.13);margin-top:clamp(12px,2.2vh,26px)}
+.gl-meter i{position:absolute;inset:0;background:#f2f6fb;transform-origin:left;transform:scaleX(0);transition:transform .25s var(--ease)}
+.gl-meter.hot i{background:var(--accent)}
+.gl-meter b{position:absolute;top:-7px;bottom:-7px;width:2px;margin-left:-1px;background:var(--warn)}
+.gl-num,.gl-session{font-family:var(--data);font-size:clamp(13px,1.35vw,18px);color:#9fb0c5;font-variant-numeric:tabular-nums}
+.gl-session{color:var(--wave)}
+.gl-note{position:relative;width:min(100%,780px);border-left:3px solid var(--wave);padding:8px 0 12px 20px;min-height:clamp(84px,13vh,128px);opacity:0;transform:translateY(10px);transition:opacity .24s var(--ease),transform .24s var(--ease)}
+.gl-note.on{opacity:1;transform:none}
+.gl-note.alert{border-color:var(--accent)}
+.gl-note .gl-title{font-family:var(--display);font-variation-settings:"wdth" 92;font-weight:700;font-size:clamp(22px,3vw,46px);line-height:1.16}
+.gl-note.alert .gl-title{color:var(--accent)}
+.gl-note .gl-body{font-size:clamp(15px,1.7vw,25px);color:#b6c4d6}
+.gl-note i{position:absolute;left:20px;right:0;bottom:0;height:2px;background:currentColor;opacity:.45;transform-origin:left}
+@keyframes gl-ttl{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+.gl-ctl{position:absolute;right:clamp(16px,3vw,40px);bottom:clamp(14px,3vh,30px);display:flex;gap:8px;opacity:0;transition:opacity .3s}
+.glass.ctl .gl-ctl,.gl-ctl:focus-within{opacity:1}
+/* 단색: 한 가지 빛만 내는 안경에서 어떻게 보일지 확인합니다. 색을 쓸 수 없으니 밝기로 구분합니다.
+   면을 채우면 그만큼 시야가 가려지므로 반전 블록은 쓰지 않습니다. */
+.glass.mono{color:#8dffb0}
+.glass.mono .gl-state{color:rgba(141,255,176,.5)}
+.glass.mono .gl-top,.glass.mono .gl-link,.glass.mono .gl-num,.glass.mono .gl-session,.glass.mono .gl-note .gl-body,.glass.mono .gl-state.wait{color:rgba(141,255,176,.74)}
+.glass.mono .gl-state.hot{color:#a8ffc4;text-shadow:0 0 .12em rgba(141,255,176,.55)}
+.glass.mono .gl-note,.glass.mono .gl-note.alert{border-color:#8dffb0}
+.glass.mono .gl-note.alert .gl-title{color:#8dffb0}
+.glass.mono .gl-meter{background:rgba(141,255,176,.22)}
+.glass.mono .gl-meter i,.glass.mono .gl-meter.hot i,.glass.mono .gl-meter b{background:#8dffb0}
+@media (max-width:900px){.nt{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.lens.pop .gl-title,.lens.pop .gl-body,.lens.pop .gl-meta{animation:none}.gl-note,.gl-meter i{transition:none}}
+/* 공간 화면 오른쪽 위 버튼이 둘이 되어, 제목 줄이 그 밑으로 들어가지 않게 자리를 더 비웁니다. 좁은 화면에서는 자동화 화면의 버튼으로 엽니다. */
+@media (max-width:1099px){.hud-tl{padding-right:262px}}
+@media (max-width:700px){#sp-glass{display:none}.hud-tl{padding-right:150px}}

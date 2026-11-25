@@ -57,8 +57,8 @@ try {
   // 3. 인증
   assert.equal(await tryConnect('wrong-password-123'), null);
   const board = await tryConnect(password); assert.ok(board, 'correct password connects');
-  const commands = []; board.on('message', (topic, p) => { if (topic === 'wled/lab/api') commands.push(p.toString()); });
-  await new Promise(r => board.subscribe('wled/lab/api', r));
+  const commands = [], alerts = []; board.on('message', (topic, p) => { if (topic === 'wled/lab/api') commands.push(p.toString()); else if (topic === 'lab/out/notify') alerts.push(p.toString()); });
+  await new Promise(r => board.subscribe(['wled/lab/api', 'lab/out/notify'], r));
   step('authentication: wrong password rejected, correct password accepted');
 
   // 창 조작 버튼(최소화, 닫기)이 차지하는 영역 밖에 브로커 버튼이 있어야 누를 수 있습니다. 좁은 화면에서도 마찬가지입니다.
@@ -91,10 +91,28 @@ try {
   const got = commands[0] || null;
   assert.ok(got && JSON.parse(got).seg, 'a rule command arrives as WLED JSON');
   step('rule engine command is delivered to devices');
+
+  // 5-1. 알림: 구독한 기기(안경·휴대폰 앱 자리)에 정해진 꼴로 도착하고, 기기가 꾸며 낸 알림은 어디에도 가지 않는다
+  for (let i = 0; i < 40 && !alerts.length; i++) await new Promise(r => setTimeout(r, 250));
+  const alert = alerts[0] ? JSON.parse(alerts[0]) : null;
+  assert.ok(alert && alert.v === 1 && alert.kind === 'motion' && alert.source === 'broker', 'a motion alert arrives as v1 JSON labelled as broker data');
+  assert.ok(!alerts[0].includes(ID), 'the alert carries no full device id');
+  const before = alerts.length; board.publish('lab/out/notify', JSON.stringify({ v: 1, title: 'forged' })); await new Promise(r => setTimeout(r, 600));
+  assert.ok(!alerts.slice(before).some(a => a.includes('forged')), 'a device cannot publish an alert');
+  await win.click('#tab-rules'); await win.waitForFunction(() => /움직임$/.test(document.querySelector('#ntl-title').textContent), null, { timeout: 5000 });   // 자동화 화면의 미리보기에도 같은 문장이 뜬다
+  await win.evaluate(() => Glass.open()); await win.waitForTimeout(500);
+  const glass = await win.evaluate(() => ({ open: Glass.isOpen(), state: document.querySelector('#gl-state').textContent, src: document.querySelector('#gl-src').textContent }));
+  assert.equal(glass.open, true); assert.ok(['움직임', '조용함'].includes(glass.state)); assert.equal(glass.src, '실측');
+  await shot(win, '04-glass.png'); await win.keyboard.press('Escape');
+  await win.waitForFunction(() => !Glass.isOpen(), null, { timeout: 5000 });
+  step('alerts reach a subscriber as v1 JSON, cannot be forged by a device, and the glasses screen opens and closes');
   clearInterval(timer); board.end(true);
 
   // 6. 화면 기록 (데모)
-  await win.click('#openConn'); await win.click('#dk-demo'); await win.waitForTimeout(9000); await shot(win, '05-demo-space.png');
+  await win.click('#openConn'); await win.click('#dk-demo'); await win.click('#tab-space'); await win.waitForTimeout(9000); await shot(win, '05-demo-space.png');
+  assert.ok(await win.evaluate(() => document.querySelectorAll('#sp-feed li').length >= 3 && !document.querySelector('#v-space').hidden), 'the space view is showing its event list');
+  const dim = await win.evaluate(async () => { let min = 1; for (let i = 0; i < 8; i++) { for (const li of [...document.querySelectorAll('#sp-feed li')].slice(1, 4)) min = Math.min(min, +getComputedStyle(li).opacity); await new Promise(r => setTimeout(r, 80)); } return min; });
+  assert.equal(dim, 1, 'event list rows stay fully visible between updates');   // 같은 내용을 다시 그려 목록이 깜빡이던 문제의 재발 방지
   for (const v of ['motion', 'presence', 'rules', 'nodes', 'evidence']) { await win.click('#tab-' + v); await win.waitForTimeout(1200); await shot(win, `06-${v}.png`); }
   step('demo views open without errors');
   // 7. 창은 밖으로 나가지 못한다

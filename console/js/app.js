@@ -65,7 +65,8 @@ const boot=$('#boot');if(boot){const kill=()=>boot.remove();boot.addEventListene
 $('#main').addEventListener('pointermove',e=>{const p=e.target.closest('.panel');if(!p)return;const r=p.getBoundingClientRect();p.style.setProperty('--mx',(e.clientX-r.left)+'px');p.style.setProperty('--my',(e.clientY-r.top)+'px');});
 show(location.hash.slice(1)||'space',false);
 Lab.demo();status();
+if(location.hash==='#glass')Glass.open();
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function frame(){const t=performance.now()/1000;try{Views.update[view](t);}catch(err){if(!frame.err){frame.err=true;console.error(err);}}requestAnimationFrame(frame);}
+function frame(){const t=performance.now()/1000;try{if(Glass.isOpen())Glass.update();else Views.update[view](t);}catch(err){if(!frame.err){frame.err=true;console.error(err);}}requestAnimationFrame(frame);}
 requestAnimationFrame(frame);
 })();

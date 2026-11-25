@@ -41,6 +41,7 @@ vulnerability). Please do not put details in a public issue.
 | A socket that sends more than 4 KB before authenticating is closed | `LIMITS.preAuthBytes` |
 | At most 32 connections; payloads over 64 KB and topics over 200 characters are refused | `LIMITS` |
 | Topics starting with `$` and `lab/console/` are reserved; devices cannot publish to them | `validTopic` |
+| Topics under `lab/out/` carry what the app itself says (alerts for glasses and phones). Devices can subscribe but cannot publish there, so a device cannot forge an alert | `HUB_ONLY`, T-HUB-010 |
 | The hub speaks plain MQTT on the LAN. There is no WebSocket or HTTP listener | `broker.mjs` |
 
 ### Secrets and data
@@ -58,7 +59,7 @@ vulnerability). Please do not put details in a public issue.
 
 ## Tested
 
-`npm test` covers the hub controls above (T-HUB-001 to 009). `npm run test:app` starts the real
+`npm test` covers the hub controls above (T-HUB-001 to 010). `npm run test:app` starts the real
 app and checks the window isolation, the first-run flow, password storage, authentication,
 and that navigation is blocked. `tests/packaged.check.mjs` repeats the isolation check against
 the packaged executable.

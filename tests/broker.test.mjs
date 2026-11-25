@@ -98,3 +98,16 @@ test('T-HUB-009 포트가 이미 쓰이고 있으면 알기 쉬운 오류를 낸
   assert.equal(b.running, false);
   await a.stop();
 });
+
+test('T-HUB-010 알림 토픽은 앱만 낼 수 있고, 기기는 받기만 한다', async () => {
+  const hub = await boot(); const toWindow = []; hub.on('message', m => toWindow.push(m.topic));
+  const { c: glasses } = await connect(hub); const seen = [];
+  await new Promise(r => glasses.subscribe('lab/out/notify', r)); glasses.on('message', (t, p) => seen.push(p.toString()));
+  const { c: rogue } = await connect(hub); rogue.on('error', () => {});
+  rogue.publish('lab/out/notify', '{"title":"forged"}'); await wait(200);
+  assert.deepEqual(seen, []); assert.deepEqual(toWindow, []); assert.equal(hub.status().counts.publishRejected, 1);
+  assert.equal(validTopic('lab/out/notify'), false); assert.equal(validTopic('lab/out/notify', true), true);
+  assert.equal(hub.publish('lab/out/notify', '{"v":1,"title":"거실: 움직임"}'), true); await wait(200);
+  assert.deepEqual(seen, ['{"v":1,"title":"거실: 움직임"}']);
+  glasses.end(true); rogue.end(true); await hub.stop();
+});

@@ -14,17 +14,22 @@ function defCfg(){return{room:{w:10,h:7},router:{x:9.2,y:0.8},
   rules:[
     {id:'r1',on:true,name:'움직임이 시작되면 LED를 금색으로',when:{t:'motion',node:'*'},then:{t:'led',color:'#ecb955',sec:8},fired:0,last:0},
     {id:'r2',on:true,name:'고정한 기기가 작업실에 들어오면 LED를 파란색으로',when:{t:'enter',room:'office'},then:{t:'led',color:'#5aa9ff',sec:8},fired:0,last:0},
-    {id:'r3',on:false,name:'5분 동안 조용하면 알림 토픽으로 보내기',when:{t:'quiet',node:'*',sec:300},then:{t:'publish',topic:'lab/notify',payload:'{"msg":"quiet"}'},fired:0,last:0}],
-  cam:{url:''},led:{topic:'wled/lab/api'},broker:{url:'ws://localhost:9001',user:'lab'},bring:{}};}
+    {id:'r3',on:false,name:'5분 동안 조용하면 알림 보내기',when:{t:'quiet',node:'*',sec:300},then:{t:'notify',level:'info'},fired:0,last:0},
+    R4()],
+  cam:{url:''},led:{topic:'wled/lab/api'},broker:{url:'ws://localhost:9001',user:'lab'},bring:{},notify:{session:true}};}
+function R4(){return{id:'r4',on:true,name:'움직임이 시작되면 알림 보내기',when:{t:'motion',node:'*'},then:{t:'notify',level:'alert'},fired:0,last:0};}
 let cfg=defCfg();
-try{const raw=localStorage.getItem(LSK);if(raw){const j=JSON.parse(raw);if(j&&j.room&&Array.isArray(j.nodes))cfg=Object.assign(defCfg(),j);}}catch(e){}
+try{const raw=localStorage.getItem(LSK);if(raw){const j=JSON.parse(raw);if(j&&j.room&&Array.isArray(j.nodes)){cfg=Object.assign(defCfg(),j);
+  // 알림 채널이 생기기 전에 저장한 설정: 예전 알림 규칙을 새 형식으로 옮기고, 움직임 알림 규칙을 하나 더합니다.
+  if(!j.notify&&Array.isArray(cfg.rules)){for(const r of cfg.rules)if(r.then&&r.then.t==='publish'&&r.then.topic==='lab/notify'&&r.then.payload==='{"msg":"quiet"}'){r.then={t:'notify',level:'info'};r.name='5분 동안 조용하면 알림 보내기';}
+    if(!cfg.rules.some(r=>r.then&&r.then.t==='notify'&&r.when.t==='motion'))cfg.rules.push(R4());}}}}catch(e){}
 const S={source:'idle',simMixed:false,simEver:false,count:0,rate:0,lastTs:0,ver:1,
-  csi:new Map(),rooms:new Map(),devs:new Map(),inputs:new Map(),led:{color:null,until:0},feed:[],log:[],session:null,sessions:[],fires:[]};
+  csi:new Map(),rooms:new Map(),devs:new Map(),inputs:new Map(),led:{color:null,until:0},feed:[],log:[],session:null,sessions:[],fires:[],notes:[]};
 let _c=0;setInterval(()=>{S.rate=S.rate*0.5+_c*0.5;_c=0;},1000);
 function save(){S.ver++;try{localStorage.setItem(LSK,JSON.stringify(cfg));}catch(e){}}
 function reset(){const b=cfg.broker,g=cfg.bring;cfg=defCfg();cfg.broker=b;cfg.bring=g||{};save();if(S.source==='demo'){clearState();}}
 const pend=new Map();
-function clearState(){pend.clear();S.csi.clear();S.rooms.clear();S.devs.clear();S.inputs.clear();S.feed.length=0;S.led={color:null,until:0};}
+function clearState(){pend.clear();S.csi.clear();S.rooms.clear();S.devs.clear();S.inputs.clear();S.feed.length=0;S.notes.length=0;S.led={color:null,until:0};}
 const node=k=>cfg.nodes.find(n=>n.key===k);
 /* 첫 실측 순서: 브로커에서 받은 것만 기록합니다. 시뮬레이터가 섞인 동안에는 세지 않습니다. */
 function mark(k,v){const b=cfg.bring||(cfg.bring={});if(k!=='cam'&&(S.source!=='live'||S.simMixed||S.simEver))return;
@@ -105,7 +110,7 @@ function deskClient(){const h={},em=(e,...a)=>(h[e]||[]).slice().forEach(f=>f(..
   offM=D.onMessage(m=>em('message',m.topic,m.payload,{retain:!!m.retain}));offB=D.onBroker(state);
   D.status().then(s=>{if(s.running)state(s);else em('error',new Error(s.error==='PORT_IN_USE'?'1883 포트를 다른 프로그램이 쓰고 있습니다':'브로커가 꺼져 있습니다'));});return c;}
 function disconnect(){stopReplay();if(client){try{client.end(true);}catch(e){}client=null;}if(S.source==='live'){S.source='idle';S.simMixed=false;}}
-function demo(){disconnect();clearState();park();S.simEver=false;S.source='demo';if(window.Sim)Sim.start();feed('데모 시작: 내장 시뮬레이터가 보내는 값입니다','sys');}
+function demo(){disconnect();clearState();park();S.simEver=false;S.source='demo';feed('데모 시작: 내장 시뮬레이터가 보내는 값입니다','sys');if(window.Sim)Sim.start();}
 
 /* ---- 자동화 ---- */
 function hexRgb(h){return[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));}
@@ -113,16 +118,34 @@ function trigger(ev){const t=now();for(const r of cfg.rules){if(!r.on||r.when.t!
   if(ev.t==='motion'&&r.when.node!=='*'&&r.when.node!==ev.node)continue;
   if(ev.t==='enter'&&r.when.room!==ev.room)continue;
   if(ev.t==='quiet'&&r.when.node!=='*'&&r.when.node!==ev.node)continue;
-  if(t-r.last<3000)continue;r.last=t;r.fired++;run(r);S.fires.unshift({t,name:r.name});if(S.fires.length>30)S.fires.pop();feed('자동화 실행: '+r.name,'rule');}}
-function run(r){const a=r.then;if(a.t==='led'){publish(cfg.led.topic,JSON.stringify({on:true,bri:160,seg:[{col:[hexRgb(a.color)]}],_sec:a.sec}));}
+  if(t-r.last<3000)continue;r.last=t;r.fired++;run(r,ev);S.fires.unshift({t,name:r.name});if(S.fires.length>30)S.fires.pop();feed('자동화 실행: '+r.name,'rule');}}
+function run(r,ev){const a=r.then;if(a.t==='led'){publish(cfg.led.topic,JSON.stringify({on:true,bri:160,seg:[{col:[hexRgb(a.color)]}],_sec:a.sec}));}
+  else if(a.t==='notify'){const m=noteOf(r,ev||{t:r.when.t,node:r.when.node,room:r.when.room});note(r.when.t,a.level||'alert',m[0],m[1]);}
   else if(a.t==='publish'){publish(a.topic,a.payload);}}
+/* ---- 알림: 안경·휴대폰처럼 바깥 화면에 띄울 짧은 문장 ----
+   토픽 하나(lab/out/notify)에 JSON 한 줄로 냅니다. 내장 브로커에서는 앱만 이 토픽에 쓸 수 있어 기기가 알림을 꾸며 낼 수 없습니다.
+   source는 값이 어디서 왔는지 그대로 적습니다. 시뮬레이터 값이면 받는 쪽 화면에도 그렇게 보여야 하기 때문입니다. */
+const NOTIFY='lab/out/notify';let _n=0;
+function note(kind,level,title,body){const t=now(),n={v:1,id:'n'+t.toString(36)+(_n++%1296).toString(36),ts:t,kind,level:level==='alert'?'alert':'info',title:mask(title).slice(0,40),body:mask(body||'').slice(0,90),ttl:8,
+    source:S.source==='live'?(S.simEver||S.simMixed?'broker_with_simulator':'broker'):S.source==='replay'?'replay':'built_in_simulator'};
+  S.notes.unshift(n);if(S.notes.length>30)S.notes.pop();publish(NOTIFY,JSON.stringify(n));return n;}
+function noteOf(r,ev){const alias=k=>{const n=k&&k!=='*'&&node(k);return n?n.alias:'Wi‑Fi 링크';};
+  if(ev.t==='motion'){const n=ev.node&&S.csi.get(ev.node.slice(4));return[alias(ev.node)+': 움직임','점수 '+(n&&n.last!=null?n.last.toFixed(2):'-')+(n&&n.thr!=null?' · 임계값 '+n.thr:'')];}
+  if(ev.t==='enter'){const d=ev.dev&&S.devs.get(ev.dev);return[roomName(ev.room)+'에 들어옴',(d&&d.name)||(ev.dev?mask(ev.dev):'고정한 기기')];}
+  const m=Math.round(((r.when&&r.when.sec)||0)/60);return[alias(ev.node)+': 조용함',(m>=1?m+'분':((r.when&&r.when.sec)||0)+'초')+' 동안 움직임이 없습니다'];}
 setInterval(()=>{const t=now();for(const n of S.csi.values()){if(n.state==='idle'&&n.quietSince&&!n.quietFired){for(const r of cfg.rules){if(r.on&&r.when.t==='quiet'&&t-n.quietSince>r.when.sec*1000){n.quietFired=true;trigger({t:'quiet',node:n.key});break;}}}}
   if(S.led.color&&t>S.led.until)S.led={color:null,until:0};},1000);
 
 /* ---- 검증 세션 ---- */
 function sessionStart(nodeKey,truth){truth=truth||'manual';S.session={start:now(),end:0,node:nodeKey,labels:[],cur:null,truth,auto:truth!=='manual',source:S.source};
+  if(cfg.notify&&cfg.notify.session)note('session','info','검증 시작: '+((node(nodeKey)||{alias:'Wi‑Fi 링크'}).alias),truth==='manual'?'지나가는 동안 표시 버튼을 누르고 계세요':'링크를 가로질러 걸어 보세요. 정답은 자동으로 적힙니다');
   if(truth.startsWith('pir:')){const i=S.inputs.get(truth.slice(4));if(i&&i.on)label(true);}}
-function label(on){const ss=S.session;if(!ss||ss.end)return;if(on&&!ss.cur){ss.cur={s:now(),e:0};ss.labels.push(ss.cur);}else if(!on&&ss.cur){ss.cur.e=now();ss.cur=null;}}
+function label(on){const ss=S.session;if(!ss||ss.end)return;if(on&&!ss.cur){ss.cur={s:now(),e:0};ss.labels.push(ss.cur);}
+  else if(!on&&ss.cur){const l=ss.cur,i=ss.labels.length;l.e=now();ss.cur=null;setTimeout(()=>passCheck(ss,l,i),2200);}} // 감지가 조금 늦게 잡힐 수 있어 2초쯤 기다렸다가 알립니다
+/* 한 번 지나갈 때마다 감지됐는지 바로 알려 줍니다. 화면 앞으로 돌아오지 않고도 결과를 볼 수 있게 하려는 것입니다. */
+function passCheck(ss,l,i){if(ss.end||ss!==S.session||!(cfg.notify&&cfg.notify.session))return null;const n=S.csi.get(ss.node.slice(4)),t=now();
+  const hit=!!n&&n.events.some(e=>e.s<=l.e+2000&&(e.e||t)>=l.s-2000),st=sessionStats(ss);
+  return note('session',hit?'info':'alert','통과 '+i+': '+(hit?'감지됨':'놓침'),'지금까지 '+st.hits+'/'+st.labels+' 감지'+(st.falses?' · 오탐 '+st.falses:''));}
 function sessionStats(ss){ss=ss||S.session;if(!ss)return null;const t=ss.end||now(),id=ss.node.slice(4),n=S.csi.get(id);
   const evs=(n?n.events:[]).filter(e=>(e.e||t)>=ss.start&&e.s<=t),ov=(e,l)=>e.s<=(l.e||t)+2000&&(e.e||t)>=l.s-2000;
   const hits=ss.labels.filter(l=>evs.some(e=>ov(e,l))).length,falses=evs.filter(e=>!ss.labels.some(l=>ov(e,l))).length;
@@ -131,7 +154,8 @@ function sessionStats(ss){ss=ss||S.session;if(!ss)return null;const t=ss.end||no
 function traceOf(ss){const n=S.csi.get(ss.node.slice(4)),a=ss.start-3000,b=ss.end+1000,pts=n?n.score.filter(p=>p.t>=a&&p.t<=b):[],k=Math.max(1,Math.ceil(pts.length/600)),out=[];
   for(let i=0;i<pts.length;i+=k){let m=pts[i];for(let q=i+1;q<Math.min(pts.length,i+k);q++)if(pts[q].v>m.v)m=pts[q];out.push([m.t-ss.start,+m.v.toFixed(3)]);}
   return{thr:n?n.thr:null,pts:out,labels:ss.labels.map(l=>[l.s-ss.start,(l.e||ss.end)-ss.start]),events:(n?n.events:[]).filter(e=>(e.e||ss.end)>=ss.start&&e.s<=ss.end).map(e=>[e.s-ss.start,(e.e||ss.end)-ss.start,+e.peak.toFixed(3)])};}
-function sessionStop(){const ss=S.session;if(!ss||ss.end)return;label(false);ss.end=now();const st=sessionStats(ss);S.sessions.unshift(Object.assign({node:ss.node,alias:(node(ss.node)||{alias:mask(ss.node)}).alias,start:ss.start,end:ss.end,auto:ss.auto,truth:ss.truth,source:ss.source,sim:ss.source!=='live'||S.simEver||S.simMixed,trace:traceOf(ss)},st));if(ss.source==='live'&&st.labels>=3)mark('session');}
+function sessionStop(){const ss=S.session;if(!ss||ss.end)return;label(false);ss.end=now();const st=sessionStats(ss);S.sessions.unshift(Object.assign({node:ss.node,alias:(node(ss.node)||{alias:mask(ss.node)}).alias,start:ss.start,end:ss.end,auto:ss.auto,truth:ss.truth,source:ss.source,sim:ss.source!=='live'||S.simEver||S.simMixed,trace:traceOf(ss)},st));if(ss.source==='live'&&st.labels>=3)mark('session');
+  if(cfg.notify&&cfg.notify.session)note('session',st.miss||st.falses?'alert':'info','검증 끝: '+st.hits+'/'+st.labels+' 감지','놓침 '+st.miss+' · 오탐 '+st.falses+(st.recall==null?'':' · 재현율 '+Math.round(st.recall*100)+'%'));}
 /* ---- 기록 재생: 내려받은 JSONL을 같은 수신 경로로 다시 흘립니다 ---- */
 let rp=null;
 function stopReplay(){if(rp){clearTimeout(rp.timer);rp=null;if(S.source==='replay')S.source='idle';}}
@@ -147,5 +171,5 @@ function exportLog(){const sim=S.source!=='live'||S.simEver;if(!sim)mark('export
   const head={kind:'sentinel-lab-log',exported_at:new Date().toISOString(),data_source:S.source==='live'?(S.simEver?'broker_with_simulator':'broker'):S.source==='replay'?'replay':'built_in_simulator',verification:sim?'SIMULATED':'OPERATOR_TO_CONFIRM',messages:S.log.length,sessions:S.sessions,note:'식별자는 앞 4자만 남기고 가렸습니다.'};
   return JSON.stringify(head)+'\n'+S.log.map(l=>JSON.stringify(l)).join('\n')+'\n';}
 return{S,get cfg(){return cfg;},canLive,now,clamp,mask,save,reset,node,roomName,ingest,publish,connect,disconnect,demo,on:f=>subs.push(f),feed,
-  sessionStart,sessionStop,sessionStats,label,exportLog,replay,stopReplay,report,mark,clearBring,hexRgb,ROOM_KO};
+  sessionStart,sessionStop,sessionStats,label,exportLog,replay,stopReplay,report,mark,clearBring,hexRgb,ROOM_KO,note,passCheck,NOTIFY};
 })();

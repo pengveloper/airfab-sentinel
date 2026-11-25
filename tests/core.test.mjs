@@ -9,13 +9,14 @@ import { fileURLToPath } from 'node:url';
 const SRC = readFileSync(fileURLToPath(new URL('../console/js/core.js', import.meta.url)), 'utf8');
 const ID = 'a1b2c3d4e5f60718';
 
-function boot() {
+function boot(saved) {
   const clock = { t: 1_800_000_000_000 };
   class FakeDate extends Date {
     constructor(...a) { if (a.length) super(...a); else super(clock.t); }
     static now() { return clock.t; }
   }
   const store = new Map();
+  if (saved) store.set('sentinel-lab-console-v1', JSON.stringify(saved)); // 예전에 저장해 둔 설정에서 시작하는 경우
   const sent = [];
   const handlers = {};
   const client = {
@@ -144,4 +145,56 @@ test('T-CON-010 내보낸 기록에 가리지 않은 식별자가 없다', () =>
   assert.ok(!out.includes(ID));
   assert.ok(!out.includes('aabbccddeeff'));
   assert.equal(JSON.parse(out.split('\n')[0]).verification, 'OPERATOR_TO_CONFIRM');
+});
+
+const notes = sent => sent.filter(m => m[0] === 'lab/out/notify').map(m => JSON.parse(m[1]));
+
+test('T-CON-011 움직임 알림은 정해진 꼴(v1)로 한 토픽에 나가고, 식별자는 가려진다', () => {
+  const { Lab, goLive, motion, tick, sent } = boot(); goLive();
+  motion('idle', 0.1); tick(200); motion('motion', 1.23);
+  const out = notes(sent);
+  assert.equal(out.length, 1);
+  const n = out[0];
+  assert.deepEqual(Object.keys(n).sort(), ['body', 'id', 'kind', 'level', 'source', 'title', 'ts', 'ttl', 'v']);
+  assert.deepEqual([n.v, n.kind, n.level, n.source, n.ttl], [1, 'motion', 'alert', 'broker', 8]);
+  assert.equal(n.title, 'CSI a1b2: 움직임'); assert.match(n.body, /^점수 1\.23/);
+  assert.ok(!JSON.stringify(n).includes(ID), '기기 ID 전체가 알림에 들어가면 안 된다');
+  assert.equal(Lab.S.notes[0].id, n.id);
+  tick(500); motion('idle', 0.1); tick(500); motion('motion', 1.4);                // 같은 규칙은 3초 안에 다시 울리지 않는다
+  assert.equal(notes(sent).length, 1);
+});
+
+test('T-CON-012 시뮬레이터 값이 섞인 알림은 실측이라고 적지 않는다', () => {
+  const { Lab, goLive, msg, motion, tick, sent } = boot(); goLive();
+  msg('lab/sim/active', '1'); motion('idle', 0.1); tick(200); motion('motion', 1.2);
+  assert.equal(notes(sent)[0].source, 'broker_with_simulator');
+});
+
+test('T-CON-013 검증 세션: 시작, 통과마다 감지 여부, 끝난 뒤 결과를 알린다', () => {
+  const { Lab, goLive, motion, tick, sent } = boot(); goLive();
+  Lab.cfg.rules.forEach(r => { r.on = false; });                                    // 세션 안내만 봅니다
+  motion('idle', 0.1); Lab.sessionStart('csi:' + ID, 'manual');
+  tick(2000); Lab.label(true); tick(500); motion('motion', 1.1); tick(2000); motion('idle', 0.1);
+  const ss = Lab.S.session, first = ss.cur; Lab.label(false); tick(2200); Lab.passCheck(ss, first, 1);
+  tick(8000); Lab.label(true); tick(2000); const second = ss.cur; Lab.label(false); tick(2200); Lab.passCheck(ss, second, 2);
+  tick(3000); Lab.sessionStop();
+  const out = notes(sent);
+  assert.deepEqual(out.map(n => n.title), ['검증 시작: CSI a1b2', '통과 1: 감지됨', '통과 2: 놓침', '검증 끝: 1/2 감지']);
+  assert.deepEqual(out.map(n => n.level), ['info', 'info', 'alert', 'alert']);
+  assert.equal(out[2].body, '지금까지 1/2 감지'); assert.equal(out[3].body, '놓침 1 · 오탐 0 · 재현율 50%');
+  assert.equal(Lab.passCheck(ss, second, 2), null, '끝난 세션에는 통과 안내를 더 내지 않는다');
+  Lab.cfg.notify.session = false; Lab.sessionStart('csi:' + ID, 'manual'); Lab.sessionStop();
+  assert.equal(notes(sent).length, 4, '안내를 끄면 세션 알림이 나가지 않는다');
+});
+
+test('T-CON-014 예전에 저장한 설정은 알림 규칙을 새 형식으로 옮겨 온다', () => {
+  const old = { room: { w: 10, h: 7 }, nodes: [], pinned: [], cam: { url: '' }, led: { topic: 'wled/lab/api' }, broker: { url: 'x', user: 'lab' }, bring: {},
+    rules: [{ id: 'r3', on: true, name: '5분 동안 조용하면 알림 토픽으로 보내기', when: { t: 'quiet', node: '*', sec: 300 }, then: { t: 'publish', topic: 'lab/notify', payload: '{"msg":"quiet"}' }, fired: 0, last: 0 },
+      { id: 'rx', on: true, name: '내가 만든 규칙', when: { t: 'motion', node: '*' }, then: { t: 'publish', topic: 'my/topic', payload: '{}' }, fired: 0, last: 0 }] };
+  const { Lab } = boot(old);
+  const r = Lab.cfg.rules;
+  assert.equal(JSON.stringify(r.find(x => x.id === 'r3').then), '{"t":"notify","level":"info"}');
+  assert.equal(JSON.stringify(r.find(x => x.id === 'rx').then), '{"t":"publish","topic":"my/topic","payload":"{}"}', '직접 만든 규칙은 건드리지 않는다');
+  assert.ok(r.some(x => x.when.t === 'motion' && x.then.t === 'notify'));
+  assert.equal(Lab.cfg.notify.session, true);
 });

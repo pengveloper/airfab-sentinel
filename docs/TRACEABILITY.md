@@ -25,6 +25,11 @@ Status words: SIMULATED, SOFTWARE_VERIFIED, HARDWARE_VERIFIED, OPERATOR_REQUIRED
 | REQ-SL-018 | The hub starts only after a password is set, and the password is not stored in clear text. | app smoke test, step 2 | EVD-P1-010 | SOFTWARE_VERIFIED on Linux; Windows DPAPI path is EVD-P1-011 |
 | REQ-SL-019 | The packaged executable starts, is isolated, and has its hardening fuses set. | `tests/packaged.check.mjs` | EVD-P1-010, EVD-P1-011 | SOFTWARE_VERIFIED on Linux; Windows is EVD-P1-011 |
 | REQ-SL-020 | Windows installs and runs the app without a publisher warning. | Store installation | EVD-P1-012 | OPERATOR_REQUIRED (needs Store submission) |
+| REQ-SL-021 | Alerts leave on one topic as version 1 JSON with masked identifiers and a source label that never calls simulated values a measurement. | T-CON-011, T-CON-012 | EVD-P1-013 | SOFTWARE_VERIFIED |
+| REQ-SL-022 | A validation session announces its start, each pass as detected or missed, and its result. | T-CON-013 | EVD-P1-013 | SOFTWARE_VERIFIED |
+| REQ-SL-023 | Settings saved before the alert channel existed are migrated without changing the user's own rules. | T-CON-014 | EVD-P1-013 | SOFTWARE_VERIFIED |
+| REQ-SL-024 | On the embedded hub only the app can publish alerts. Devices can subscribe but cannot forge one. | T-HUB-010, app smoke test, alert step | EVD-P1-014 | SOFTWARE_VERIFIED |
+| REQ-SL-025 | Alerts are shown on real glasses or in a phone app. | a receiver app ([NOTIFY.md](NOTIFY.md)) | EVD-P1-015 | OPERATOR_REQUIRED (no receiver built yet) |
 
 Hardware results are added only with the board, firmware version, operator and time recorded.
 Failed results stay in the table.

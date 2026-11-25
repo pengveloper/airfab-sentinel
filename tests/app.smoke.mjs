@@ -32,7 +32,12 @@ try {
   const ready = () => win.waitForFunction(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, { timeout: 20_000 });
   await ready();
   // 화면 언어는 기기 언어를 따릅니다. 아래 단계는 한국어 문장을 확인하므로, 영어로 뜬 환경(빌드 서버)에서는 먼저 한국어로 바꿉니다.
-  if (await win.evaluate(() => I18N.lang) !== 'ko') { await win.evaluate(() => I18N.set('ko')); await win.waitForFunction(() => window.I18N && I18N.lang === 'ko', null, { timeout: 20_000 }); await ready(); console.log('note started in English, switched to Korean'); }
+  const langState = () => win.evaluate(() => ({ lang: window.I18N && I18N.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable: ' + e.name; } })(), system: navigator.language, search: location.search }));
+  if ((await langState()).lang !== 'ko') {
+    await Promise.all([win.waitForEvent('load', { timeout: 30_000 }), win.evaluate(() => { I18N.set('ko'); })]); await ready();
+    const st = await langState(); console.log('note started in English, switched to Korean: ' + JSON.stringify(st));
+    assert.equal(st.lang, 'ko'); assert.equal(st.search, '', 'the language parameter is removed from the address once applied');
+  }
 
   // 1. 창의 격리 상태
   const iso = await win.evaluate(async () => ({ url: location.href, require: typeof window.require, process: typeof window.process, bridge: Object.keys(window.desktop).sort(),
@@ -120,8 +125,9 @@ try {
   step('demo views open without errors');
 
   // 6-1. 영어 화면: 버튼으로 언어를 바꾸면 모든 화면에 한글이 남지 않고, 사전에 없는 문장도 없다
-  await win.click('#tab-space'); await win.click('#lang');
-  await win.waitForFunction(() => window.I18N && I18N.lang === 'en' && window.Desk && window.Desk.status(), null, { timeout: 20_000 }); await win.waitForTimeout(1500);
+  await win.click('#tab-space'); await Promise.all([win.waitForEvent('load', { timeout: 30_000 }), win.click('#lang')]); await ready();
+  console.log('note switched with the button: ' + JSON.stringify(await langState()));
+  assert.equal(await win.evaluate(() => I18N.lang), 'en'); await win.waitForTimeout(1500);
   assert.equal(await win.evaluate(() => document.documentElement.lang), 'en');
   await win.click('#openConn'); await win.click('#dk-demo'); await win.waitForTimeout(4000);
   const leftover = () => win.evaluate(() => { const H = /[\u3131-\u318e\uac00-\ud7a3]/, seen = [];
@@ -149,7 +155,7 @@ try {
 
 } catch (e) { failed = true; console.error(e);
   // 실패했을 때 원인을 좁힐 수 있도록 창의 상태를 남깁니다.
-  try { const w = await app.firstWindow(); console.log('state at failure:', JSON.stringify(await w.evaluate(() => ({ setupHidden: document.querySelector('#setup').hidden, emptyHidden: document.querySelector('#sp-empty').hidden, csi: window.Lab && Lab.S.csi.size, rooms: window.Lab && Lab.S.rooms.size, devs: window.Lab && Lab.S.devs.size, deskHidden: document.querySelector('#desk').hidden, source: window.Lab && Lab.S.source, status: window.Desk && window.Desk.status(), size: [innerWidth, innerHeight], visibility: document.visibilityState, body: document.body.className })))); } catch { /* ignore */ }
+  try { const w = await app.firstWindow(); console.log('state at failure:', JSON.stringify(await w.evaluate(() => ({ lang: window.I18N && I18N.lang, address: location.href, setupHidden: document.querySelector('#setup').hidden, emptyHidden: document.querySelector('#sp-empty').hidden, csi: window.Lab && Lab.S.csi.size, rooms: window.Lab && Lab.S.rooms.size, devs: window.Lab && Lab.S.devs.size, deskHidden: document.querySelector('#desk').hidden, source: window.Lab && Lab.S.source, status: window.Desk && window.Desk.status(), size: [innerWidth, innerHeight], visibility: document.visibilityState, body: document.body.className })))); } catch { /* ignore */ }
   try { await (await app.firstWindow()).screenshot({ path: path.join(out, 'failure.png') }); } catch { /* ignore */ } }
 await app.close().catch(() => {});
 await new Promise(r => setTimeout(r, 1000));

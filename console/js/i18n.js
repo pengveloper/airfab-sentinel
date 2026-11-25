@@ -1,7 +1,7 @@
 /* 화면 언어. 한국어 원문이 곧 열쇠입니다.
    영어 사전(i18n-en.js)에 같은 열쇠가 있으면 그 문장을 쓰고, 없으면 원문을 그대로 보여 줍니다.
    L`노드 ${n}대` 처럼 쓰면 열쇠는 "노드 {0}대"가 되고, 영어 문장에서는 {0}의 자리를 옮길 수 있습니다.
-   언어는 주소의 ?lang=, 저장해 둔 선택, 기기 언어 순으로 정합니다. 바꾸면 화면을 다시 불러옵니다. */
+   언어는 주소의 ?lang=, 저장해 둔 선택, 기기 언어 순으로 정합니다. 바꾸면 화면을 다시 엽니다. */
 (function(g){'use strict';
 const EN=g.I18N_EN||{},HANGUL=/[ㄱ-ㆎ가-힣]/,KEY='sentinel-lab-lang',ATTRS=['title','aria-label','placeholder','alt','data-title'];
 const ok=x=>x==='ko'||x==='en';
@@ -9,7 +9,8 @@ let saved=null,asked=null;
 try{saved=g.localStorage.getItem(KEY);}catch(e){}
 try{asked=new URLSearchParams(g.location.search).get('lang');}catch(e){}
 const lang=ok(asked)?asked:ok(saved)?saved:/^ko\b/i.test((g.navigator&&g.navigator.language)||'ko')?'ko':'en';
-if(ok(asked)&&asked!==saved){try{g.localStorage.setItem(KEY,asked);}catch(e){}}
+if(ok(asked)){try{if(asked!==saved)g.localStorage.setItem(KEY,asked);}catch(e){}
+  try{const u=new URL(g.location.href);u.searchParams.delete('lang');g.history.replaceState(null,'',u.toString());}catch(e){}} // 적용한 뒤에는 주소를 깨끗이 둡니다
 const missing=new Set(),keys=new WeakMap();
 const join=(s,v)=>{let o=s[0];for(let i=0;i<v.length;i++)o+=v[i]+s[i+1];return o;};
 function L(s,...v){
@@ -29,9 +30,8 @@ const REV=new Map();for(const k in EN)if(k.length<=12&&!/[{<]/.test(k))REV.set(E
 const alias=a=>typeof a!=='string'?a:lang==='en'?(a.length<=12&&HANGUL.test(a)&&EN[a]!=null?EN[a]:a):(REV.has(a)?REV.get(a):a);
 g.L=L;
 g.I18N={lang,missing,page,alias,set(l){if(!ok(l)||l===lang)return;try{g.localStorage.setItem(KEY,l);}catch(e){}
-  // 주소에 ?lang=이 남아 있으면 저장한 선택보다 앞서므로 먼저 지웁니다. 주소가 같으면 replace로는 다시 불러오지 않으니 reload를 씁니다.
-  try{const u=new URL(g.location.href);if(u.searchParams.has('lang')){u.searchParams.delete('lang');g.history.replaceState(null,'',u.toString());}}catch(e){}
-  g.location.reload();}};
+  // 고른 언어를 주소에 실어 다시 엽니다. 저장소를 쓸 수 없는 환경에서도 바뀌고, 주소가 달라지므로 화면이 반드시 새로 열립니다.
+  try{const u=new URL(g.location.href);u.searchParams.set('lang',l);g.location.replace(u.toString());}catch(e){g.location.reload();}}};
 page();
 /* 언어 바꾸기 버튼: 바꿀 언어의 이름을 그 언어로 적습니다 */
 if(g.document)for(const b of g.document.querySelectorAll('#lang,#su-lang')){const to=lang==='ko'?'en':'ko';b.textContent=to==='en'?'EN':'한국어';b.lang=to;

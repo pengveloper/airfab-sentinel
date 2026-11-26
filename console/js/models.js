@@ -58,12 +58,13 @@ function sensorPrompt(){const src=S.source==='live'?(S.simEver||S.simMixed?L('�
 
 /* ---- 안경 질문: lab/in/ask → 모델 → lab/out/notify ---- */
 const SYS={ko:'너는 스마트 안경 렌즈에 뜨는 짧은 답을 쓴다. 한국어로 80자 이내, 한두 문장으로 답한다. 마크다운, 목록, 이모지는 쓰지 않는다. 모르면 모른다고 한다.',
-  en:'You write short answers shown on a smart-glasses lens. Answer in English in at most 80 characters, one or two sentences. No markdown, lists or emoji. If you are not sure, say so.'};
+  en:'You write short answers shown on a smart-glasses lens. Answer in English in at most 80 characters, one or two sentences. No markdown, lists or emoji. If you are not sure, say so.',
+  zh:'你为智能眼镜镜片写简短的回答。用中文回答，不超过40个字，一两句话。不要使用Markdown、列表或表情符号。不确定时就说不确定。'};
 const clean=s=>String(s).replace(/[\u0000-\u001f\u007f]+/g,' ').replace(/[*_#`>~|]/g,'').replace(/\s+/g,' ').trim();
 const cut=(s,n)=>{const a=Array.from(s);return a.length>n?a.slice(0,n-1).join('')+'…':s;};
 let pending=0,lastAt=0;
 function parseAsk(text){let j;try{j=JSON.parse(text);}catch(e){return null;}if(!j||j.v!==1||typeof j.text!=='string')return null;
-  const q=cut(clean(j.text),300);if(!q)return null;return{id:typeof j.id==='string'?j.id.slice(0,40):'',q,lang:j.lang==='en'?'en':j.lang==='ko'?'ko':I18N.lang};}
+  const q=cut(clean(j.text),300);if(!q)return null;return{id:typeof j.id==='string'?j.id.slice(0,40):'',q,lang:j.lang==='en'||j.lang==='ko'||j.lang==='zh'?j.lang:I18N.lang};}
 async function onAsk(topic,text,src,retained){if(topic!==ASK||src!=='live'||retained||!D)return; // 보관된 예전 질문에는 답하지 않습니다
   const a=parseAsk(text);if(!a)return;const c=cfg(),t=Lab.now();
   const entry={t,q:a.q,a:'',err:''};st.asks.unshift(entry);if(st.asks.length>20)st.asks.pop();

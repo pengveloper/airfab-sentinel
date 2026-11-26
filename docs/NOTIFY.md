@@ -64,8 +64,8 @@ own voice input and publishes one question:
 | `v` | Format version, 1 |
 | `id` | Chosen by the asker; the answer carries it back in `re` |
 | `text` | The question, up to 300 characters |
-| `lang` | `ko` or `en`: the language the answer should be in |
-| `from` | Who asked, for the log only |
+| `lang` | `ko`, `en` or `zh`: the language the answer should be in |
+| `from` | Who asked, for the log only (`relay` for the phone, `rokid_agent` for the relay server) |
 
 In the desktop app's 모델 view, "휴대폰·안경 질문에 답하기" turns answering on and picks the model.
 The question goes to that model on this PC (Ollama), with instructions to answer in at most 80
@@ -74,6 +74,12 @@ characters, and the answer goes out on `lab/out/notify` with `kind` `answer`, `s
 being answered, the app says so in an alert instead of staying silent. Retained questions are
 ignored. Any client that has the hub password can ask, so the app takes at most one new question
 every 1.5 seconds (T-CON-020 and the app smoke test).
+
+The same questions can come from away from home through the relay server: the Rokid app's custom
+agent posts to the server, the server sends the question down the desktop app's own outgoing
+connection, and the app hands it to the window as `lab/in/ask` with `from` `rokid_agent` and an id
+starting with `r`. Only the alert the window publishes for that id goes back up the connection.
+See [ROKID_AGENT.md](ROKID_AGENT.md).
 
 ## Trying it without glasses
 

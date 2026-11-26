@@ -52,3 +52,27 @@ export function suggestPassword() {
 /** Where the local model server (Ollama) listens. Not a secret; checked again by models.mjs. */
 export function getModelUrl() { const v = load().modelUrl; return typeof v === 'string' ? v : undefined; }
 export function setModelUrl(url) { const s = load(); s.modelUrl = String(url).slice(0, 200); save(s); }
+
+/**
+ * The relay server link (desktop/main/link.mjs): its address in clear, the PC token sealed like
+ * the hub password. getLink() returns the token only to the main process.
+ */
+export function getLink() {
+  const s = load();
+  let token = null;
+  if (s.linkTokenEnc && secure()) { try { token = safeStorage.decryptString(Buffer.from(s.linkTokenEnc, 'base64')); } catch { token = null; } }
+  return { url: typeof s.linkUrl === 'string' ? s.linkUrl : null, token };
+}
+
+/** A missing token keeps the one already saved. */
+export function setLink(url, token) {
+  const s = load();
+  if (token) {
+    if (!secure()) throw Object.assign(new Error('secure storage unavailable'), { code: 'NO_SECURE_STORAGE' });
+    s.linkTokenEnc = safeStorage.encryptString(token).toString('base64');
+  }
+  s.linkUrl = String(url).slice(0, 300);
+  save(s);
+}
+
+export function clearLink() { const s = load(); delete s.linkUrl; delete s.linkTokenEnc; save(s); }

@@ -10,7 +10,7 @@
   "scripts": {
     "postinstall": "node desktop/scripts/fonts.mjs",
     "start": "electron .",
-    "test": "node --test tests/core.test.mjs tests/broker.test.mjs tests/models.test.mjs tests/i18n.test.mjs",
+    "test": "node --test tests/core.test.mjs tests/broker.test.mjs tests/models.test.mjs tests/server.test.mjs tests/i18n.test.mjs",
     "test:app": "node tests/app.smoke.mjs",
     "fonts": "node desktop/scripts/fonts.mjs",
     "dist": "electron-builder --config desktop/builder.config.js --publish never"
@@ -26,6 +26,7 @@
     "electron": "45.4.1",
     "electron-builder": "26.18.0",
     "mqtt": "5.16.1",
-    "playwright-core": "1.65.1"
+    "playwright-core": "1.65.1",
+    "ws": "8.23.0"
   }
 }

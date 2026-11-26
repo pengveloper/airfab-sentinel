@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, Menu, clipboard, ipcMain, protocol, session, shell } from 'electron';
 import { Hub } from './broker.mjs';
 import { Models } from './models.mjs';
+import { Link, linkUrl, validToken } from './link.mjs';
 import * as store from './store.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -38,11 +39,29 @@ const port = Number(process.env.WAVREL_MQTT_PORT) || 1883;
 const hub = new Hub({ port, getPassword: () => store.getPassword() });
 // Local models (Ollama) on this PC or the home network. WAVREL_OLLAMA_URL is for tests.
 const models = new Models({ url: process.env.WAVREL_OLLAMA_URL || store.getModelUrl() });
+// The relay server link: questions asked on Rokid glasses away from home (docs/ROKID_AGENT.md).
+const link = new Link();
 const send = (channel, data) => { if (win && !win.isDestroyed()) win.webContents.send(channel, data); };
 const publicStatus = () => ({ ...hub.status(), hasPassword: store.hasPassword(), error: lastError });
 let lastError = null;
 
 hub.on('message', m => send('mqtt:message', m));
+
+// A question from the relay server is handed to the window as if a phone had asked it on
+// lab/in/ask, so the same switch, model and rate limit apply. Its answer is the alert the
+// window publishes for that question (relayAnswer below). Nothing else crosses the link.
+const HUB_OFF = { ko: 'PC의 Wavrel 허브가 꺼져 있어 답할 수 없습니다.', en: 'The Wavrel hub on the PC is off, so it cannot answer.', zh: '电脑上的 Wavrel 集线器已关闭，无法回答。' };
+link.on('state', s => send('link:state', linkStatus()));
+link.on('ask', q => {
+  if (!hub.running || !win) { link.answer(q.id, HUB_OFF[q.lang] || HUB_OFF.en); return; }
+  send('mqtt:message', { topic: 'lab/in/ask', payload: JSON.stringify({ v: 1, id: 'r' + q.id, text: q.text, lang: q.lang, from: 'rokid_agent' }), retain: false });
+});
+function relayAnswer(topic, payload) {
+  if (topic !== 'lab/out/notify' || typeof payload !== 'string' || payload.length > 8192) return;
+  let n; try { n = JSON.parse(payload); } catch { return; }
+  if (n && n.kind === 'answer' && typeof n.re === 'string' && /^r[a-f0-9]{12}$/.test(n.re)) link.answer(n.re.slice(1), String(n.body || n.title || ''));
+}
+function linkStatus() { const saved = store.getLink(); return { ...link.status(), url: saved.url, hasToken: !!saved.token }; }
 hub.on('clients', () => send('broker:state', publicStatus()));
 hub.on('state', () => send('broker:state', publicStatus()));
 
@@ -95,10 +114,22 @@ function wireIpc() {
   handle('broker:reveal', () => store.getPassword());
   handle('broker:restart', async () => { await hub.stop(); return startHub(); });
   handle('mqtt:replay', () => hub.retainedList());
-  handle('mqtt:publish', arg => !!arg && hub.publish(arg.topic, arg.payload));
+  handle('mqtt:publish', arg => { if (!arg) return false; relayAnswer(arg.topic, arg.payload); return hub.publish(arg.topic, arg.payload); });
   handle('models:list', () => models.list());
   handle('models:ask', arg => models.ask(arg && typeof arg === 'object' ? { model: arg.model, prompt: arg.prompt, system: arg.system, maxTokens: arg.maxTokens } : {}));
   handle('models:url', raw => { if (!models.setUrl(raw)) return { ok: false, url: models.url }; store.setModelUrl(models.url); return { ok: true, url: models.url }; });
+  handle('link:status', () => linkStatus());
+  handle('link:set', arg => {
+    const a = arg && typeof arg === 'object' ? arg : {};
+    if (a.url === '') { store.clearLink(); link.stop(); return linkStatus(); }
+    const url = linkUrl(a.url);
+    if (!url) return { ...linkStatus(), refused: 'BAD_URL' };
+    const token = typeof a.token === 'string' && a.token.trim() ? a.token.trim() : null;
+    if (token && !validToken(token)) return { ...linkStatus(), refused: 'BAD_TOKEN' };
+    try { store.setLink(url, token); } catch (e) { return { ...linkStatus(), refused: e.code || 'INVALID' }; }
+    link.configure(store.getLink());
+    return linkStatus();
+  });
   handle('clipboard:write', text => { if (typeof text === 'string' && text.length <= 200_000) { clipboard.writeText(text); return true; } return false; });
 }
 
@@ -120,6 +151,8 @@ else {
     wireIpc();
     createWindow();
     if (store.hasPassword()) await startHub();
+    const saved = store.getLink();
+    if (saved.url && saved.token) link.configure(saved);
   });
-  app.on('window-all-closed', async () => { await hub.stop().catch(() => {}); app.quit(); });
+  app.on('window-all-closed', async () => { link.stop(); await hub.stop().catch(() => {}); app.quit(); });
 }

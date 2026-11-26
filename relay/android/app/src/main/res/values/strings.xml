@@ -24,8 +24,8 @@
     <string name="hub_blocked">Blocked for a minute</string>
     <string name="hub_unreachable">Can\'t reach the PC</string>
     <string name="hub_not_local">Not on this network</string>
-    <string name="hub_not_local_help">That name leads to an address outside the local network, so the password was not sent. Use the Host address from the Built-in broker panel.</string>
-    <string name="hub_wrong_password_help">The PC refused the password. Copy it again from the Built-in broker panel, then start the relay again. The phone won\'t retry on its own, because the PC blocks an address for a minute after five wrong passwords.</string>
+    <string name="hub_not_local_help">That name leads to an address outside the local network, so the password was not sent. Use the Host address from the Built-in hub panel.</string>
+    <string name="hub_wrong_password_help">The PC refused the password. Copy it again from the Built-in hub panel, then start the relay again. The phone won\'t retry on its own, because the PC blocks an address for a minute after five wrong passwords.</string>
     <string name="hub_blocked_help">The PC is blocking this phone for a minute after several wrong passwords. The relay tries again in about a minute.</string>
 
     <string name="glass_none">None paired</string>
@@ -49,19 +49,19 @@
     <string name="lens_waiting">Waiting for an alert</string>
     <string name="lens_waiting_body">Alerts appear here exactly as your glasses show them.</string>
 
-    <string name="section_hub">PC broker</string>
+    <string name="section_hub">PC hub</string>
     <string name="label_address">Address</string>
     <string name="hint_address">For example 192.168.0.12</string>
-    <string name="label_password">Broker password</string>
-    <string name="hint_password">From the Built-in broker panel</string>
+    <string name="label_password">Hub password</string>
+    <string name="hint_password">From the Built-in hub panel</string>
     <string name="hint_saved">Saved. Type to replace it</string>
-    <string name="help_hub">In Wavrel on your PC, press Connect. The Built-in broker panel shows the Host address and the password. The phone and the PC need to be on the same Wi-Fi.</string>
-    <string name="addr_empty">Enter the Host address from the Built-in broker panel.</string>
-    <string name="addr_bad_host">That isn\'t an address. Use the Host numbers from the Built-in broker panel, such as 192.168.0.12.</string>
-    <string name="addr_bad_port">The port must be a number from 1 to 65535. The broker uses 1883 unless you changed it.</string>
-    <string name="addr_loopback">That address points at this phone. Use the Host address from the Built-in broker panel.</string>
+    <string name="help_hub">In Wavrel on your PC, press Connect. The Built-in hub panel shows the Host address and the password. The phone and the PC need to be on the same Wi-Fi.</string>
+    <string name="addr_empty">Enter the Host address from the Built-in hub panel.</string>
+    <string name="addr_bad_host">That isn\'t an address. Use the Host numbers from the Built-in hub panel, such as 192.168.0.12.</string>
+    <string name="addr_bad_port">The port must be a number from 1 to 65535. The hub uses 1883 unless you changed it.</string>
+    <string name="addr_loopback">That address points at this phone. Use the Host address from the Built-in hub panel.</string>
     <string name="addr_not_private">The PC only accepts phones on the same local network. Use its local address, which usually starts with 192.168, 10 or 172.</string>
-    <string name="pw_empty">Enter the broker password from the Built-in broker panel.</string>
+    <string name="pw_empty">Enter the hub password from the Built-in hub panel.</string>
 
     <string name="section_glasses">Rokid glasses</string>
     <string name="find_glasses">Find glasses</string>

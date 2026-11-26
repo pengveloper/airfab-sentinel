@@ -26,6 +26,22 @@ jobs:
       - name: Desktop smoke test
         run: xvfb-run -a npm run test:app
 
+  server:
+    name: Relay server (Node 24, as deployed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Relay server and desktop link tests
+        run: node --test tests/server.test.mjs
+      - name: Relay server dependency audit
+        working-directory: server
+        run: npm audit --omit=dev --audit-level=high
+
   windows:
     name: Build and verify (Windows)
     runs-on: windows-latest

@@ -19,7 +19,8 @@ any client but itself (T-HUB-010), so the relay cannot be used to fake an alert.
 | | |
 |---|---|
 | Built and unit tested | Every push, in the `relay` workflow (T-REL-001 to T-REL-008) |
-| On a phone with the PC app | Not run yet (OPERATOR_REQUIRED) |
+| Against the desktop app's broker | Every push, in an Android 15 emulator: wrong password, connect, alert on screen and as a notification, simulated values labelled, Korean, unfolded layout |
+| On a real phone with the PC app | Not run yet (OPERATOR_REQUIRED) |
 | On Rokid glasses | Not run yet (OPERATOR_REQUIRED). Rokid's CXR-M SDK documents the first generation of Rokid Glasses. Whether it drives Rokid Glasses 2 is not confirmed |
 
 ## Install

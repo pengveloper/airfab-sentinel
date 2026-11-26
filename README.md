@@ -19,7 +19,7 @@ claimed in this repository yet. See [Status](#status).
 - **Validation, not vibes.** A session records when a person really crossed the link and matches that against the firmware's detections: hits, misses, false detections, recall. Ground truth comes from a held key, a PIR sensor, or (demo only) the simulator.
 - **Evidence you can hand over.** Export the message log, replay it later, and generate a standalone HTML report with the score curve of every session.
 - **English and Korean.** The interface follows the system language and switches with one button. A test fails the build if any sentence lacks a translation.
-- **Alerts for glasses and phones.** Rules and validation sessions publish one short sentence at a time on a single topic that only the app can write to, so a wearable app needs nothing but an MQTT subscription. A full-screen black page previews what the glasses would show. No receiver has been tested on real glasses yet. Format: [docs/NOTIFY.md](docs/NOTIFY.md).
+- **Alerts for glasses and phones.** Rules and validation sessions publish one short sentence at a time on a single topic that only the app can write to, so a wearable app needs nothing but an MQTT subscription. A full-screen black page previews what the glasses would show. [Sentinel Relay](relay/README.md), an Android app, receives them as phone notifications and puts them on Rokid glasses. It is built, unit tested and run in an emulator against the app's broker in CI; it has not run on real glasses yet. Format: [docs/NOTIFY.md](docs/NOTIFY.md).
 
 | First run | Hub panel |
 |---|---|
@@ -123,7 +123,8 @@ None of these firmwares is included or modified here. Each keeps its own license
 | Desktop app: window isolation, first run, password storage, message flow, rule delivery, alert delivery, navigation lock | Smoke test of the real app passes on Linux; packaged build starts (SOFTWARE_VERIFIED) |
 | Windows build, DPAPI path, MSIX packaging, Defender scan | Passes in GitHub Actions on `windows-latest` (EVD-P1-011); see the latest run |
 | English interface: every sentence translated, no Korean left on any screen or in the report | 4 automated tests and an English pass in the app smoke test (SOFTWARE_VERIFIED) |
-| Alerts shown on real glasses or a phone app | Not done yet (OPERATOR_REQUIRED) |
+| Alerts in the Android relay, from the app's broker | Checked in an Android emulator in CI (`relay` workflow) |
+| Alerts shown on real glasses or a real phone | Not done yet (OPERATOR_REQUIRED) |
 | Installing from the Microsoft Store without a warning | Not done yet (OPERATOR_REQUIRED) |
 | Real boards | Not measured yet (OPERATOR_REQUIRED) |
 
@@ -147,6 +148,7 @@ desktop/    Electron main process, embedded hub, preload bridge, packaging confi
 console/    the console (runs in the desktop window and as a static page)
 tests/      data layer, hub, app smoke test, packaged-build check
 broker/     optional Mosquitto kit for running without the desktop app
+relay/      Android app that carries alerts to the phone and Rokid glasses, and its CI driver
 tools/      broker-sim.html, a publisher of simulated messages through a real broker
 evidence/   evidence table and the template for hardware verification
 docs/       screenshots, traceability, distribution

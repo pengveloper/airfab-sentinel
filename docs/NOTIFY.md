@@ -4,8 +4,9 @@ Sentinel Lab can say what it sees in one short sentence at a time, on one MQTT t
 A receiver (an app for smart glasses, a phone, anything that speaks MQTT) subscribes to that
 topic and shows the title and body. It needs to know nothing about ESP32 firmware.
 
-Status: the sending side is covered by automated tests. No receiver app has been built or
-tested on real glasses yet (OPERATOR_REQUIRED).
+Status: the sending side is covered by automated tests. A receiver for Android phones and Rokid
+glasses is in [relay/](../relay/README.md). It is built and unit tested in CI but has not yet run
+on a phone or on glasses (OPERATOR_REQUIRED).
 
 ## Topic
 
@@ -55,6 +56,12 @@ mistaken for a measurement (T-CON-012).
 ```sh
 mosquitto_sub -h <address of this PC> -p 1883 -u lab -P <hub password> -t lab/out/notify
 ```
+
+## Receivers
+
+- [Sentinel Relay](../relay/README.md) for Android: shows each alert as a phone notification and on
+  Rokid glasses through Rokid's CXR-M SDK. Tests T-REL-001 to T-REL-004 check it against this
+  format, including that a missing or unknown `source` is labelled rather than shown as a measurement.
 
 ## Writing a receiver
 

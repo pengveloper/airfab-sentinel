@@ -19,7 +19,8 @@ Sentinel Relay는 PC의 Sentinel Lab이 보내는 알림을 안드로이드 휴�
 | | |
 |---|---|
 | 빌드와 단위 시험 | 푸시할 때마다 `relay` 워크플로에서 (T-REL-001 ~ T-REL-008) |
-| PC 앱과 휴대폰으로 실제 실행 | 아직 안 함 (OPERATOR_REQUIRED) |
+| 데스크톱 앱 브로커와 주고받기 | 푸시할 때마다 안드로이드 15 에뮬레이터에서: 틀린 비밀번호, 연결, 화면과 휴대폰 알림에 알림 도착, 시뮬레이션 표시, 한국어, 펼친 화면 |
+| 실제 휴대폰과 PC 앱으로 실행 | 아직 안 함 (OPERATOR_REQUIRED) |
 | 로키드 안경에서 실제 실행 | 아직 안 함 (OPERATOR_REQUIRED). Rokid CXR-M SDK 문서는 1세대 Rokid Glasses 기준이라 Rokid Glasses 2에서 동작하는지는 확인되지 않았습니다 |
 
 ## 설치

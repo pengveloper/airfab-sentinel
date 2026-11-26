@@ -25,9 +25,12 @@ def dump():
         adb("shell", "uiautomator", "dump", "/sdcard/ui.xml", check=False)
         raw = adb("exec-out", "cat", "/sdcard/ui.xml", check=False)
         try:
-            return ET.fromstring(raw)
+            root = ET.fromstring(raw)
         except ET.ParseError:
             time.sleep(1)
+            continue
+        if not dismiss_system_dialog(root):
+            return root
     raise SystemExit("could not read the screen")
 
 
@@ -70,6 +73,20 @@ def type_into(rid, value):
     adb("shell", "input", "text", value)
     adb("shell", "input", "keyevent", "KEYCODE_ESCAPE")
     time.sleep(0.5)
+
+
+def dismiss_system_dialog(root):
+    """The emulator's launcher sometimes stops responding on a slow runner and Android covers
+    the screen with "isn't responding". That is not the relay: press Wait and carry on."""
+    for n in root.iter("node"):
+        if n.get("resource-id") == "android:id/aerr_wait":
+            b = re.findall(r"\d+", n.get("bounds", ""))
+            if len(b) == 4:
+                adb("shell", "input", "tap", str((int(b[0]) + int(b[2])) // 2), str((int(b[1]) + int(b[3])) // 2))
+                print("dismissed a system 'not responding' dialog")
+                time.sleep(1)
+                return True
+    return False
 
 
 def wait_for(desc, check, seconds=20):

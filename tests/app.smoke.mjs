@@ -22,8 +22,17 @@ const ID = 'a1b2c3d4e5f60718';
 // Ollama 대신 같은 API로 답하는 작은 서버. 모델 화면과 안경 질문 경로를 실제 앱에서 확인합니다.
 const ollama = http.createServer((req, res) => { let b = ''; req.on('data', c => { b += c; }); req.on('end', () => {
   const j = b ? JSON.parse(b) : null; res.writeHead(200, { 'content-type': 'application/json' });
-  if (req.url === '/api/tags') res.end(JSON.stringify({ models: [{ name: 'tiny-test:1b', size: 1e9, details: { family: 'test', parameter_size: '1B', quantization_level: 'Q4_0' } }] }));
-  else res.end(JSON.stringify({ message: { role: 'assistant', content: j.messages.some(m => m.role === 'system') ? '거실은 지금 조용합니다.' : '시험용 답입니다.' }, eval_count: 8, eval_duration: 4e8, load_duration: 1e6 })); }); });
+  if (req.url === '/api/tags') res.end(JSON.stringify({ models: [{ name: 'tiny-test:1b', size: 1e9, details: { family: 'test', parameter_size: '1B', quantization_level: 'Q4_0' } },
+    { name: 'eyes-test:4b', size: 3e9, details: { family: 'test', families: ['test', 'clip'], parameter_size: '4B', quantization_level: 'Q4_0' } }] }));
+  else {
+    const pic = j.messages.at(-1).images;
+    if (pic) seenPictures.push(pic[0]);
+    res.end(JSON.stringify({ message: { role: 'assistant', content: pic ? '현관에 사람 한 명이 보입니다.' : j.messages.some(m => m.role === 'system') ? '거실은 지금 조용합니다.' : '시험용 답입니다.' }, eval_count: 8, eval_duration: 4e8, load_duration: 1e6 })); } }); });
+const seenPictures = [];
+// 시험용 카메라: Tasmota처럼 /snapshot.jpg에서 아주 작은 JPEG 한 장을 줍니다.
+const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0xff, 0xd9]);
+const cam = http.createServer((req, res) => { if (req.url === '/snapshot.jpg') { res.writeHead(200, { 'content-type': 'image/jpeg' }); res.end(JPEG); } else { res.writeHead(404); res.end(); } });
+await new Promise(r => cam.listen(0, '127.0.0.1', r));
 await new Promise(r => ollama.listen(0, '127.0.0.1', r));
 // 창을 다루는 동작은 모두 창 안에서 직접 실행합니다.
 // Windows 빌드 서버에서는 시험 도구가 창이 열리는 순간을 놓치는 일이 있었고, 그러면 도구의 누르기와 기다림이 창은 멀쩡한데도 끝나지 않았습니다.
@@ -76,7 +85,7 @@ try {
     csp: (await fetch('index.html')).headers.get('content-security-policy'), outside: await fetch('app://wavrel/../package.json').then(r => r.status, () => 0) }));
   assert.equal(iso.url, 'app://wavrel/index.html'); assert.equal(iso.require, 'undefined'); assert.equal(iso.process, 'undefined');
   assert.ok(iso.csp.includes("script-src 'self'") && iso.csp.includes("object-src 'none'")); assert.notEqual(iso.outside, 200);
-  assert.deepEqual(iso.bridge, ['ask', 'copy', 'info', 'models', 'onBroker', 'onMessage', 'onRemote', 'publish', 'remote', 'replayRetained', 'restart', 'revealPassword', 'setModelServer', 'setRemote', 'setup', 'status', 'suggestPassword']);
+  assert.deepEqual(iso.bridge, ['ask', 'copy', 'info', 'look', 'models', 'onBroker', 'onMessage', 'onRemote', 'publish', 'remote', 'replayRetained', 'restart', 'revealPassword', 'setModelServer', 'setRemote', 'setup', 'status', 'suggestPassword']);
   assert.equal((await win.evaluate(() => window.desktop.setRemote('ws://agent.example.com/link', 'z'.repeat(20)))).refused, 'BAD_URL', 'the relay link must use wss:// unless it is this PC');
   assert.equal((await win.evaluate(() => window.desktop.setModelServer('http://8.8.8.8:11434'))).ok, false, 'the model server must be on this PC or the home network');
   step('window is isolated: no Node, fixed bridge, CSP header, no path escape');
@@ -181,6 +190,17 @@ try {
   assert.ok(answer && answer.kind === 'answer' && answer.source === 'local_model' && answer.body === '거실은 지금 조용합니다.' && answer.model === 'tiny-test:1b', 'a question from the glasses is answered on the alert topic: ' + JSON.stringify(answer));
   await shot(win, '06-models.png');
   step('models view reads the local model server, compares answers, and answers a question from the glasses as an alert');
+  // 5-2b. 카메라에게 묻기: 카메라 사진 한 장이 메인 프로세스를 거쳐 사진을 읽는 모델에만 가고, 모델이 본 사진과 답이 보인다
+  await win.evaluate(port => { Lab.cfg.cam.url = `http://127.0.0.1:${port}/snapshot.jpg`; Lab.save(); Look.draw(); }, cam.address().port);
+  await ui.until(() => document.querySelector('#lk-model').value === 'eyes-test:4b' && !document.querySelector('#lk-go').disabled, null, 10_000);
+  assert.deepEqual(await win.evaluate(() => [...document.querySelectorAll('#lk-model option')].map(o => o.value)), ['', 'eyes-test:4b'], 'only picture-reading models are offered');
+  await ui.click('#lk-go');
+  await ui.until(() => document.querySelector('#lk-text').textContent === '현관에 사람 한 명이 보입니다.', null, 10_000);
+  assert.ok(await win.evaluate(() => document.querySelector('#lk-img').src.startsWith('data:image/jpeg;base64,')), 'the window shows the picture the model saw');
+  assert.equal(Buffer.from(seenPictures.at(-1), 'base64').equals(JPEG), true, 'the model server received the camera picture');
+  assert.equal((await win.evaluate(p => window.desktop.look('eyes-test:4b', 'q', `http://8.8.8.8:${p}/snapshot.jpg`), 80)).error, 'CAMERA_BAD_URL', 'cameras outside the home network are refused');
+  await sleep(300); await shot(win, '06-models-look.png');
+  step('ask the camera: one picture goes from the camera to the picture-reading model through the main process, and the answer and picture are shown');
   // 5-3. 밖에서 묻기: 로키드 플랫폼 자리에서 중계 서버로 질문을 보내면, 서버가 이 PC에 전하고 고른 모델의 답이 SSE로 돌아온다
   const relayAk = 'smoke_ak_' + 'x'.repeat(30), relayToken = 'smoke_home_' + 'y'.repeat(30);
   const relay = relayServer({ rokidAk: relayAk, homeToken: relayToken });

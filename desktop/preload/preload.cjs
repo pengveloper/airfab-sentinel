@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('desktop', Object.freeze({
   models: () => ipcRenderer.invoke('models:list'),
   ask: (model, prompt, opts = {}) => ipcRenderer.invoke('models:ask', { model, prompt, system: opts.system, maxTokens: opts.maxTokens }),
   setModelServer: url => ipcRenderer.invoke('models:url', url),
+  look: (model, prompt, camera, opts = {}) => ipcRenderer.invoke('models:look', { model, prompt, camera, system: opts.system, maxTokens: opts.maxTokens }),
   remote: () => ipcRenderer.invoke('link:status'),
   setRemote: (url, token) => ipcRenderer.invoke('link:set', { url, token }),
   onMessage: listen('mqtt:message'),

@@ -11,7 +11,7 @@ import * as acorn from 'acorn';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'console');
 const HANGUL = /[ㄱ-ㆎ가-힣]/;
-const JS = ['core.js', 'sim.js', 'space.js', 'views.js', 'report.js', 'glass.js', 'models.js', 'remote.js', 'projects.js', 'desktop.js', 'app.js'];
+const JS = ['core.js', 'sim.js', 'space.js', 'views.js', 'report.js', 'glass.js', 'models.js', 'look.js', 'remote.js', 'projects.js', 'desktop.js', 'app.js'];
 const ATTRS = ['title', 'aria-label', 'placeholder', 'alt', 'data-title', 'value', 'content'];
 
 export const norm = s => s.replace(/\s+/g, ' ').trim();

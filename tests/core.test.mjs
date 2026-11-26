@@ -269,7 +269,8 @@ function bootModels(answer = { ok: true, text: '**거실은**\n 조용합니다.
   const els = new Map();
   env.ctx.document = { querySelector: q => { if (!els.has(q)) els.set(q, el()); return els.get(q); }, createElement: el, activeElement: null };
   const asked = [];
-  env.ctx.desktop = { models: async () => ({ ok: true, url: 'http://127.0.0.1:11434', models: [{ name: 'm:4b' }] }), ask: async (model, prompt, opts) => { asked.push({ model, prompt, opts }); return answer; }, setModelServer: async u => ({ ok: true, url: u }) };
+  env.ctx.desktop = { models: async () => ({ ok: true, url: 'http://127.0.0.1:11434', models: [{ name: 'm:4b' }, { name: 'eyes:4b', vision: true }] }), ask: async (model, prompt, opts) => { asked.push({ model, prompt, opts }); return answer; },
+    look: async (model, prompt, camera, opts) => { asked.push({ look: true, model, prompt, camera, opts }); return { ok: true, text: '현관에 한 명이 있습니다.' }; }, setModelServer: async u => ({ ok: true, url: u }) };
   vm.runInContext(read('models.js'), env.ctx);
   env.ctx.Models.wire();
   return { ...env, asked, Models: env.ctx.Models };
@@ -297,4 +298,25 @@ test('T-CON-020 안경에서 온 질문: 꺼져 있으면 그렇다고 답하고
   assert.match(answers().find(n => n.re === 'q3').body, /답하는 중/, 'a question right after another is turned away, not queued forever');
   tick(5000); msg('lab/in/ask', { v: 1, id: 'q4', text: '보관된 질문' }, true); await flush();
   assert.equal(answers().some(n => n.re === 'q4'), false, 'a retained question is old and gets no answer');
+});
+
+test('T-CON-021 켜 두면 사진을 읽는 모델은 카메라 사진을 함께 보고, 사진을 못 찍으면 글로만 묻는다', async () => {
+  const env = bootModels();
+  const { Lab, goLive, msg, sent, asked, tick } = env;
+  goLive(); await flush();
+  const c = env.Models.cfg(); c.glass = true; c.gmodel = 'eyes:4b'; c.gcam = true; Lab.cfg.cam.url = 'http://192.168.0.31:81/stream';
+  const answers = () => sent.filter(([t]) => t === 'lab/out/notify').map(([, p]) => JSON.parse(p)).filter(n => n.kind === 'answer');
+  msg('lab/in/ask', { v: 1, id: 'c1', text: '현관에 누가 있어?', lang: 'ko' }); await flush(); await flush();
+  assert.equal(asked.at(-1).look, true); assert.equal(asked.at(-1).camera, 'http://192.168.0.31:81/stream');
+  assert.match(asked.at(-1).opts.system, /사진에서 보이는 것만/);
+  assert.equal(answers().at(-1).body, '현관에 한 명이 있습니다.');
+  env.ctx.desktop.look = async (model, prompt, camera, opts) => { asked.push({ look: true, model, prompt, camera, opts }); return { ok: false, error: 'CAMERA_UNREACHABLE' }; };
+  tick(2000);
+  msg('lab/in/ask', { v: 1, id: 'c2', text: '현관에 누가 있어?', lang: 'ko' }); await flush(); await flush(); await flush();
+  assert.equal(asked.at(-1).look, undefined, 'falls back to a text-only question');
+  c.gmodel = 'm:4b';
+  tick(2000);
+  const before = asked.filter(a => a.look).length;
+  msg('lab/in/ask', { v: 1, id: 'c3', text: '안녕?', lang: 'ko' }); await flush(); await flush();
+  assert.equal(asked.filter(a => a.look).length, before, 'a model that cannot read pictures gets no picture');
 });

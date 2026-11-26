@@ -8,6 +8,7 @@ export const DEFAULT_URL = 'http://127.0.0.1:11434';
 
 export const MODEL_LIMITS = Object.freeze({
   prompt: 8000,          // characters in one question
+  imageChars: 4_100_000, // base64 characters of one picture (about 3 MB)
   system: 2000,          // characters of instructions
   answerTokens: 1024,    // the most tokens one answer may use
   responseBytes: 2_000_000,
@@ -41,7 +42,11 @@ export function describeModel(m) {
   const str = (v, n) => (typeof v === 'string' ? v.slice(0, n) : '');
   const name = str(m && (m.name || m.model), 120);
   if (!validModelName(name)) return null;
-  return { name, size: Number.isFinite(m.size) ? m.size : 0, family: str(d.family, 40), params: str(d.parameter_size, 20), quant: str(d.quantization_level, 20) };
+  const fams = Array.isArray(d.families) ? d.families.filter(f => typeof f === 'string').map(f => f.toLowerCase()) : [];
+  // Ollama does not list capabilities in /api/tags, so a picture-reading model is recognised by
+  // its vision-encoder family or its name. A model that cannot read pictures ignores the image.
+  const vision = fams.some(f => /^(clip|mllama|qwen2?5?vl|gemma3)$/.test(f)) || /vision|llava|moondream|minicpm-v|qwen2?\.?5?-?vl|gemma3|granite3\.2-vision/i.test(name);
+  return { name, size: Number.isFinite(m.size) ? m.size : 0, family: str(d.family, 40), params: str(d.parameter_size, 20), quant: str(d.quantization_level, 20), vision };
 }
 
 /** Reads one Ollama /api/chat reply (stream off) into text and timing. */
@@ -96,13 +101,15 @@ export class Models {
    * One question to one model. Questions run one after another, because a laptop GPU holds
    * one model at a time; running them together would only make every answer slower.
    */
-  ask({ model, prompt, system = '', maxTokens = 512 } = {}) {
+  ask({ model, prompt, system = '', maxTokens = 512, images = [] } = {}) {
     if (!validModelName(model)) return Promise.resolve({ ok: false, error: 'BAD_MODEL' });
+    if (!Array.isArray(images) || images.length > 1 || images.some(b => typeof b !== 'string' || !b || b.length > MODEL_LIMITS.imageChars || !/^[A-Za-z0-9+/]+={0,2}$/.test(b))) return Promise.resolve({ ok: false, error: 'BAD_IMAGE' });
     if (typeof prompt !== 'string' || !prompt.trim() || prompt.length > MODEL_LIMITS.prompt) return Promise.resolve({ ok: false, error: 'BAD_PROMPT' });
     if (typeof system !== 'string' || system.length > MODEL_LIMITS.system) return Promise.resolve({ ok: false, error: 'BAD_PROMPT' });
     const tokens = Math.max(16, Math.min(MODEL_LIMITS.answerTokens, Math.floor(Number(maxTokens) || 512)));
     const run = async () => {
-      const messages = system.trim() ? [{ role: 'system', content: system }, { role: 'user', content: prompt }] : [{ role: 'user', content: prompt }];
+      const user = images.length ? { role: 'user', content: prompt, images } : { role: 'user', content: prompt };
+      const messages = system.trim() ? [{ role: 'system', content: system }, user] : [user];
       const t0 = this.now();
       const r = await this.#call('/api/chat', { model, messages, stream: false, options: { num_predict: tokens } }, MODEL_LIMITS.askTimeoutMs);
       if (r.error) return { ok: false, error: r.error, detail: r.detail || '' };

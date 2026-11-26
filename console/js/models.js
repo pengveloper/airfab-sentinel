@@ -25,7 +25,7 @@ function drawList(){const ul=$('#md-list'),c=cfg();
     lab.append(cb,b);li.append(lab,k);ul.append(li);}
   const sel=$('#md-gmodel');sel.innerHTML='';const none=document.createElement('option');none.value='';none.textContent=L('고르지 않음');sel.append(none);
   for(const m of st.models){const o=document.createElement('option');o.value=m.name;o.textContent=m.name;sel.append(o);}sel.value=st.models.some(m=>m.name===c.gmodel)?c.gmodel:'';
-  picked();}
+  picked();if(window.Look)Look.models();}
 function picked(){const n=cfg().pick.filter(p=>st.models.some(m=>m.name===p)).length;$('#md-picked').textContent=n?L`모델 ${n}개 고름`:'';$('#md-run').disabled=!D||!n||st.busy;}
 function card(run){const el=document.createElement('article');el.className='md-card';
   const h=document.createElement('header'),name=document.createElement('b'),chip=document.createElement('span'),stat=document.createElement('p'),body=document.createElement('p');
@@ -57,6 +57,7 @@ function sensorPrompt(){const src=S.source==='live'?(S.simEver||S.simMixed?L('�
   return L`다음은 Wavrel 콘솔의 최근 센서 기록입니다. 출처: ${src}.`+'\n'+lines.join('\n')+'\n\n'+L('무슨 일이 있었는지 세 문장 이내로 요약하세요. 기록만으로 알 수 없는 것은 그렇다고 말하세요.');}
 
 /* ---- 안경 질문: lab/in/ask → 모델 → lab/out/notify ---- */
+const SEE={ko:'함께 보낸 사진은 집 카메라가 방금 찍은 것이다. 사진에서 보이는 것만 말한다.',en:'The attached picture was just taken by the home camera. Say only what it shows.',zh:'附带的照片是家里摄像头刚拍的。只说照片里能看到的。'};
 const SYS={ko:'너는 스마트 안경 렌즈에 뜨는 짧은 답을 쓴다. 한국어로 80자 이내, 한두 문장으로 답한다. 마크다운, 목록, 이모지는 쓰지 않는다. 모르면 모른다고 한다.',
   en:'You write short answers shown on a smart-glasses lens. Answer in English in at most 80 characters, one or two sentences. No markdown, lists or emoji. If you are not sure, say so.',
   zh:'你为智能眼镜镜片写简短的回答。用中文回答，不超过40个字，一两句话。不要使用Markdown、列表或表情符号。不确定时就说不确定。'};
@@ -72,7 +73,10 @@ async function onAsk(topic,text,src,retained){if(topic!==ASK||src!=='live'||reta
   if(!c.glass||!c.gmodel){reply(L('PC에서 질문 답하기가 꺼져 있습니다. Wavrel 모델 화면에서 켜세요.'),true);return;}
   if(pending>=2||t-lastAt<1500){reply(L('앞의 질문에 답하는 중입니다. 잠시 뒤에 다시 물어 주세요.'),true);return;}
   pending++;lastAt=t;drawAsks();
-  try{const r=await D.ask(c.gmodel,a.q,{system:SYS[a.lang],maxTokens:96});
+  try{const m=st.models.find(x=>x.name===c.gmodel),cam=Lab.cfg.cam&&Lab.cfg.cam.url;
+    // 켜 두면 사진을 읽는 모델은 카메라 사진 한 장을 함께 봅니다. 사진을 못 찍으면 글로만 묻습니다.
+    let r=c.gcam&&cam&&m&&m.vision?await D.look(c.gmodel,a.q,cam,{system:SYS[a.lang]+' '+SEE[a.lang],maxTokens:96}):null;
+    if(!r||(!r.ok&&/^CAMERA_/.test(r.error||'')))r=await D.ask(c.gmodel,a.q,{system:SYS[a.lang],maxTokens:96});
     if(r.ok&&clean(r.text))reply(cut(clean(r.text),90),false,c.gmodel);else reply(r.ok?L('모델이 빈 답을 냈습니다.'):errText(r.error),true,c.gmodel);}
   finally{pending--;}}
 
@@ -89,5 +93,5 @@ function wire(){const c=cfg();
     if(!r.ok){$('#md-note').textContent=L('이 PC나 집 안 망의 주소만 쓸 수 있습니다. 예: http://127.0.0.1:11434');$('#md-url').value=r.url;return;}refresh();});
   for(const id of['#md-url','#md-save','#md-refresh','#md-glass','#md-gmodel','#md-sensors','#md-prompt','#md-len'])$(id).disabled=!D;
   Lab.on(onAsk);drawState();drawList();drawRuns();drawAsks();picked();if(D)refresh();}
-return{wire,refresh,parseAsk,onAsk,sensorPrompt,ASK,update(){}};
+return{wire,refresh,parseAsk,onAsk,sensorPrompt,ASK,list:()=>st.models,cfg,update(){}};
 })();

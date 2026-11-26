@@ -200,6 +200,18 @@
             </form>
           </div>
           <div class="md-out" id="md-out" aria-live="polite"></div>
+          <div class="panel" id="lk-panel">
+            <div class="ph"><h2>카메라에게 묻기</h2><span class="chip" id="lk-state">카메라 없음</span></div>
+            <form class="pb" id="lk-form" autocomplete="off">
+              <p class="muted">카메라 화면에 넣은 ESP32‑CAM에서 사진 한 장을 찍어, 사진을 읽는 모델에게 묻습니다. 사진은 이 PC와 모델 서버 밖으로 나가지 않습니다.</p>
+              <label for="lk-model">사진을 읽는 모델<select id="lk-model"></select></label>
+              <label for="lk-prompt">질문<input id="lk-prompt" maxlength="500" spellcheck="false"></label>
+              <label class="inl" for="lk-glass"><input type="checkbox" id="lk-glass">안경 질문에도 카메라 사진을 함께 보내기</label>
+              <div class="row"><button class="btn primary" type="submit" id="lk-go">사진 찍고 묻기</button></div>
+              <p class="muted" id="lk-note"></p>
+            </form>
+            <div class="lk-out" id="lk-out" aria-live="polite" hidden><img id="lk-img" alt=""><div><p class="md-text" id="lk-text"></p><p class="kv" id="lk-meta"></p></div></div>
+          </div>
         </div>
         <div class="stack w360">
           <div class="panel">
@@ -329,6 +341,7 @@
 <script src="js/projects-data.js"></script>
 <script src="js/projects.js"></script>
 <script src="js/models.js"></script>
+<script src="js/look.js"></script>
 <script src="js/remote.js"></script>
 <script src="js/app.js"></script>
 <script src="js/desktop.js"></script>

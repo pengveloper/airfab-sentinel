@@ -40,7 +40,7 @@ test('T-MOD-002 설치된 모델 목록을 읽고, 이상한 이름은 버린다
   const r = await new Models({ url: s.url }).list();
   assert.equal(r.ok, true);
   assert.deepEqual(r.models.map(m => m.name), ['nemotron-mini:4b', 'muse-glimmer:30b']);
-  assert.deepEqual(r.models[0], { name: 'nemotron-mini:4b', size: 2_700_000_000, family: 'nemotron', params: '4B', quant: 'Q4_K_M' });
+  assert.deepEqual(r.models[0], { name: 'nemotron-mini:4b', size: 2_700_000_000, family: 'nemotron', params: '4B', quant: 'Q4_K_M', vision: false });
   assert.equal(validModelName('a/b:1'), true); assert.equal(validModelName('a/../b'), false); assert.equal(describeModel({}), null);
   await s.close();
 });
@@ -93,4 +93,24 @@ test('T-MOD-007 없는 모델과 이상한 응답을 구분해서 알린다', as
   assert.deepEqual(readAnswer({}, 1), { ok: false, error: 'BAD_RESPONSE' });
   assert.equal(m.setUrl('http://example.com'), false); assert.equal(m.url, s.url);
   await s.close();
+});
+
+test('T-MOD-008 사진 한 장을 함께 보내고, 사진 모양이 아닌 것은 보내지 않는다; 사진을 읽는 모델을 알아본다', async () => {
+  const srv = await fakeOllama((req, j) => j && j.messages ? chat(j.messages.at(-1).images ? '사람 한 명이 보입니다.' : '사진이 없습니다.') : null);
+  try {
+    const m = new Models({ url: srv.url });
+    const r = await m.ask({ model: 'gemma3:4b', prompt: '누가 있어?', images: ['/9j/4AAQSkZJRg=='] });
+    assert.equal(r.ok, true); assert.equal(r.text, '사람 한 명이 보입니다.');
+    assert.deepEqual(srv.seen.at(-1).body.messages.at(-1).images, ['/9j/4AAQSkZJRg==']);
+    const before = srv.seen.length;
+    for (const images of [['not base64!'], ['a', 'b'], 'x', [''], ['A'.repeat(4_100_001)]])
+      assert.equal((await m.ask({ model: 'gemma3:4b', prompt: 'q', images })).error, 'BAD_IMAGE');
+    assert.equal(srv.seen.length, before, 'refused pictures never reach the server');
+  } finally { await srv.close(); }
+  const d = n => describeModel({ name: n.name, size: 1, details: { families: n.f } });
+  assert.equal(d({ name: 'llava:7b', f: ['llama', 'clip'] }).vision, true);
+  assert.equal(d({ name: 'llama3.2-vision:11b', f: ['mllama'] }).vision, true);
+  assert.equal(d({ name: 'gemma3:4b', f: ['gemma3'] }).vision, true);
+  assert.equal(d({ name: 'qwen2.5vl:7b', f: ['qwen25vl'] }).vision, true);
+  assert.equal(d({ name: 'nemotron-mini:4b', f: ['nemotron'] }).vision, false);
 });

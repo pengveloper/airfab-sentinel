@@ -1,0 +1,17 @@
+{
+  "name": "wavrel-relay-server",
+  "version": "0.5.0",
+  "description": "Lets Rokid glasses ask the Wavrel PC at home a question from anywhere",
+  "author": "pengveloper",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "main.mjs",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node main.mjs"
+  },
+  "dependencies": {
+    "ws": "8.23.0"
+  }
+}

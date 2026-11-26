@@ -25,6 +25,7 @@ claimed in this repository yet. See [Status](#status).
 - **Evidence you can hand over.** Export the message log, replay it later, and generate a standalone HTML report with the score curve of every session.
 - **English and Korean.** The interface follows the system language and switches with one button. A test fails the build if any sentence lacks a translation.
 - **Open models on your own PC.** The Models view sends the same question to several models installed with [Ollama](https://ollama.com) and shows each answer with its time and speed side by side, or asks them about the recent sensor log. The window never talks to the model server itself: the main process checks that the address is on this PC or the home network, then asks for it. With answering turned on, a question spoken into Wavrel Relay comes to the PC, the model you picked answers in under 80 characters, and the answer goes to the phone and the glasses as an alert. Checked with a stand-in model server in tests; not yet with a real model on the laptop.
+- **Ask from anywhere.** With the optional relay server ([docs/ROKID_AGENT.md](docs/ROKID_AGENT.md)), Rokid glasses' custom agent sends a question to the server, the server passes it down the desktop app's own outgoing connection, and the same model answers on the lens. The PC needs no open port; the server keeps nothing you ask and drops the location the glasses send.
 - **Alerts for glasses and phones.** Rules and validation sessions publish one short sentence at a time on a single topic that only the app can write to, so a wearable app needs nothing but an MQTT subscription. A full-screen black page previews what the glasses would show. [Wavrel Relay](relay/README.md), an Android app, receives them as phone notifications and puts them on Rokid glasses. It is built, unit tested and run in an emulator against the app's broker in CI; it has not run on real glasses yet. Format: [docs/NOTIFY.md](docs/NOTIFY.md).
 
 | First run | Hub panel |
@@ -52,7 +53,7 @@ flowchart LR
   subgraph APP["Wavrel (desktop)"]
     H["Main process<br/>MQTT hub: auth, limits, private addresses only"]
     W["Sandboxed window<br/>console, 3D, validation, reports"]
-    H -- "14 validated IPC calls" --> W
+    H -- "17 validated IPC calls" --> W
   end
   A -- MQTT 1883 --> H
   C -- MQTT 1883 --> H
@@ -73,7 +74,7 @@ central view is needed. That relay is on the roadmap, not in this version.
 ## Security
 
 The app listens on your LAN, so it is built defensively. The window is sandboxed, loads
-only files shipped with the app, and reaches the system through fourteen validated calls.
+only files shipped with the app, and reaches the system through seventeen validated calls.
 The hub requires a password, accepts only private-range addresses, limits failed logins,
 connection count and message size, and stores the password with Windows credential
 protection. The executable is hardened with Electron fuses, and CI audits dependencies and
@@ -132,6 +133,7 @@ None of these firmwares is included or modified here. Each keeps its own license
 | English interface: every sentence translated, no Korean left on any screen or in the report | 4 automated tests and an English pass in the app smoke test (SOFTWARE_VERIFIED) |
 | Alerts in the Android relay, from the app's broker | Checked in an Android emulator in CI (`relay` workflow) |
 | Models view and spoken questions answered by a local model | 7 tests against a stand-in model server, a console test and a step in the app smoke test (SOFTWARE_VERIFIED). Not yet run with Ollama and a real model (OPERATOR_REQUIRED) |
+| Ask from anywhere: a Rokid custom agent through the relay server to the PC's model | 11 tests run a real server against the desktop link, plus a step in the app smoke test (SOFTWARE_VERIFIED). Server deploy, the Rokid platform and real glasses not yet (OPERATOR_REQUIRED) |
 | Alerts shown on real glasses or a real phone | Not done yet (OPERATOR_REQUIRED) |
 | Installing from the Microsoft Store without a warning | Not done yet (OPERATOR_REQUIRED) |
 | Real boards | Not measured yet (OPERATOR_REQUIRED) |
@@ -142,7 +144,7 @@ The evidence table is in [evidence/EVIDENCE-P1.md](evidence/EVIDENCE-P1.md).
 ## Tests
 
 ```sh
-npm test            # data layer (T-CON-001..019), hub (T-HUB-001..010), language (T-I18N-001..004)
+npm test            # data layer (T-CON-001..020), hub (T-HUB-001..010), models (T-MOD-001..007), relay server and link (T-SRV-001..010, T-LNK-001), language (T-I18N-001..004)
 npm run test:app    # starts the real app: isolation, first run, auth, message flow, alerts, English
 ```
 

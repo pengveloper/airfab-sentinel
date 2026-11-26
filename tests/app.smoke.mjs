@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import http from 'node:http';
 import mqtt from 'mqtt';
 import { _electron } from 'playwright-core';
+import { createApp as relayServer } from '../server/app.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'dist', 'smoke'); fs.mkdirSync(out, { recursive: true });
@@ -75,7 +76,8 @@ try {
     csp: (await fetch('index.html')).headers.get('content-security-policy'), outside: await fetch('app://wavrel/../package.json').then(r => r.status, () => 0) }));
   assert.equal(iso.url, 'app://wavrel/index.html'); assert.equal(iso.require, 'undefined'); assert.equal(iso.process, 'undefined');
   assert.ok(iso.csp.includes("script-src 'self'") && iso.csp.includes("object-src 'none'")); assert.notEqual(iso.outside, 200);
-  assert.deepEqual(iso.bridge, ['ask', 'copy', 'info', 'models', 'onBroker', 'onMessage', 'publish', 'replayRetained', 'restart', 'revealPassword', 'setModelServer', 'setup', 'status', 'suggestPassword']);
+  assert.deepEqual(iso.bridge, ['ask', 'copy', 'info', 'models', 'onBroker', 'onMessage', 'onRemote', 'publish', 'remote', 'replayRetained', 'restart', 'revealPassword', 'setModelServer', 'setRemote', 'setup', 'status', 'suggestPassword']);
+  assert.equal((await win.evaluate(() => window.desktop.setRemote('ws://agent.example.com/link', 'z'.repeat(20)))).refused, 'BAD_URL', 'the relay link must use wss:// unless it is this PC');
   assert.equal((await win.evaluate(() => window.desktop.setModelServer('http://8.8.8.8:11434'))).ok, false, 'the model server must be on this PC or the home network');
   step('window is isolated: no Node, fixed bridge, CSP header, no path escape');
 
@@ -177,6 +179,27 @@ try {
   assert.ok(answer && answer.kind === 'answer' && answer.source === 'local_model' && answer.body === '거실은 지금 조용합니다.' && answer.model === 'tiny-test:1b', 'a question from the glasses is answered on the alert topic: ' + JSON.stringify(answer));
   await shot(win, '06-models.png');
   step('models view reads the local model server, compares answers, and answers a question from the glasses as an alert');
+  // 5-3. 밖에서 묻기: 로키드 플랫폼 자리에서 중계 서버로 질문을 보내면, 서버가 이 PC에 전하고 고른 모델의 답이 SSE로 돌아온다
+  const relayAk = 'smoke_ak_' + 'x'.repeat(30), relayToken = 'smoke_home_' + 'y'.repeat(30);
+  const relay = relayServer({ rokidAk: relayAk, homeToken: relayToken });
+  await new Promise(r => relay.server.listen(0, '127.0.0.1', r));
+  const relayPort = relay.server.address().port;
+  await win.evaluate(([u, t]) => { document.querySelector('#rm-url').value = u; document.querySelector('#rm-token').value = t; }, [`ws://127.0.0.1:${relayPort}/link`, relayToken]);
+  await ui.click('#rm-save');
+  await ui.until(() => document.querySelector('#rm-state').classList.contains('live'), null, 10_000);
+  assert.equal(await win.evaluate(() => document.querySelector('#rm-token').value), '', 'the token field is cleared after saving');
+  assert.ok(!fs.readFileSync(path.join(userData, 'settings.json'), 'utf8').includes(relayToken), 'the PC token is not stored in clear text');
+  await sleep(1600);   // 콘솔은 질문 사이에 1.5초를 둡니다
+  const sse = await (await fetch(`http://127.0.0.1:${relayPort}/rokid/sse`, { method: 'POST', headers: { authorization: `Bearer ${relayAk}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ message_id: 'smoke-1', agent_id: 'agent-smoke', message: [{ role: 'user', type: 'text', text: '거실에 누가 있어?' }], metadata: { language: 'ko-KR', location: '어딘가' } }) })).text();
+  const evs = sse.split('\n\n').filter(b => b.startsWith('event:message')).map(b => JSON.parse(b.split('\n')[1].slice(5)));
+  assert.equal(evs[0] && evs[0].answer_stream, '거실은 지금 조용합니다.', 'the relay server streams back the answer of the chosen model: ' + sse.slice(0, 300));
+  assert.ok(evs.length === 2 && evs[1].is_finish === true && evs[0].message_id === 'smoke-1' && evs[0].agent_id === 'agent-smoke', 'the stream ends with the closing event and echoes the ids');
+  await ui.until(() => /질문 1개를 받아 1개에 답했습니다/.test(document.querySelector('#rm-note').textContent), null, 5_000);
+  await shot(win, '06-models-remote.png');
+  await ui.click('#rm-off'); await ui.until(() => !document.querySelector('#rm-state').classList.contains('live'), null, 5_000);
+  await relay.close();
+  step('ask from anywhere: a Rokid agent request through the relay server is answered by the chosen model, and the PC token is not kept in clear text');
   clearInterval(timer); board.end(true);
 
   // 6. 화면 기록 (데모)

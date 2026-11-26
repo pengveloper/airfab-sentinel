@@ -1,0 +1,111 @@
+# Deploys the relay server (server/) to one EC2 instance in Seoul and keeps it up to date.
+# Same trust as the website: the job assumes wavrel-github-deploy through GitHub's OpenID Connect
+# token, which the role accepts only from this repository's "aws" environment (main only).
+# The instance has no SSH: the code is installed through SSM Run Command (server/deploy/install.sh).
+name: server
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - 'desktop/main/link.mjs'
+      - 'infra/server.yml'
+      - '.github/workflows/server.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: server-deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-northeast-2
+  STACK: wavrel-relay
+  DOMAIN: agent.wavrel.com
+
+jobs:
+  deploy:
+    name: Deploy the relay server
+    runs-on: ubuntu-latest
+    environment:
+      name: aws
+      url: https://agent.wavrel.com/health
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install without running package scripts
+        run: npm ci --ignore-scripts
+      - name: Test the server
+        run: node --test tests/server.test.mjs
+
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Create or update the stack
+        run: |
+          aws cloudformation deploy --stack-name "$STACK" --template-file infra/server.yml \
+            --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset --tags project=wavrel
+          out() { aws cloudformation describe-stacks --stack-name "$STACK" --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          echo "INSTANCE_ID=$(out InstanceId)" >> "$GITHUB_ENV"
+          echo "PUBLIC_IP=$(out PublicIp)" >> "$GITHUB_ENV"
+
+      # Created once with a random value and never overwritten or printed. The server reads them
+      # at start; the owner copies them from Parameter Store into the Rokid platform and the app.
+      - name: Create the two secrets if they are missing
+        run: |
+          for name in rokid-ak home-token; do
+            if aws ssm get-parameter --name "/wavrel/relay/$name" --query Parameter.Name --output text >/dev/null 2>&1; then continue; fi
+            f=$(mktemp); chmod 600 "$f"
+            printf '{"Name":"/wavrel/relay/%s","Type":"SecureString","Value":"%s","Description":"Wavrel relay server"}' \
+              "$name" "$(head -c 32 /dev/urandom | base64 | tr '+/' '-_' | tr -d '=\n')" > "$f"
+            aws ssm put-parameter --cli-input-json "file://$f" --no-overwrite >/dev/null
+            rm -f "$f"
+            echo "created /wavrel/relay/$name"
+          done
+
+      - name: Install this commit on the instance
+        run: |
+          repo="${GITHUB_REPOSITORY#*/}"
+          jq -n --arg sha "$GITHUB_SHA" --arg repo "$repo" --arg full "$GITHUB_REPOSITORY" --arg domain "$DOMAIN" '{
+            commands: [
+              "set -euo pipefail",
+              "d=$(mktemp -d)",
+              ("curl -fsSL https://codeload.github.com/" + $full + "/tar.gz/" + $sha + " | tar -xz -C \"$d\" --strip-components=1 " + $repo + "-" + $sha + "/server"),
+              ("bash \"$d/server/deploy/install.sh\" " + $sha + " \"$d/server\" " + $domain),
+              "rm -rf \"$d\""
+            ],
+            executionTimeout: ["1200"]
+          }' > params.json
+          # A new instance needs a minute or two before SSM can reach it.
+          for i in $(seq 1 40); do
+            cmd=$(aws ssm send-command --instance-ids "$INSTANCE_ID" --document-name AWS-RunShellScript \
+              --comment "wavrel relay ${GITHUB_SHA::7}" --parameters file://params.json \
+              --query Command.CommandId --output text 2>/dev/null) && break
+            sleep 15
+          done
+          [ -n "${cmd:-}" ] || { echo "::error::SSM could not reach $INSTANCE_ID"; exit 1; }
+          for i in $(seq 1 120); do
+            status=$(aws ssm get-command-invocation --command-id "$cmd" --instance-id "$INSTANCE_ID" --query Status --output text 2>/dev/null || echo Pending)
+            case "$status" in Success|Failed|Cancelled|TimedOut) break;; esac
+            sleep 10
+          done
+          aws ssm get-command-invocation --command-id "$cmd" --instance-id "$INSTANCE_ID" --query '[StandardOutputContent,StandardErrorContent]' --output text | tail -n 40
+          [ "$status" = Success ] || { echo "::error::install finished with $status"; exit 1; }
+
+      - name: Check the public address
+        run: |
+          resolved=$(getent ahostsv4 "$DOMAIN" | awk '{print $1; exit}' || true)
+          if [ "$resolved" != "$PUBLIC_IP" ]; then
+            echo "::warning::$DOMAIN resolves to '${resolved:-nothing}'. Add an A record $DOMAIN -> $PUBLIC_IP (DNS only) in Cloudflare; Caddy then fetches the certificate by itself."
+            exit 0
+          fi
+          curl -fsS --retry 12 --retry-delay 10 --retry-all-errors "https://$DOMAIN/health"
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "https://$DOMAIN/rokid/sse")
+          [ "$code" = 401 ] || { echo "::error::expected 401 without a key, got $code"; exit 1; }
+          echo "relay is up at https://$DOMAIN"

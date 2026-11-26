@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Wavrel relay server: one small EC2 instance behind Caddy (TLS) that lets Rokid glasses ask
+  the Wavrel PC at home a question from anywhere. Deployed by .github/workflows/server.yml with
+  the wavrel-github-deploy role, so every resource is named wavrel-relay-* or tagged
+  project=wavrel and the instance role carries the wavrel-relay-boundary.
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t4g.micro
+    AllowedValues: [t4g.nano, t4g.micro, t4g.small]
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+    Description: Latest Amazon Linux 2023 for arm64, resolved from AWS's public parameter
+
+Resources:
+  ServerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: wavrel-relay-server
+      Description: Wavrel relay server instance (SSM Run Command and its own two secrets)
+      PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/wavrel-relay-boundary
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: ec2.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: relay-secrets
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Read only: the deploy workflow creates the two secrets, the server only reads them.
+              - Effect: Allow
+                Action: ssm:GetParameter
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/wavrel/relay/*
+              - Effect: Allow
+                Action: kms:Decrypt
+                Resource: '*'
+                Condition:
+                  StringLike:
+                    kms:ViaService: !Sub ssm.${AWS::Region}.amazonaws.com
+      Tags:
+        - { Key: project, Value: wavrel }
+
+  ServerProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: wavrel-relay-server
+      Roles: [!Ref ServerRole]
+
+  ServerGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: wavrel-relay-server
+      GroupDescription: Wavrel relay server, HTTPS only (port 80 answers the certificate challenge and redirects)
+      SecurityGroupIngress:
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 443, ToPort: 443, CidrIpv6: '::/0' }
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIp: 0.0.0.0/0 }
+        - { IpProtocol: tcp, FromPort: 80, ToPort: 80, CidrIpv6: '::/0' }
+      Tags:
+        - { Key: project, Value: wavrel }
+        - { Key: Name, Value: wavrel-relay-server }
+
+  Server:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref ServerProfile
+      SecurityGroupIds: [!GetAtt ServerGroup.GroupId]
+      CreditSpecification: { CPUCredits: standard }
+      PropagateTagsToVolumeOnCreation: true
+      Tags:
+        - { Key: project, Value: wavrel }
+        - { Key: Name, Value: wavrel-relay-server }
+      # No SSH key and no port 22: the workflow manages the machine through SSM Run Command.
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          dnf -y -q upgrade --security || true
+
+  ServerAddress:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Server
+      Tags:
+        - { Key: project, Value: wavrel }
+        - { Key: Name, Value: wavrel-relay-server }
+
+Outputs:
+  InstanceId:
+    Value: !Ref Server
+  PublicIp:
+    Description: Point the relay domain's A record here (DNS only, not proxied)
+    Value: !Ref ServerAddress

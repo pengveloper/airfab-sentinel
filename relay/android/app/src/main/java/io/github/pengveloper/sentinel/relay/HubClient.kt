@@ -9,6 +9,9 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence
+import java.net.Inet4Address
+import java.net.Inet6Address
+import java.net.InetAddress
 import java.security.SecureRandom
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -71,8 +74,26 @@ class HubClient(
     private fun connect() {
         if (closed) return
         onState(Relay.Hub.CONNECTING)
+        // Resolve here and connect to the address itself: a host name must lead to the local
+        // network before the password is sent, and must not be re-resolved somewhere else later.
+        val target = client?.serverURI ?: run {
+            val found = try {
+                InetAddress.getAllByName(address.host).toList()
+            } catch (e: Exception) {
+                onState(Relay.Hub.UNREACHABLE)
+                schedule(minOf(30, 2 shl minOf(attempt++, 4)))
+                return
+            }
+            val local = found.filter { HubAddress.isLocal(it.address) }.sortedBy { if (it is Inet4Address) 0 else 1 }
+            val chosen = local.firstOrNull() ?: run {
+                onState(Relay.Hub.NOT_LOCAL)
+                return
+            }
+            val host = if (chosen is Inet6Address) chosen.hostAddress!!.substringBefore('%') else chosen.hostAddress!!
+            HubAddress(host, address.port).uri
+        }
         val c = client ?: try {
-            MqttAsyncClient(address.uri, clientId(), MemoryPersistence()).also {
+            MqttAsyncClient(target, clientId(), MemoryPersistence()).also {
                 it.setCallback(callback)
                 client = it
             }

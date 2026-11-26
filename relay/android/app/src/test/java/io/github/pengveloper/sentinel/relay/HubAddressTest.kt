@@ -2,7 +2,9 @@ package io.github.pengveloper.sentinel.relay
 
 import io.github.pengveloper.sentinel.relay.HubAddress.Problem
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** T-REL-005..006: hub address entry. */
@@ -38,5 +40,15 @@ class HubAddressTest {
         assertEquals(Problem.NOT_PRIVATE, problem("8.8.8.8"))
         assertEquals(Problem.NOT_PRIVATE, problem("172.32.0.1"))
         assertEquals(Problem.NOT_PRIVATE, problem("2001:db8::1"))
+    }
+
+    private fun ip(s: String) = java.net.InetAddress.getByName(s).address
+
+    @Test fun `T-REL-009 a host name must resolve to the local network`() {
+        for (a in listOf("192.168.0.12", "10.0.2.2", "172.16.0.1", "172.31.255.254", "169.254.1.1", "fd00::5", "fe80::1", "::ffff:192.168.1.2"))
+            assertTrue(a, HubAddress.isLocal(ip(a)))
+        for (a in listOf("8.8.8.8", "172.32.0.1", "127.0.0.1", "::1", "2001:db8::1", "::ffff:8.8.8.8", "100.64.0.1"))
+            assertFalse(a, HubAddress.isLocal(ip(a)))
+        assertFalse(HubAddress.isLocal(ByteArray(5)))
     }
 }

@@ -21,6 +21,8 @@
     <string name="hub_wrong_password">비밀번호 틀림</string>
     <string name="hub_blocked">1분간 차단됨</string>
     <string name="hub_unreachable">PC에 닿지 않음</string>
+    <string name="hub_not_local">로컬 네트워크 밖</string>
+    <string name="hub_not_local_help">이 이름은 로컬 네트워크 밖의 주소를 가리켜서 비밀번호를 보내지 않았습니다. 내장 브로커 창의 Host 주소를 넣어 주세요.</string>
     <string name="hub_wrong_password_help">PC가 비밀번호를 거절했습니다. 내장 브로커 창에서 비밀번호를 다시 복사한 뒤 릴레이를 다시 시작하세요. 비밀번호가 다섯 번 틀리면 PC가 그 주소를 1분 동안 막기 때문에 휴대폰이 혼자 다시 시도하지 않습니다.</string>
     <string name="hub_blocked_help">비밀번호가 여러 번 틀려서 PC가 이 휴대폰을 1분 동안 막고 있습니다. 1분쯤 뒤에 릴레이가 다시 시도합니다.</string>
 

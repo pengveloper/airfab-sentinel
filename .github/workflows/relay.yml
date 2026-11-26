@@ -103,10 +103,14 @@ jobs:
           for f in sorted(glob.glob("relay-shots/*.png")):
               im = Image.open(f).convert("RGB")
               im.thumbnail((540, 1400))
+              im = im.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
               buf = io.BytesIO()
               im.save(buf, "PNG", optimize=True)
+              data = base64.b64encode(buf.getvalue()).decode()
+              # GitHub drops very long log lines, so the image goes out in short pieces.
               print("SHOT-BEGIN", os.path.basename(f))
-              print(base64.b64encode(buf.getvalue()).decode())
+              for i in range(0, len(data), 4000):
+                  print("SHOT-DATA", data[i:i + 4000])
               print("SHOT-END")
           PY
       - uses: actions/upload-artifact@v7

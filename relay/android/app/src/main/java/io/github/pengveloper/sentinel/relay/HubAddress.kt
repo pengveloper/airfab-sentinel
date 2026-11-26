@@ -77,6 +77,19 @@ data class HubAddress(val host: String, val port: Int) {
             }
         }
 
+        /**
+         * Whether a resolved address is one the relay may send the password to: private or
+         * link-local, IPv4 or IPv6 (including IPv4-mapped), and not this phone's loopback.
+         * A host name is checked this way after it resolves, so a name cannot lead off the LAN.
+         */
+        fun isLocal(raw: ByteArray): Boolean {
+            val b = raw.map { it.toInt() and 0xff }
+            if (b.size == 4) return b[0] != 127 && privateV4(b[0], b[1])
+            if (b.size != 16) return false
+            if (b.subList(0, 10).all { it == 0 } && b[10] == 0xff && b[11] == 0xff) return isLocal(raw.copyOfRange(12, 16))
+            return (b[0] and 0xfe) == 0xfc || (b[0] == 0xfe && (b[1] and 0xc0) == 0x80)
+        }
+
         /** RFC 1918 and link-local, the IPv4 ranges the hub accepts besides loopback. */
         private fun privateV4(a: Int, b: Int) =
             a == 10 || (a == 172 && b in 16..31) || (a == 192 && b == 168) || (a == 169 && b == 254)

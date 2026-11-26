@@ -18,7 +18,7 @@ any client but itself (T-HUB-010), so the relay cannot be used to fake an alert.
 
 | | |
 |---|---|
-| Built and unit tested | Every push, in the `relay` workflow (T-REL-001 to T-REL-008) |
+| Built and unit tested | Every push, in the `relay` workflow (T-REL-001 to T-REL-009) |
 | Against the desktop app's broker | Every push, in an Android 15 emulator: wrong password, connect, alert on screen and as a notification, simulated values labelled, Korean, unfolded layout |
 | On a real phone with the PC app | Not run yet (OPERATOR_REQUIRED) |
 | On Rokid glasses | Not run yet (OPERATOR_REQUIRED). Rokid's CXR-M SDK documents the first generation of Rokid Glasses. Whether it drives Rokid Glasses 2 is not confirmed |
@@ -74,7 +74,8 @@ These are open until someone runs them and records the result in
 ## Privacy and security
 
 - Everything stays on the local network. The relay refuses public addresses before it tries
-  them, matching the broker's own rule.
+  them, matching the broker's own rule. A host name is resolved first and the password goes
+  only to a local address it resolves to.
 - The broker password, the Rokid secret and licence, and the glasses' link details are sealed
   with an AES-GCM key held in the Android Keystore. Backups are off for this app.
 - The relay writes no logs. The glasses' Bluetooth address is never shown; the list of glasses

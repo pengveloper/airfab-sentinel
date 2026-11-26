@@ -21,6 +21,8 @@
     <string name="hub_wrong_password">Wrong password</string>
     <string name="hub_blocked">Blocked for a minute</string>
     <string name="hub_unreachable">Can\'t reach the PC</string>
+    <string name="hub_not_local">Not on this network</string>
+    <string name="hub_not_local_help">That name leads to an address outside the local network, so the password was not sent. Use the Host address from the Built-in broker panel.</string>
     <string name="hub_wrong_password_help">The PC refused the password. Copy it again from the Built-in broker panel, then start the relay again. The phone won\'t retry on its own, because the PC blocks an address for a minute after five wrong passwords.</string>
     <string name="hub_blocked_help">The PC is blocking this phone for a minute after several wrong passwords. The relay tries again in about a minute.</string>
 

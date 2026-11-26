@@ -14,6 +14,7 @@ object Labels {
             Relay.Hub.WRONG_PASSWORD -> R.string.hub_wrong_password
             Relay.Hub.BLOCKED -> R.string.hub_blocked
             Relay.Hub.UNREACHABLE -> R.string.hub_unreachable
+            Relay.Hub.NOT_LOCAL -> R.string.hub_not_local
         },
     )
 

@@ -15,7 +15,7 @@ object Relay {
     const val HUB_USER = "lab"
     const val RECENT_MAX = 20
 
-    enum class Hub { OFF, CONNECTING, ON, WRONG_PASSWORD, BLOCKED, UNREACHABLE }
+    enum class Hub { OFF, CONNECTING, ON, WRONG_PASSWORD, BLOCKED, UNREACHABLE, NOT_LOCAL }
     enum class Glass { NONE, OFF, CONNECTING, ON, NEED_LICENCE, NO_DISPLAY, FAILED }
 
     data class Received(val alert: Alert, val at: Long, val onGlasses: Boolean)

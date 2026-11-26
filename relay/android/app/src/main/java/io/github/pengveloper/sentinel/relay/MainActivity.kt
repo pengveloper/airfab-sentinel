@@ -47,6 +47,7 @@ class MainActivity : Activity() {
     private lateinit var recentEmpty: TextView
     private var shownRecent: List<Relay.Received>? = null
     private var pending: (() -> Unit)? = null
+    private var findDialog: AlertDialog? = null
 
     private val render: (Relay.Snapshot) -> Unit = { s -> draw(s) }
     private val redraw = Runnable { draw(Relay.snapshot) }
@@ -89,7 +90,8 @@ class MainActivity : Activity() {
 
         toggle.setOnClickListener {
             val s = Relay.snapshot
-            if (s.running && s.hub != Relay.Hub.WRONG_PASSWORD) RelayService.stop(this) else startRelay()
+            val retry = s.hub == Relay.Hub.WRONG_PASSWORD || s.hub == Relay.Hub.NOT_LOCAL
+            if (s.running && !retry) RelayService.stop(this) else startRelay()
         }
         findViewById<Button>(R.id.find).setOnClickListener { saveSecret(); withBluetooth { findGlasses() } }
         glassAction.setOnClickListener {
@@ -112,6 +114,9 @@ class MainActivity : Activity() {
     }
 
     override fun onStop() {
+        // Closing the dialog stops its Bluetooth scan; a scan left running would drain the battery.
+        findDialog?.dismiss()
+        findDialog = null
         Relay.unlisten(render)
         main.removeCallbacksAndMessages(null)
         super.onStop()
@@ -250,7 +255,8 @@ class MainActivity : Activity() {
         val stop = Runnable { try { scanner?.stopScan(cb) } catch (_: Exception) {} }
         main.postDelayed(stop, 15_000)
 
-        AlertDialog.Builder(this, R.style.Dialog)
+        findDialog?.dismiss()
+        findDialog = AlertDialog.Builder(this, R.style.Dialog)
             .setTitle(R.string.find_title)
             .setAdapter(names) { _, which ->
                 devices.values.elementAtOrNull(which)?.let { Relay.glasses.pair(it) }
@@ -259,6 +265,7 @@ class MainActivity : Activity() {
             .setOnDismissListener {
                 main.removeCallbacks(stop)
                 stop.run()
+                findDialog = null
             }
             .show()
         if (names.isEmpty) toast(R.string.find_searching)
@@ -294,7 +301,7 @@ class MainActivity : Activity() {
         runState.setTextColor(getColor(if (s.running) R.color.ok else R.color.muted))
         runState.backgroundTintList = ColorStateList.valueOf(getColor(if (s.running) R.color.ok_soft else R.color.raise))
         // After a wrong password the button retries with what is in the field instead of stopping.
-        val retry = s.running && s.hub == Relay.Hub.WRONG_PASSWORD
+        val retry = s.running && (s.hub == Relay.Hub.WRONG_PASSWORD || s.hub == Relay.Hub.NOT_LOCAL)
         val stops = s.running && !retry
         toggle.text = getString(if (retry) R.string.retry_relay else if (stops) R.string.stop_relay else R.string.start_relay)
         toggle.setBackgroundResource(if (stops) R.drawable.bg_secondary else R.drawable.bg_primary)
@@ -307,8 +314,14 @@ class MainActivity : Activity() {
         link(R.id.link1a, R.id.link1b, s.hub == Relay.Hub.ON)
         link(R.id.link2a, R.id.link2b, s.glass == Relay.Glass.ON && s.running)
 
-        if (s.hub == Relay.Hub.WRONG_PASSWORD || s.hub == Relay.Hub.BLOCKED) {
-            toggleHint.text = getString(if (s.hub == Relay.Hub.WRONG_PASSWORD) R.string.hub_wrong_password_help else R.string.hub_blocked_help)
+        val help = when (s.hub) {
+            Relay.Hub.WRONG_PASSWORD -> R.string.hub_wrong_password_help
+            Relay.Hub.BLOCKED -> R.string.hub_blocked_help
+            Relay.Hub.NOT_LOCAL -> R.string.hub_not_local_help
+            else -> 0
+        }
+        if (help != 0) {
+            toggleHint.text = getString(help)
             toggleHint.setTextColor(getColor(R.color.bad))
         }
 

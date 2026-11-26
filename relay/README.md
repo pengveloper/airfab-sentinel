@@ -31,13 +31,13 @@ Screenshots from the CI emulator run against the desktop app's broker.
 
 ## Install
 
-1. Open the latest successful run of the
-   [relay workflow](https://github.com/pengveloper/wavrel/actions/workflows/relay.yml)
-   and download `wavrel-relay-debug-apk`. You need to be signed in to GitHub to download it.
-2. Unzip it, copy the APK to the phone and open it. Android asks once to allow installs from
-   that app (Files, Chrome and so on).
-3. Debug builds are signed with a key made for each build. To install a newer one, uninstall
-   the old one first. Settings are lost when you do.
+1. On the phone, open
+   [Wavrel-Relay.apk](https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk)
+   from the latest release (also linked on [wavrel.com](https://wavrel.com/en/#get)). No GitHub account needed.
+2. Open the downloaded file. Android asks once to allow installs from that app (Chrome, Files and so on).
+3. Release builds are signed with the project's own key, so a newer release installs over the old
+   one and keeps its settings. A test build from the relay workflow (`wavrel-relay-debug-apk`) uses a
+   different key: uninstall it before installing a release, and the other way round.
 
 ## Connect to the PC
 

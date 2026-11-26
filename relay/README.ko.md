@@ -31,13 +31,13 @@ CI 에뮬레이터가 데스크톱 앱의 브로커에 붙어 찍은 화면입�
 
 ## 설치
 
-1. [relay 워크플로](https://github.com/pengveloper/wavrel/actions/workflows/relay.yml)의
-   가장 최근 성공한 실행에서 `wavrel-relay-debug-apk`를 내려받습니다. GitHub에 로그인해야 받을 수
-   있습니다.
-2. 압축을 풀어 APK를 휴대폰으로 옮기고 엽니다. 처음 한 번 그 앱(내 파일, 크롬 등)에서 설치를
-   허용할지 묻습니다.
-3. 디버그 빌드는 빌드마다 다른 키로 서명됩니다. 새 버전을 깔려면 이전 것을 먼저 지워야 하고, 이때
-   설정도 지워집니다.
+1. 휴대폰에서 최신 릴리스의
+   [Wavrel-Relay.apk](https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk)를
+   엽니다([wavrel.com](https://wavrel.com/#get)에도 링크가 있습니다). GitHub 계정은 필요 없습니다.
+2. 받은 파일을 엽니다. 처음 한 번 그 앱(크롬, 내 파일 등)에서 설치를 허용할지 묻습니다.
+3. 릴리스 빌드는 프로젝트의 고정 키로 서명되어 새 버전이 이전 버전 위에 설정을 유지한 채 설치됩니다.
+   relay 워크플로의 시험용 빌드(`wavrel-relay-debug-apk`)는 키가 달라서, 릴리스로 바꿀 때나 그 반대일
+   때는 먼저 지워야 합니다.
 
 ## PC와 연결
 

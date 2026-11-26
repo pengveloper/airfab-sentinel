@@ -94,6 +94,8 @@ try {
   const saved = fs.readFileSync(path.join(userData, 'settings.json'), 'utf8');
   assert.ok(!saved.includes(password), 'the password must not be stored in clear text');
   step('first run: broker starts only after a password is set, and the password is not stored in clear text');
+  await ui.until(() => /^Wavrel \d+\.\d+\.\d+$/.test(document.querySelector('#dk-ver').textContent), null, 5_000);
+  assert.equal(await win.evaluate(() => document.querySelector('#dk-ver').textContent), 'Wavrel ' + JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version, 'the broker dialog shows the app version');
   await ui.click('#dk-close');
 
   // 3. 인증

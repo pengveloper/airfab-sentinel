@@ -494,4 +494,5 @@ window.I18N_EN={
 "연결 중":"Connecting",
 "질문 {0}개를 받아 {1}개에 답했습니다. 위의 '휴대폰·안경 질문에 답하기'가 켜져 있어야 답합니다.":"{0} questions received, {1} answered. Answers need 'Answer questions from phone and glasses' turned on above.",
 "서버를 직접 띄우는 방법은 docs/ROKID_AGENT.md에 있습니다.":"How to run your own server: docs/ROKID_AGENT.md.",
+"새 버전 확인":"Check for a new version",
 };

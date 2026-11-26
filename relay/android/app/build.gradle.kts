@@ -13,13 +13,29 @@ android {
         applicationId = "com.wavrel.relay"
         minSdk = 28 // the Rokid SDK needs Android 9 or later
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.5.0"
+    }
+
+    // Release builds are signed only in the release workflow, which loads the key from
+    // Parameter Store into a temporary file. Nothing about the key is in this repository.
+    val releaseKeystore = System.getenv("WAVREL_RELAY_KEYSTORE")
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storeType = "PKCS12"
+                storePassword = System.getenv("WAVREL_RELAY_KEYSTORE_PASSWORD")
+                keyAlias = "wavrel-relay"
+                keyPassword = System.getenv("WAVREL_RELAY_KEYSTORE_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
         }
     }
 
@@ -30,6 +46,12 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+    }
+
+    // The release build's lint step pulls extra tool dependencies that the repositories this
+    // build allows do not serve; the debug build, which CI tests on an emulator, has no such step.
+    lint {
+        checkReleaseBuilds = false
     }
 
     packaging {

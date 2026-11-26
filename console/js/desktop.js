@@ -35,7 +35,7 @@ function draw(){if(!st||drawer.hidden)return;const state=$('#dk-state'),err=st.e
   $('#dk-vals').innerHTML=`<dt>Host</dt><dd>${hosts}</dd><dt>Port</dt><dd><span class="val">${st.port}</span></dd><dt>${L`사용자`}</dt><dd><span class="val">${esc(st.user)}</span></dd><dt>${L`비밀번호`}</dt><dd>${pw}</dd><dt>Scheme</dt><dd><span class="val">mqtt</span></dd>`;
   $('#dk-clients').innerHTML=st.clients.length?st.clients.map(c=>`<li><b>${esc(c.id)}</b><span class="kv">${esc(c.address)}</span></li>`).join(''):L('<li class="none">아직 붙은 기기가 없습니다.</li>');
   $('#dk-live').hidden=S.source==='live';$('#dk-demo').hidden=S.source==='demo';}
-function open(){drawer.hidden=false;D.status().then(apply);$('#dk-close').focus();}
+function open(){drawer.hidden=false;D.status().then(apply);D.info().then(i=>{$('#dk-ver').textContent='Wavrel '+i.version;}).catch(()=>{});$('#dk-close').focus();}
 function close(){drawer.hidden=true;shown=null;}
 function apply(s){st=s;Desk.rev++;draw();}
 function openSetup(){setup.hidden=false;note.textContent=NOTE0;note.className='muted';$('#su-pass').focus();}

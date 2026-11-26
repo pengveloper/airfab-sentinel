@@ -1,0 +1,184 @@
+# Publishes a GitHub release from main: the Windows portable zip, the signed Android relay APK,
+# SHA-256 checksums and the Defender report. Started by hand with the version to release, which
+# must match package.json. The workflow creates the tag v<version> on the commit it built.
+#
+# Stable download links (used by wavrel.com) point at copies without the version in the name:
+#   https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-win-x64.zip
+#   https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk
+name: release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, for example 0.5.0 (must match package.json)
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    name: Check the version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: v
+        env:
+          WANT: ${{ inputs.version }}
+        run: |
+          [ "$GITHUB_REF" = refs/heads/main ] || { echo "::error::Releases are made from main only"; exit 1; }
+          [[ "$WANT" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Version must look like 1.2.3"; exit 1; }
+          have=$(node -p "require('./package.json').version")
+          [ "$have" = "$WANT" ] || { echo "::error::package.json says $have, not $WANT"; exit 1; }
+          grep -q "^## $WANT " CHANGELOG.md || { echo "::error::CHANGELOG.md has no section for $WANT"; exit 1; }
+          if git ls-remote --exit-code --tags origin "refs/tags/v$WANT" >/dev/null; then echo "::error::v$WANT already exists"; exit 1; fi
+          echo "version=$WANT" >> "$GITHUB_OUTPUT"
+
+  windows:
+    name: Windows zip
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tests
+        run: npm test
+      - name: Desktop smoke test (real window, DPAPI)
+        run: npm run test:app
+      - name: Package
+        run: npm run dist
+        env:
+          APPX_IDENTITY_NAME: ${{ vars.APPX_IDENTITY_NAME }}
+          APPX_PUBLISHER: ${{ vars.APPX_PUBLISHER }}
+          APPX_PUBLISHER_DISPLAY_NAME: ${{ vars.APPX_PUBLISHER_DISPLAY_NAME }}
+      - name: Packaged app starts
+        run: node tests/packaged.check.mjs "dist/win-unpacked/Wavrel.exe"
+      - name: Microsoft Defender scan of the zip
+        shell: pwsh
+        run: |
+          $mp = Join-Path $env:ProgramFiles 'Windows Defender\MpCmdRun.exe'
+          $report = 'dist/defender-scan.txt'
+          if (-not (Test-Path $mp)) { 'Defender command line scanner not found on this runner; scan not run.' | Tee-Object $report; exit 0 }
+          & $mp -SignatureUpdate *> $null
+          $threat = $false
+          foreach ($t in @(Get-ChildItem dist -File -Filter *.zip | ForEach-Object FullName) + (Resolve-Path 'dist/win-unpacked').Path) {
+            $o = & $mp -Scan -ScanType 3 -File $t -DisableRemediation 2>&1 | Out-String
+            "== $(Split-Path $t -Leaf) (exit $LASTEXITCODE)`n$o" | Tee-Object $report -Append
+            if ($LASTEXITCODE -eq 2) { $threat = $true }
+          }
+          if ($threat) { Write-Error 'Defender reported a threat in the build output.'; exit 1 }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-windows
+          path: |
+            dist/Wavrel-${{ needs.check.outputs.version }}-win-x64.zip
+            dist/Wavrel-${{ needs.check.outputs.version }}-store.appx
+            dist/defender-scan.txt
+          if-no-files-found: error
+
+  android:
+    name: Signed relay APK
+    needs: check
+    runs-on: ubuntu-latest
+    # The signing key lives in Parameter Store; only the "aws" environment (main) may read it.
+    environment: aws
+    permissions:
+      contents: read
+      id-token: write
+    defaults:
+      run:
+        working-directory: relay/android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: 8.14.3
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-2
+      # Created once on the first release, then reused so every later APK installs over the last.
+      # The key and its password never appear in the log or in the repository.
+      - name: Load the signing key (create it on the first release)
+        working-directory: ${{ runner.temp }}
+        run: |
+          umask 077
+          get() { aws ssm get-parameter --with-decryption --name "/wavrel/relay-android/$1" --query Parameter.Value --output text; }
+          if ! aws ssm get-parameter --name /wavrel/relay-android/keystore --query Parameter.Name --output text >/dev/null 2>&1; then
+            pass=$(head -c 24 /dev/urandom | base64 | tr -d '/+=\n')
+            echo "::add-mask::$pass"
+            KSPASS="$pass" keytool -genkeypair -keystore new.p12 -storetype PKCS12 -alias wavrel-relay -keyalg RSA -keysize 3072 \
+              -validity 10000 -dname "CN=Wavrel Relay, O=pengveloper" -storepass:env KSPASS -keypass:env KSPASS >/dev/null 2>&1
+            jq -n --arg v "$pass" '{Name:"/wavrel/relay-android/keystore-password",Type:"SecureString",Value:$v,Description:"Wavrel Relay signing key password"}' > p.json
+            jq -n --arg v "$(base64 -w0 new.p12)" '{Name:"/wavrel/relay-android/keystore",Type:"SecureString",Tier:"Advanced",Value:$v,Description:"Wavrel Relay signing key (PKCS12, base64)"}' > k.json
+            aws ssm put-parameter --cli-input-json file://p.json --no-overwrite >/dev/null
+            aws ssm put-parameter --cli-input-json file://k.json --no-overwrite >/dev/null
+            rm -f new.p12 p.json k.json
+            echo "created the relay signing key in Parameter Store"
+          fi
+          pass=$(get keystore-password); echo "::add-mask::$pass"
+          get keystore | base64 -d > relay.p12
+          echo "WAVREL_RELAY_KEYSTORE=$RUNNER_TEMP/relay.p12" >> "$GITHUB_ENV"
+          echo "WAVREL_RELAY_KEYSTORE_PASSWORD=$pass" >> "$GITHUB_ENV"
+      - name: Unit tests
+        run: gradle --no-daemon testReleaseUnitTest
+      - name: Build the signed release APK
+        run: gradle --no-daemon assembleRelease
+      - name: Check the signature
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME"/build-tools | sort -V | tail -n 1)/apksigner verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
+          mkdir -p out && cp "$apk" "out/Wavrel-Relay-${{ needs.check.outputs.version }}.apk"
+          rm -f "$WAVREL_RELAY_KEYSTORE"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-android
+          path: relay/android/out/*.apk
+          if-no-files-found: error
+
+  publish:
+    name: Publish the release
+    needs: [check, windows, android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v7
+        with:
+          path: art
+          merge-multiple: true
+      - name: Assets, checksums and notes
+        env:
+          V: ${{ needs.check.outputs.version }}
+        run: |
+          mkdir pub
+          cp "art/Wavrel-$V-win-x64.zip" "art/Wavrel-Relay-$V.apk" art/defender-scan.txt pub/
+          cp "art/Wavrel-$V-win-x64.zip" pub/Wavrel-win-x64.zip
+          cp "art/Wavrel-Relay-$V.apk" pub/Wavrel-Relay.apk
+          (cd pub && sha256sum *.zip *.apk > SHA256SUMS.txt && cat SHA256SUMS.txt)
+          awk -v v="$V" '$0 ~ "^## "v" " {on=1; next} on && /^## / {exit} on' CHANGELOG.md > notes.md
+          cat >> notes.md <<'EOF'
+
+          ### Downloads
+          - **Windows**: `Wavrel-win-x64.zip`. Unzip and run `Wavrel.exe`. The zip is not code-signed yet, so Windows shows "Windows protected your PC" on first run (More info → Run anyway). The Microsoft Store version, which installs without that warning, is in certification.
+          - **Android (Wavrel Relay)**: `Wavrel-Relay.apk`. Allow installing from this source when Android asks.
+          - Compare downloads with `SHA256SUMS.txt`. `defender-scan.txt` is Microsoft Defender's report on the build.
+          EOF
+      - name: Create the release and its tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ needs.check.outputs.version }}
+        run: gh release create "v$V" pub/* --target "$GITHUB_SHA" --title "Wavrel $V" --notes-file notes.md

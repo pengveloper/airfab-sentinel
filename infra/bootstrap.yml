@@ -7,13 +7,17 @@ Description: >-
   (bootstrap-wavrel) so the role cannot change it.
 
 Parameters:
-  Repository:
+  OwnerId:
     Type: String
-    Default: pengveloper/airfab-sentinel
-  NewRepository:
+    Default: '109851425'
+    Description: GitHub ID of the repository owner (pengveloper)
+  RepositoryId:
     Type: String
-    Default: pengveloper/wavrel
-    Description: The name the repository will have after the rename; both are trusted.
+    Default: '1342679245'
+    Description: >-
+      GitHub ID of the repository. GitHub puts immutable owner and repository IDs in the OIDC
+      subject, so the trust survives a rename and cannot be claimed by a new repository that
+      takes the old name.
   ExistingOidcProviderArn:
     Type: String
     Default: ''
@@ -90,9 +94,8 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub:
-                  - !Sub repo:${Repository}:environment:aws
-                  - !Sub repo:${NewRepository}:environment:aws
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:*@${OwnerId}/*@${RepositoryId}:environment:aws
       Policies:
         - PolicyName: wavrel-deploy
           PolicyDocument:

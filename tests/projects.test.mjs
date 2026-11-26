@@ -18,7 +18,9 @@ test('T-PRJ-001 every project is complete in Korean and English and points at re
 });
 
 test('T-PRJ-002 the app data and both website pages match the project files', () => {
-  for (const [rel, body] of Object.entries(outputs())) assert.equal(fs.readFileSync(path.join(root, rel), 'utf8'), body, `${rel} is out of date: run node tools/projects.mjs`);
+  // Git on Windows may check text files out with CRLF line endings; the content is what matters.
+  const lf = s => s.replace(/\r\n/g, '\n');
+  for (const [rel, body] of Object.entries(outputs())) assert.equal(lf(fs.readFileSync(path.join(root, rel), 'utf8')), body, `${rel} is out of date: run node tools/projects.mjs`);
 });
 
 test('T-PRJ-003 a broken project file is refused with its name and the reason', () => {

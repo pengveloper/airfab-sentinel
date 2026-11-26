@@ -198,7 +198,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   let stale = 0;
   for (const [rel, body] of Object.entries(outputs())) {
     const file = path.join(root, rel);
-    const now = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+    const now = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n') : null;
     if (now === body) continue;
     if (check) { console.error(`out of date: ${rel} (run node tools/projects.mjs)`); stale++; }
     else { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, body); console.log(`wrote ${rel}`); }

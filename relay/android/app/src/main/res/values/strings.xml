@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sentinel Relay</string>
+    <string name="lede">Carries alerts from Sentinel Lab on your PC to this phone and your Rokid glasses.</string>
+
+    <string name="state_running">Running</string>
+    <string name="state_stopped">Stopped</string>
+    <string name="start_relay">Start relay</string>
+    <string name="retry_relay">Reconnect with this password</string>
+    <string name="stop_relay">Stop relay</string>
+
+    <string name="node_hub">PC</string>
+    <string name="node_phone">This phone</string>
+    <string name="node_glasses">Glasses</string>
+    <string name="phone_relaying">Relaying</string>
+    <string name="phone_waiting">Waiting for the PC</string>
+    <string name="service_text">PC: %1$s · Glasses: %2$s</string>
+    <string name="phone_idle">Not running</string>
+
+    <string name="hub_off">Not connected</string>
+    <string name="hub_connecting">Connecting…</string>
+    <string name="hub_on">Connected</string>
+    <string name="hub_wrong_password">Wrong password</string>
+    <string name="hub_blocked">Blocked for a minute</string>
+    <string name="hub_unreachable">Can\'t reach the PC</string>
+    <string name="hub_not_local">Not on this network</string>
+    <string name="hub_not_local_help">That name leads to an address outside the local network, so the password was not sent. Use the Host address from the Built-in broker panel.</string>
+    <string name="hub_wrong_password_help">The PC refused the password. Copy it again from the Built-in broker panel, then start the relay again. The phone won\'t retry on its own, because the PC blocks an address for a minute after five wrong passwords.</string>
+    <string name="hub_blocked_help">The PC is blocking this phone for a minute after several wrong passwords. The relay tries again in about a minute.</string>
+
+    <string name="glass_none">None paired</string>
+    <string name="glass_off">Not connected</string>
+    <string name="glass_connecting">Connecting…</string>
+    <string name="glass_on">Connected</string>
+    <string name="glass_need_licence">Needs the Rokid licence</string>
+    <string name="glass_no_display">No display</string>
+    <string name="glass_failed">Connection failed</string>
+    <string name="glass_none_line">No glasses yet. Turn your glasses on, then find them.</string>
+    <string name="glass_line">%1$s ··%2$s · %3$s</string>
+    <string name="glass_default_name">Rokid Glasses</string>
+    <string name="glass_reconnect">Reconnect</string>
+    <string name="glass_disconnect">Disconnect</string>
+    <string name="glass_no_info">The glasses didn\'t send their connection details</string>
+    <string name="glass_sdk_unsupported">This Rokid SDK version connects in a way the relay doesn\'t know</string>
+    <string name="glass_open_failed">The glasses couldn\'t open the alert screen (code %1$d)</string>
+
+    <string name="lens_off">Relay is off</string>
+    <string name="lens_off_body">Start the relay to show alerts from your PC here and on your glasses.</string>
+    <string name="lens_waiting">Waiting for an alert</string>
+    <string name="lens_waiting_body">Alerts appear here exactly as your glasses show them.</string>
+
+    <string name="section_hub">PC broker</string>
+    <string name="label_address">Address</string>
+    <string name="hint_address">For example 192.168.0.12</string>
+    <string name="label_password">Broker password</string>
+    <string name="hint_password">From the Built-in broker panel</string>
+    <string name="hint_saved">Saved. Type to replace it</string>
+    <string name="help_hub">In Sentinel Lab on your PC, press Connect. The Built-in broker panel shows the Host address and the password. The phone and the PC need to be on the same Wi-Fi.</string>
+    <string name="addr_empty">Enter the Host address from the Built-in broker panel.</string>
+    <string name="addr_bad_host">That isn\'t an address. Use the Host numbers from the Built-in broker panel, such as 192.168.0.12.</string>
+    <string name="addr_bad_port">The port must be a number from 1 to 65535. The broker uses 1883 unless you changed it.</string>
+    <string name="addr_loopback">That address points at this phone. Use the Host address from the Built-in broker panel.</string>
+    <string name="addr_not_private">The PC only accepts phones on the same local network. Use its local address, which usually starts with 192.168, 10 or 172.</string>
+    <string name="pw_empty">Enter the broker password from the Built-in broker panel.</string>
+
+    <string name="section_glasses">Rokid glasses</string>
+    <string name="find_glasses">Find glasses</string>
+    <string name="find_title">Choose your glasses</string>
+    <string name="find_searching">Searching… Keep the glasses on and nearby.</string>
+    <string name="device_label">%1$s ··%2$s</string>
+    <string name="cancel">Cancel</string>
+    <string name="bt_off">Turn on Bluetooth first.</string>
+    <string name="bt_permission_needed">The relay needs Nearby devices permission to find and connect to the glasses.</string>
+    <string name="label_secret">Rokid client secret</string>
+    <string name="hint_secret">From your Rokid developer account</string>
+    <string name="choose_licence">Choose licence file</string>
+    <string name="licence_present">Licence file saved</string>
+    <string name="licence_absent">No licence file</string>
+    <string name="licence_saved">Licence file saved on this phone.</string>
+    <string name="licence_unreadable">That file couldn\'t be read, or is larger than 64 KB.</string>
+    <string name="help_licence">Rokid\'s SDK asks for a client secret and a licence file (.lc) issued for your glasses through Rokid\'s developer program before it reconnects. Without them the relay still tries the first connection. Both stay encrypted on this phone.</string>
+    <string name="test_glasses">Show a test on the glasses</string>
+    <string name="test_not_connected">Connect the glasses first.</string>
+    <string name="test_failed">The glasses didn\'t accept the screen.</string>
+    <string name="test_title">Sentinel Relay test</string>
+    <string name="test_body">If you can read this, alerts will show here.</string>
+    <string name="phone_alerts">Also notify on this phone</string>
+
+    <string name="section_recent">Recent alerts</string>
+    <string name="recent_empty">No alerts yet. To try it, press Send a test alert in Rules on the PC.</string>
+    <string name="shown_on_glasses">On glasses</string>
+    <string name="not_on_glasses">Phone only</string>
+
+    <string name="tag_alert">Attention</string>
+    <string name="tag_info">Notice</string>
+    <string name="src_mixed">Partly simulated</string>
+    <string name="src_replay">Replay</string>
+    <string name="src_simulator">Simulated</string>
+    <string name="src_unknown">Unknown source</string>
+
+    <string name="ch_service">Relay running</string>
+    <string name="ch_alert">Alerts</string>
+    <string name="ch_info">Notices</string>
+    <string name="service_title">Relaying alerts from your PC</string>
+    <string name="action_stop">Stop</string>
+</resources>

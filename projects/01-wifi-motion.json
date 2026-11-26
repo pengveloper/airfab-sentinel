@@ -1,0 +1,74 @@
+{
+  "id": "wifi-motion",
+  "order": 1,
+  "level": 1,
+  "minutes": 45,
+  "demo": true,
+  "status": "OPERATOR_REQUIRED",
+  "title": {
+    "ko": "와이파이로 움직임 보기",
+    "en": "See movement through Wi-Fi"
+  },
+  "summary": {
+    "ko": "공유기와 보드 사이를 사람이 지나가면 와이파이 신호가 흔들립니다. ESPectre 펌웨어로 그 흔들림을 움직임으로 바꾸고, 실제로 지나간 순간과 맞춰 봅니다.",
+    "en": "When someone walks between the router and a board, the Wi-Fi signal wobbles. ESPectre turns that wobble into motion, and you check it against the moments you really walked past."
+  },
+  "learn": {
+    "ko": [
+      "와이파이 채널 정보(CSI)로 움직임을 재는 방식",
+      "감지율과 헛경보를 세는 검증 세션"
+    ],
+    "en": [
+      "How Wi-Fi channel information (CSI) measures motion",
+      "A test session that counts hits and false alarms"
+    ]
+  },
+  "parts": [
+    "esp32-s3",
+    "router",
+    "usb"
+  ],
+  "firmware": [
+    {
+      "name": "ESPectre",
+      "url": "https://espectre.dev/tools/flash/"
+    }
+  ],
+  "steps": [
+    {
+      "ko": "허브를 켜고 비밀번호를 정합니다.",
+      "en": "Start the hub and set its password.",
+      "view": "nodes"
+    },
+    {
+      "ko": "ESP32-S3에 ESPectre를 굽고, 허브 창의 주소·포트·사용자·비밀번호를 넣습니다.",
+      "en": "Flash ESPectre to the ESP32-S3 and enter the hub's address, port, user and password.",
+      "view": "nodes"
+    },
+    {
+      "ko": "보드를 공유기와 2~4m 떨어진 곳에 둡니다.",
+      "en": "Put the board 2 to 4 m away from the router.",
+      "view": "presence"
+    },
+    {
+      "ko": "움직임 화면에서 세션을 시작하고, 지나갈 때마다 L 키를 누릅니다. 세 번 이상 지나갑니다.",
+      "en": "Start a session in the Motion view and press L each time you walk past, at least three times.",
+      "view": "motion"
+    },
+    {
+      "ko": "기록 화면에서 감지율과 헛경보를 확인합니다.",
+      "en": "Check the hit rate and false alarms in the Records view.",
+      "view": "evidence"
+    }
+  ],
+  "success": {
+    "ko": [
+      "지나간 횟수의 대부분이 감지로 잡힌다",
+      "가만히 있을 때 헛경보가 거의 없다"
+    ],
+    "en": [
+      "Most walk-pasts show up as detections",
+      "Few false alarms while nobody moves"
+    ]
+  }
+}

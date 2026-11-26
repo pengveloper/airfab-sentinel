@@ -51,6 +51,16 @@
     </section>
 
     <!-- 움직임 -->
+    <section class="view" id="v-projects" data-title="프로젝트" hidden>
+      <div class="cols">
+        <div class="panel w360">
+          <div class="ph"><h2>따라 하는 프로젝트</h2><span class="chip" id="pj-count"></span></div>
+          <p class="muted pad">보드, 모델, 안경을 엮은 작은 실험입니다. 단계를 체크하면 이 PC에 저장되고, 단계 옆 '열기'로 해당 화면에 바로 갑니다.</p>
+          <ol class="pj-list" id="pj-list"></ol>
+        </div>
+        <div class="panel pj-main" id="pj-detail" tabindex="-1" aria-live="polite"></div>
+      </div>
+    </section>
     <section class="view" id="v-motion" data-title="움직임" hidden>
       <div class="cols">
         <div class="panel grow">
@@ -316,6 +326,8 @@
 <script src="js/space.js"></script>
 <script src="js/views.js"></script>
 <script src="js/glass.js"></script>
+<script src="js/projects-data.js"></script>
+<script src="js/projects.js"></script>
 <script src="js/models.js"></script>
 <script src="js/remote.js"></script>
 <script src="js/app.js"></script>

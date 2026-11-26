@@ -202,6 +202,17 @@ try {
   await ui.click('#rm-off'); await ui.until(() => !document.querySelector('#rm-state').classList.contains('live'), null, 5_000);
   await relay.close();
   step('ask from anywhere: a Rokid agent request through the relay server is answered by the chosen model, and the PC token is not kept in clear text');
+  // 5-4. 프로젝트 화면: 목록이 나오고, 단계와 부품 체크가 저장된다
+  await win.evaluate(() => { location.hash = 'projects'; });
+  await ui.until(() => document.querySelectorAll('#pj-list .pj-item').length >= 6, null, 5_000);
+  await ui.click('#pj-list li:nth-child(2) .pj-item');
+  await ui.click('#pj-detail .pj-steps input[data-step="0"]');
+  await ui.click('#pj-detail .pj-checks input[data-part]');
+  await ui.until(() => /1\/\d+ 단계/.test(document.querySelector('#pj-list li:nth-child(2) .kv').textContent), null, 5_000);
+  const lab = await win.evaluate(() => JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k => (localStorage.getItem(k) || '').includes('"lab"')) || 'null')));
+  assert.ok(lab && lab.lab && lab.lab.done['ble-rooms'] && lab.lab.done['ble-rooms'][0] === 0 && Object.keys(lab.lab.have).length === 1, 'ticked steps and parts are saved');
+  await sleep(800); await shot(win, '07-projects.png');
+  step('projects view lists the projects and keeps ticked steps and parts');
   clearInterval(timer); board.end(true);
 
   // 6. 화면 기록 (데모)

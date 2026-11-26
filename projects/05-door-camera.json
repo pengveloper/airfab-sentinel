@@ -1,0 +1,63 @@
+{
+  "id": "door-camera",
+  "order": 5,
+  "level": 2,
+  "minutes": 40,
+  "demo": false,
+  "status": "OPERATOR_REQUIRED",
+  "title": {
+    "ko": "현관 카메라 보기",
+    "en": "Watch the front door"
+  },
+  "summary": {
+    "ko": "ESP32-CAM에 Tasmota 카메라 펌웨어를 굽고 카메라 화면에서 영상을 봅니다. 움직임 규칙과 함께 쓰면 누가 왔을 때 화면을 바로 확인할 수 있습니다.",
+    "en": "Flash Tasmota's camera firmware to the ESP32-CAM and watch it in the Camera view. With a motion rule, you can check the picture the moment someone arrives."
+  },
+  "learn": {
+    "ko": [
+      "ESP32-CAM 굽기와 핀 설정(템플릿)",
+      "로컬망 안에서만 영상 보기"
+    ],
+    "en": [
+      "Flashing the ESP32-CAM and its pin template",
+      "Watching video inside your own network only"
+    ]
+  },
+  "parts": [
+    "esp32-cam",
+    "router",
+    "usb"
+  ],
+  "firmware": [
+    {
+      "name": "Tasmota (tasmota32-webcam)",
+      "url": "https://tasmota.github.io/install/"
+    }
+  ],
+  "steps": [
+    {
+      "ko": "어댑터에 꽂은 ESP32-CAM에 tasmota32-webcam을 굽습니다.",
+      "en": "Flash tasmota32-webcam to the ESP32-CAM on its adapter.",
+      "view": "nodes"
+    },
+    {
+      "ko": "영상이 안 나오면 AI-Thinker ESP32-CAM 템플릿을 적용합니다.",
+      "en": "If there is no picture, apply the AI-Thinker ESP32-CAM template."
+    },
+    {
+      "ko": "스트림 주소(http://카메라 주소:81/stream)를 카메라 화면에 넣습니다.",
+      "en": "Enter the stream address (http://camera address:81/stream) in the Camera view.",
+      "view": "camera"
+    }
+  ],
+  "success": {
+    "ko": [
+      "카메라 화면에 영상이 나온다",
+      "같은 와이파이 밖에서는 열리지 않는다"
+    ],
+    "en": [
+      "The Camera view shows the picture",
+      "It does not open from outside your Wi-Fi"
+    ]
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "id": "glasses-alert",
+  "order": 3,
+  "level": 2,
+  "minutes": 40,
+  "demo": true,
+  "status": "OPERATOR_REQUIRED",
+  "title": {
+    "ko": "움직임 알림을 안경으로 받기",
+    "en": "Get motion alerts on your glasses"
+  },
+  "summary": {
+    "ko": "1번 프로젝트의 움직임 감지를 휴대폰과 로키드 안경 렌즈에 알림으로 띄웁니다. 시뮬레이터 값은 '시뮬레이션'이라고 표시되어 실측과 섞이지 않습니다.",
+    "en": "Send the motion from project 1 to the phone and the Rokid lens as alerts. Simulated values are labelled so they never pass for real ones."
+  },
+  "learn": {
+    "ko": [
+      "허브의 알림 토픽(lab/out/notify) 구조",
+      "휴대폰이 안경으로 알림을 넘기는 방식"
+    ],
+    "en": [
+      "The hub's alert topic (lab/out/notify)",
+      "How the phone hands alerts to the glasses"
+    ]
+  },
+  "parts": [
+    "esp32-s3",
+    "router",
+    "phone",
+    "rokid"
+  ],
+  "firmware": [
+    {
+      "name": "ESPectre",
+      "url": "https://espectre.dev/tools/flash/"
+    },
+    {
+      "name": "Wavrel Relay",
+      "url": "https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk"
+    }
+  ],
+  "steps": [
+    {
+      "ko": "휴대폰에 Wavrel Relay를 설치하고, 허브 창의 Host 주소와 비밀번호를 넣습니다.",
+      "en": "Install Wavrel Relay on the phone and enter the Host address and password from the hub panel.",
+      "view": "nodes"
+    },
+    {
+      "ko": "Relay에서 안경을 연결하고 '시험 알림'으로 렌즈에 뜨는지 봅니다.",
+      "en": "Connect the glasses in Relay and send a test alert to see it on the lens."
+    },
+    {
+      "ko": "자동화에서 '움직임이 있으면 알림' 규칙을 켭니다.",
+      "en": "Turn on the 'notify on motion' rule in Automation.",
+      "view": "rules"
+    },
+    {
+      "ko": "안경 화면 미리보기로 렌즈에 어떻게 보일지 확인합니다.",
+      "en": "Preview how it looks on the lens in the glasses screen.",
+      "view": "glass"
+    }
+  ],
+  "success": {
+    "ko": [
+      "움직임 후 몇 초 안에 렌즈에 알림이 뜬다",
+      "시뮬레이터 알림에는 '시뮬레이션'이 붙는다"
+    ],
+    "en": [
+      "An alert reaches the lens a few seconds after motion",
+      "Simulator alerts carry the 'simulated' label"
+    ]
+  }
+}

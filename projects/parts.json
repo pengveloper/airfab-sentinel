@@ -1,0 +1,46 @@
+{
+  "esp32-s3": {
+    "ko": "ESP32-S3 개발 보드 (DevKitC-1, N16R8)",
+    "en": "ESP32-S3 dev board (DevKitC-1, N16R8)"
+  },
+  "esp32-c3": {
+    "ko": "ESP32-C3 Super Mini",
+    "en": "ESP32-C3 Super Mini"
+  },
+  "esp32-cam": {
+    "ko": "ESP32-CAM과 USB 어댑터",
+    "en": "ESP32-CAM with its USB adapter"
+  },
+  "router": {
+    "ko": "2.4GHz 와이파이 공유기 (집 공유기)",
+    "en": "2.4 GHz Wi-Fi router (the one at home)"
+  },
+  "usb": {
+    "ko": "데이터용 USB 케이블",
+    "en": "USB data cable"
+  },
+  "phone": {
+    "ko": "Android 휴대폰 (Android 9 이상)",
+    "en": "Android phone (Android 9 or later)"
+  },
+  "rokid": {
+    "ko": "로키드 안경",
+    "en": "Rokid glasses"
+  },
+  "ble": {
+    "ko": "블루투스를 켠 휴대폰이나 BLE 태그",
+    "en": "A phone with Bluetooth on, or a BLE tag"
+  },
+  "ws2812b": {
+    "ko": "WS2812B LED 띠 (5V)",
+    "en": "WS2812B LED strip (5 V)"
+  },
+  "ollama": {
+    "ko": "Ollama를 설치한 PC (그래픽카드 있으면 빠름)",
+    "en": "A PC with Ollama installed (faster with a GPU)"
+  },
+  "server": {
+    "ko": "Wavrel 중계 서버 (agent.wavrel.com 또는 직접 띄운 서버)",
+    "en": "Wavrel relay server (agent.wavrel.com or your own)"
+  }
+}

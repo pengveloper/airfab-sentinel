@@ -15,7 +15,7 @@ import * as store from './store.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ORIGIN = 'app://wavrel/';
 const ROOT = () => path.join(app.getAppPath(), 'console');
-const EXTERNAL = new Set(['espectre.dev', 'espresense.com', 'tasmota.github.io', 'templates.blakadder.com', 'github.com', 'mosquitto.org']);
+const EXTERNAL = new Set(['espectre.dev', 'espresense.com', 'tasmota.github.io', 'templates.blakadder.com', 'github.com', 'mosquitto.org', 'install.wled.me', 'ollama.com', 'wavrel.com']);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json', '.md': 'text/plain; charset=utf-8' };
 const CSP = [
   "default-src 'self'", "script-src 'self'", "style-src 'self' 'unsafe-inline'", "font-src 'self'",

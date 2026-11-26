@@ -3,6 +3,7 @@
 const $=s=>document.querySelector(s),S=Lab.S;
 const TABS=[
   ['space',L('공간'),'<path d="M3 8l9-5 9 5-9 5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/>'],
+  ['projects',L('프로젝트'),'<path d="M9 3h6M10 3v6l-5.4 9.2A1.9 1.9 0 0 0 6.2 21h11.6a1.9 1.9 0 0 0 1.6-2.8L14 9V3"/><path d="M7.4 15h9.2"/>'],
   ['motion',L('움직임'),'<path d="M2 12h4l2-6 4 13 3-9 2 4h5"/>'],
   ['presence',L('위치'),'<circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/>'],
   ['camera',L('카메라'),'<rect x="3" y="7" width="13" height="10" rx="1.5"/><path d="M16 11l5-3v8l-5-3"/>'],
@@ -61,7 +62,7 @@ $('#conn-form').addEventListener('submit',e=>{e.preventDefault();note.className=
   Lab.connect($('#c-url').value.trim(),$('#c-user').value,$('#c-pass').value,err=>{if(err){note.className='muted err';note.textContent=err;if(S.source!=='live'&&S.source!=='demo')Lab.demo();}else{$('#c-pass').value='';closeDrawer();}});});
 
 /* 시작 */
-Views.wire();Views.update.models=Models.update;Models.wire();Remote.wire();Space.init($('#space3d'));
+Views.wire();Views.update.models=Models.update;Models.wire();Remote.wire();Projects.wire();Space.init($('#space3d'));
 const boot=$('#boot');if(boot){const kill=()=>boot.remove();boot.addEventListener('click',kill);setTimeout(kill,2400);}
 $('#main').addEventListener('pointermove',e=>{const p=e.target.closest('.panel');if(!p)return;const r=p.getBoundingClientRect();p.style.setProperty('--mx',(e.clientX-r.left)+'px');p.style.setProperty('--my',(e.clientY-r.top)+'px');});
 show(location.hash.slice(1)||'space',false);

@@ -10,7 +10,7 @@
   "scripts": {
     "postinstall": "node desktop/scripts/fonts.mjs",
     "start": "electron .",
-    "test": "node --test tests/core.test.mjs tests/broker.test.mjs tests/models.test.mjs tests/server.test.mjs tests/i18n.test.mjs",
+    "test": "node --test tests/core.test.mjs tests/broker.test.mjs tests/models.test.mjs tests/server.test.mjs tests/projects.test.mjs tests/i18n.test.mjs",
     "test:app": "node tests/app.smoke.mjs",
     "fonts": "node desktop/scripts/fonts.mjs",
     "dist": "electron-builder --config desktop/builder.config.js --publish never"

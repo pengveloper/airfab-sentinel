@@ -1,0 +1,67 @@
+{
+  "id": "ask-from-anywhere",
+  "order": 6,
+  "level": 3,
+  "minutes": 60,
+  "demo": false,
+  "status": "OPERATOR_REQUIRED",
+  "title": {
+    "ko": "밖에서 집 PC에 묻기",
+    "en": "Ask the home PC from anywhere"
+  },
+  "summary": {
+    "ko": "로키드 앱의 사용자 지정 에이전트가 Wavrel 중계 서버로 질문을 보내고, 서버가 집 PC의 모델에 넘깁니다. PC에는 열린 포트가 필요 없습니다.",
+    "en": "The Rokid app's custom agent sends the question to the Wavrel relay server, which passes it to the model on the home PC. The PC opens no port."
+  },
+  "learn": {
+    "ko": [
+      "나가는 연결로 집 PC를 밖에서 부르는 구조",
+      "비밀값 두 개를 나눠 쓰는 이유"
+    ],
+    "en": [
+      "Reaching a home PC from outside through its own outgoing connection",
+      "Why the agent key and the PC token are separate"
+    ]
+  },
+  "parts": [
+    "ollama",
+    "server",
+    "rokid"
+  ],
+  "firmware": [
+    {
+      "name": "docs/ROKID_AGENT.ko.md",
+      "url": "https://github.com/pengveloper/wavrel/blob/main/docs/ROKID_AGENT.ko.md"
+    }
+  ],
+  "steps": [
+    {
+      "ko": "4번 프로젝트처럼 모델이 답하게 켭니다.",
+      "en": "Turn on answering as in project 4.",
+      "view": "models"
+    },
+    {
+      "ko": "모델 화면의 '밖에서 묻기'에 중계 서버 주소와 PC 토큰을 넣습니다.",
+      "en": "Enter the relay server address and the PC token under 'Ask from anywhere' in the Models view.",
+      "view": "models"
+    },
+    {
+      "ko": "링주 플랫폼에 사용자 지정 에이전트를 만들고 URL과 AK를 넣습니다.",
+      "en": "Create a custom agent on the Lingzhu platform with the URL and the AK."
+    },
+    {
+      "ko": "안경에서 그 에이전트로 바꾸고 물어봅니다.",
+      "en": "Switch to that agent on the glasses and ask."
+    }
+  ],
+  "success": {
+    "ko": [
+      "집 밖에서도 렌즈에 답이 뜬다",
+      "PC를 끄면 렌즈가 'PC가 연결되어 있지 않다'고 알려 준다"
+    ],
+    "en": [
+      "The lens gets an answer away from home",
+      "With the PC off, the lens says the PC is not connected"
+    ]
+  }
+}

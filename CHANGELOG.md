@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Projects.** A new Projects view and wavrel.com/projects/ list seven experiments that tie boards, models and glasses together: parts, firmware, steps and what success looks like, in Korean and English. Ticked steps and parts are saved on the PC; each step can open its screen. Projects are JSON files in `projects/`, checked in CI, so anyone can add one by pull request.
+- "Broker" is now called the hub everywhere a person reads it, and the first-run screen explains what it is.
+
 ## 0.5.0 (2026-11-26)
 
 ### Desktop app

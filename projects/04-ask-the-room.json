@@ -1,0 +1,72 @@
+{
+  "id": "ask-the-room",
+  "order": 4,
+  "level": 2,
+  "minutes": 30,
+  "demo": false,
+  "status": "OPERATOR_REQUIRED",
+  "title": {
+    "ko": "안경으로 방 상태 묻기",
+    "en": "Ask about the room from your glasses"
+  },
+  "summary": {
+    "ko": "이 PC의 공개 모델(Ollama)이 안경에서 말로 한 질문에 80자 안으로 답합니다. 모델 화면에서 여러 모델의 답과 속도를 먼저 비교해 고릅니다.",
+    "en": "An open model on this PC (Ollama) answers a question spoken on the glasses in under 80 characters. Compare models' answers and speed in the Models view first."
+  },
+  "learn": {
+    "ko": [
+      "로컬 모델의 속도와 품질 비교",
+      "짧은 렌즈용 답을 만드는 지시문"
+    ],
+    "en": [
+      "Comparing local models for speed and quality",
+      "Instructions that keep answers short enough for a lens"
+    ]
+  },
+  "parts": [
+    "ollama",
+    "phone",
+    "rokid"
+  ],
+  "firmware": [
+    {
+      "name": "Ollama",
+      "url": "https://ollama.com/download"
+    },
+    {
+      "name": "Wavrel Relay",
+      "url": "https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk"
+    }
+  ],
+  "steps": [
+    {
+      "ko": "Ollama를 설치하고 작은 모델 하나를 받습니다(예: 4B 안팎).",
+      "en": "Install Ollama and pull one small model (around 4B, say).",
+      "view": "models"
+    },
+    {
+      "ko": "모델 화면에서 같은 질문을 두세 모델에 던져 답과 속도를 비교합니다.",
+      "en": "In the Models view, ask two or three models the same question and compare.",
+      "view": "models"
+    },
+    {
+      "ko": "'휴대폰·안경 질문에 답하기'를 켜고 답할 모델을 고릅니다.",
+      "en": "Turn on 'Answer questions from phone and glasses' and pick the model.",
+      "view": "models"
+    },
+    {
+      "ko": "Relay의 '소리 내어 PC에 묻기'로 물어봅니다.",
+      "en": "Ask with 'Ask the PC out loud' in Relay."
+    }
+  ],
+  "success": {
+    "ko": [
+      "10초 안에 렌즈에 답이 뜬다",
+      "답이 두 줄을 넘지 않는다"
+    ],
+    "en": [
+      "The answer reaches the lens within 10 seconds",
+      "The answer fits in two lines"
+    ]
+  }
+}

@@ -3,7 +3,8 @@ Description: >-
   Wavrel, one-time setup. Lets GitHub Actions in this repository deploy the
   website and the alert relay without stored AWS keys (OpenID Connect). The role can only be
   assumed by jobs that run in the repository's "aws" environment, and it can only touch
-  resources named wavrel-*.
+  resources named wavrel-*. Deploy this stack under a name outside that prefix
+  (bootstrap-wavrel) so the role cannot change it.
 
 Parameters:
   Repository:
@@ -108,13 +109,15 @@ Resources:
                   - iam:GetInstanceProfile
                   - iam:AddRoleToInstanceProfile
                   - iam:RemoveRoleFromInstanceProfile
+                # Only the relay server's own role. The deploy role itself is not wavrel-relay-*,
+                # so it cannot rewrite its own permissions.
                 Resource:
-                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-*
-                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:instance-profile/wavrel-*
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-relay-*
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:instance-profile/wavrel-relay-*
               - Sid: PassOnlyToEc2
                 Effect: Allow
                 Action: iam:PassRole
-                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-*
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-relay-*
                 Condition:
                   StringEquals:
                     iam:PassedToService: ec2.amazonaws.com

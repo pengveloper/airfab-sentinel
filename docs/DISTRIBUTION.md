@@ -36,7 +36,7 @@ Progress:
 | Step | State |
 |---|---|
 | Individual developer account | Registered 2026-11-24 |
-| Name reserved | "Sentinel Lab", Store ID `9NVR2WGRQB9X` (a reservation lapses if nothing is submitted within three months). "Wavrel" is to be reserved on the same product before the next submission |
+| Name reserved | "Sentinel Lab", Store ID `9NVR2WGRQB9X` (a reservation lapses if nothing is submitted within three months). "Wavrel" reserved on the same product 2026-11-26 and set as its dashboard name |
 | Package identity | `Pengveloper.SentinelLab`, set in `desktop/builder.config.js`; CI builds the package with it. The identity name stays the same after the rename, only the display name changes |
 | Submission draft: pricing and availability | Done: free, all markets, public |
 | Submission draft: properties | Done: Developer tools; declares that the app handles personal information (device names and identifiers from the user's own boards, processed locally); privacy policy entered as text hosted by Microsoft; OneDrive backup of app data turned off |
@@ -45,8 +45,8 @@ Progress:
 | Submission draft: package | Done: `SentinelLab-0.3.0-store.appx`, validated (x64, Windows desktop only) |
 | Store listing | Done for Korean and English, under the name Sentinel Lab: text, five screenshots each, seven search keywords |
 | Submitted for certification | 2026-11-26 |
-| Certification | Waiting for Microsoft |
-| Rename to Wavrel | Code and [STORE_LISTING.md](STORE_LISTING.md) renamed. Next: reserve "Wavrel" on the product, then a submission with the `Wavrel-<version>-store.appx` package and the renamed listing. The first submission is not to be published under the old name |
+| Certification | Cancelled 2026-11-26 by the account owner's decision, so the app is not published under the old name. The submission is a draft again |
+| Rename to Wavrel | Code and [STORE_LISTING.md](STORE_LISTING.md) renamed; "Wavrel" reserved. Next: in the same submission, replace the package with `Wavrel-0.4.0-store.appx`, update the listing text and screenshots, and submit again |
 | Publish and first Store install | Not done. Because publishing is manual, the account owner presses "Publish now" after certification passes |
 
 If certification fails, Partner Center gives the reason in the submission's certification
@@ -71,7 +71,7 @@ The Store package has the strongest position: Microsoft scans it during certific
 ## Verifying a download
 
 ```powershell
-Get-FileHash .\Wavrel-0.3.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\Wavrel-0.4.0-win-x64.zip -Algorithm SHA256
 ```
 
 Compare the result with `SHA256SUMS.txt` from the same CI run or release.

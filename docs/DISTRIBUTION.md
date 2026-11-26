@@ -41,15 +41,13 @@ Progress:
 | Submission draft: pricing and availability | Done: free, all markets, public |
 | Submission draft: properties | Done: Developer tools; declares that the app handles personal information (device names and identifiers from the user's own boards, processed locally); privacy policy entered as text hosted by Microsoft; OneDrive backup of app data turned off |
 | Submission draft: age rating | Done: all ages in every system |
-| Submission draft: submission options | Done: published only when "Publish now" is pressed after certification; reviewer notes entered under Additional testing information |
-| Submission draft: package | Not uploaded yet. Version 0.3.0 comes from the CI artifact of `main` |
-| Submission draft: Store listing | Waiting for the package (listing languages appear after upload). Text is prepared in [STORE_LISTING.md](STORE_LISTING.md) |
+| Submission draft: submission options | Done: published only when "Publish now" is pressed after certification; reviewer notes entered under Additional testing information; runFullTrust justification entered |
+| Submission draft: package | Done: `SentinelLab-0.3.0-store.appx`, validated (x64, Windows desktop only) |
+| Submission draft: Store listing | Text entered for Korean and English from [STORE_LISTING.md](STORE_LISTING.md); screenshots still to be uploaded |
 | Certification and first Store install | Not done |
 
-To finish: download `SentinelLab-<version>-store.appx` from the latest CI run of `main`
-(artifact `sentinel-lab-windows`) and upload it under Packages; paste the listing text and add
-screenshots for Korean and English; then submit for certification. The account owner uploads
-the package and submits.
+To finish: upload screenshots to the Korean and English listings, then submit for
+certification. The account owner uploads files and submits.
 
 Partner Center accepts the privacy policy either as a URL or as text that Microsoft hosts. The
 draft uses hosted text. The same policy is published at

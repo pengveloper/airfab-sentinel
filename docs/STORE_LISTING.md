@@ -17,6 +17,11 @@ MQTT broker on TCP port 1883 so that ESP32 boards on the user's own network can 
 which requires the full-trust desktop runtime. It does not require administrator rights,
 does not install drivers or services, and does not start with Windows.
 
+Partner Center limits the justification field under Submission options to 500 characters. The
+text entered there:
+
+> Sentinel Lab is a packaged desktop (Win32) app built with Electron, so it runs with runFullTrust. It hosts a local MQTT broker on TCP port 1883 that ESP32 boards on the user's own network connect to, and shows their readings. The broker needs a password and accepts only private network addresses. No admin rights, drivers, services or startup entries; no internet connection.
+
 ## Notes for certification
 
 No hardware or account is needed to review the app. On first launch choose "See the demo first"
@@ -46,6 +51,7 @@ What you get
 - A 3D view of the room that draws the sensing region of each Wi-Fi link and the live motion score along it.
 - Validation sessions that compare what the firmware detected with when someone really walked through: hits, misses, false detections and recall.
 - A floor plan with Bluetooth device positions, a camera view, and simple rules such as "when motion starts, turn the light gold".
+- Short alerts for glasses and phones, with a full-screen preview of what the glasses would show.
 - Log export, replay, and a standalone report for each test.
 - A demo mode with a built-in simulator, clearly labelled, so you can explore before you own a board.
 - English and Korean, following your Windows language.
@@ -66,9 +72,11 @@ Detection validation with recall and false-detection counts
 Bluetooth presence on a floor plan
 Camera stream next to sensor data
 Automation rules for LED feedback
+Alerts for glasses and phones
 Log export, replay and HTML reports
 Demo mode with a labelled simulator
-No account, no telemetry
+English and Korean interface
+No account, no telemetry, no ads
 
 **Keywords (up to 7)**
 
@@ -94,6 +102,7 @@ Wi‑Fi 신호로 움직임을 감지하거나, 방마다 블루투스 거리를
 - 블루투스 기기 위치를 그린 평면도, 카메라 화면, "움직임이 시작되면 조명을 금색으로" 같은 간단한 규칙.
 - 기록 내려받기, 재생, 시험별 리포트.
 - 내장 시뮬레이터로 도는 데모. 시뮬레이션 값이라고 표시되므로 보드가 없어도 먼저 둘러볼 수 있습니다.
+- 한국어와 영어. Windows 언어를 따르고, 버튼 하나로 바꿉니다.
 
 신경 쓴 부분
 
@@ -103,6 +112,28 @@ Wi‑Fi 신호로 움직임을 감지하거나, 방마다 블루투스 거리를
 
 ESPectre, ESPresense, Tasmota, WLED 펌웨어와 함께 씁니다. 이 프로젝트들은 각자의 라이선스로 따로 배포됩니다.
 
+**제품 기능 (최대 20개, 한 줄에 하나)**
+
+ESP32 보드용 MQTT 허브 내장
+Wi‑Fi 감지 링크를 그린 3D 방 화면
+재현율과 오탐 수를 보여 주는 감지 검증
+평면도 위 블루투스 재실 표시
+센서 값 옆에 보는 카메라 영상
+LED로 알려 주는 자동화 규칙
+안경·휴대폰으로 보내는 알림
+기록 내려받기, 재생, HTML 리포트
+시뮬레이션 값임을 표시하는 데모
+한국어·영어 화면
+계정·수집·광고 없음
+
 **키워드**
 
 ESP32, MQTT, Wi-Fi 감지, CSI, IoT, 재실 감지, 홈랩
+
+## Other fields (both languages)
+
+- Copyright and trademark: `Copyright (c) 2026 pengveloper. MIT License.`
+- Developer: `Pengveloper`
+- What's new in this version: left empty for the first submission.
+- Screenshots: at least one desktop screenshot per language is required. Use the Korean screens
+  for the Korean listing and the English screens for the English listing (1480 x 940 PNG).

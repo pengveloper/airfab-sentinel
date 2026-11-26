@@ -32,7 +32,7 @@ Screenshots from the CI emulator run against the desktop app's broker.
 ## Install
 
 1. Open the latest successful run of the
-   [relay workflow](https://github.com/pengveloper/airfab-sentinel/actions/workflows/relay.yml)
+   [relay workflow](https://github.com/pengveloper/wavrel/actions/workflows/relay.yml)
    and download `wavrel-relay-debug-apk`. You need to be signed in to GitHub to download it.
 2. Unzip it, copy the APK to the phone and open it. Android asks once to allow installs from
    that app (Files, Chrome and so on).

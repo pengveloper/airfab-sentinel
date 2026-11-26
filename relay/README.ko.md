@@ -31,7 +31,7 @@ CI 에뮬레이터가 데스크톱 앱의 브로커에 붙어 찍은 화면입�
 
 ## 설치
 
-1. [relay 워크플로](https://github.com/pengveloper/airfab-sentinel/actions/workflows/relay.yml)의
+1. [relay 워크플로](https://github.com/pengveloper/wavrel/actions/workflows/relay.yml)의
    가장 최근 성공한 실행에서 `wavrel-relay-debug-apk`를 내려받습니다. GitHub에 로그인해야 받을 수
    있습니다.
 2. 압축을 풀어 APK를 휴대폰으로 옮기고 엽니다. 처음 한 번 그 앱(내 파일, 크롬 등)에서 설치를

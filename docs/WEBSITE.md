@@ -21,7 +21,7 @@ holds no AWS keys. It asks GitHub for an OpenID Connect token and exchanges it f
 `wavrel-github-deploy` role, which trusts only this repository's `aws` environment, matched by
 GitHub's numeric owner and repository IDs so a renamed or re-created repository cannot borrow it.
 The role ARN is the repository variable `AWS_DEPLOY_ROLE_ARN`; the `aws` environment allows
-only `main` (and the branch that first set the site up).
+only `main`.
 
 Each run:
 
@@ -64,5 +64,6 @@ The workflow prints the distribution name and the validation records when it cre
 
 ## Old address
 
-`pengveloper.github.io/airfab-sentinel/` (GitHub Pages) now only forwards to the same page on
-wavrel.com; see `.github/workflows/pages.yml`.
+Until November 2026 the demo was on GitHub Pages under the repository's old name
+(`pengveloper/airfab-sentinel`). The repository is now `pengveloper/wavrel`; GitHub Pages is off
+and wavrel.com is the only address.

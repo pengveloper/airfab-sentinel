@@ -95,8 +95,7 @@ The full comparison of channels, the Store steps and the antivirus notes are in
 
 [The demo](https://wavrel.com/demo/) and [the privacy policy](https://wavrel.com/privacy/) are
 on wavrel.com. In the browser the demo runs on the simulator only; connecting to boards needs the
-desktop app. The old GitHub Pages address still works: the `pages` workflow now publishes only
-pages that forward each visitor to the same page on wavrel.com.
+desktop app. How the site is hosted and deployed: [docs/WEBSITE.md](docs/WEBSITE.md).
 
 ## Run it
 
@@ -150,15 +149,16 @@ On Linux the app test needs a display: `xvfb-run -a npm run test:app`.
 ## Repository layout
 
 ```
-web/        privacy policy page published to GitHub Pages
+web/        wavrel.com: landing pages, privacy policy, 404 (the demo is console/)
+infra/      AWS templates for the website and the deploy role
 desktop/    Electron main process, embedded hub, preload bridge, packaging config
 console/    the console (runs in the desktop window and as a static page)
 tests/      data layer, hub, app smoke test, packaged-build check
 broker/     optional Mosquitto kit for running without the desktop app
 relay/      Android app that carries alerts to the phone and Rokid glasses, and its CI driver
-tools/      broker-sim.html, a publisher of simulated messages through a real broker
+tools/      broker-sim.html (simulated messages through a real broker), site.mjs (assembles the site)
 evidence/   evidence table and the template for hardware verification
-docs/       screenshots, traceability, distribution
+docs/       screenshots, traceability, distribution, website, design tokens
 ```
 
 ## Scope

@@ -5,7 +5,7 @@
 name: web
 on:
   push:
-    branches: [main, feat/aws-web]
+    branches: [main]
     paths:
       - 'web/**'
       - 'console/**'

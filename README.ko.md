@@ -48,7 +48,7 @@ Node.js 22가 필요합니다. 첫 실행에서 허브 비밀번호를 정한 �
 
 [데모](https://wavrel.com/demo/?lang=ko)와 [개인정보 처리방침](https://wavrel.com/privacy/)은 wavrel.com에 있습니다.
 브라우저의 데모는 시뮬레이터로만 돌아가고, 보드에 연결하려면 데스크톱 앱이 필요합니다.
-예전 GitHub Pages 주소도 그대로 열립니다. `pages` 워크플로는 이제 같은 페이지의 wavrel.com 주소로 넘겨 주는 페이지만 올립니다.
+사이트를 올리고 배포하는 방식은 [docs/WEBSITE.md](docs/WEBSITE.md)에 있습니다.
 
 ## 실측 순서
 
@@ -137,13 +137,15 @@ npm run test:app    # 실제 앱을 띄워 격리, 첫 실행, 인증, 메시지
 
 ## 폴더
 
+- `web/` wavrel.com의 첫 화면, 개인정보 처리방침, 404 (데모는 `console/`)
+- `infra/` 웹사이트와 배포 역할용 AWS 템플릿
 - `desktop/` Electron 메인 프로세스, 내장 허브, preload, 패키징 설정
 - `console/` 콘솔 (데스크톱 창 안에서도, 정적 페이지로도 동작)
 - `tests/` 데이터 계층, 허브, 앱 연기 시험, 묶은 빌드 확인
 - `broker/` 데스크톱 앱 없이 쓰는 Mosquitto 구성
 - `relay/` 알림을 휴대폰과 로키드 안경으로 옮기는 안드로이드 앱과 CI 구동 스크립트
-- `tools/` 실제 브로커로 시뮬레이션 메시지를 보내는 도구
-- `evidence/`, `docs/` 증거표, 스크린샷, 추적표, 배포 문서
+- `tools/` 실제 브로커로 시뮬레이션 메시지를 보내는 도구, 사이트를 묶는 `site.mjs`
+- `evidence/`, `docs/` 증거표, 스크린샷, 추적표, 배포·웹사이트·디자인 문서
 
 ## 라이선스
 

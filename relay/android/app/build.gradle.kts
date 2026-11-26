@@ -48,6 +48,12 @@ android {
         unitTests.isReturnDefaultValues = true
     }
 
+    // The release build's lint step pulls extra tool dependencies that the repositories this
+    // build allows do not serve; the debug build, which CI tests on an emulator, has no such step.
+    lint {
+        checkReleaseBuilds = false
+    }
+
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}", "META-INF/DEPENDENCIES")
     }

@@ -137,11 +137,19 @@ jobs:
       - name: Build the signed release APK
         run: gradle --no-daemon assembleRelease
       - name: Check the signature
+        shell: bash
         run: |
-          apk=app/build/outputs/apk/release/app-release.apk
-          "$ANDROID_HOME"/build-tools/$(ls "$ANDROID_HOME"/build-tools | sort -V | tail -n 1)/apksigner verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
-          mkdir -p out && cp "$apk" "out/Wavrel-Relay-${{ needs.check.outputs.version }}.apk"
           rm -f "$WAVREL_RELAY_KEYSTORE"
+          ls -l app/build/outputs/apk/release/
+          apk=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
+          case "$apk" in *unsigned*) echo "::error::the release APK was not signed"; exit 1;; esac
+          signer=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -n 1)apksigner
+          echo "checking $apk with $signer"
+          status=0; "$signer" verify --verbose --print-certs "$apk" > verify.txt 2>&1 || status=$?
+          cat verify.txt
+          [ "$status" = 0 ] || { echo "::error::apksigner exited with $status"; exit 1; }
+          grep -q "Wavrel Relay" verify.txt || { echo "::error::the APK is not signed with the Wavrel Relay key"; exit 1; }
+          mkdir -p out && cp "$apk" "out/Wavrel-Relay-${{ needs.check.outputs.version }}.apk"
       - uses: actions/upload-artifact@v7
         with:
           name: release-android

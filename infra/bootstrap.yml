@@ -25,6 +25,48 @@ Conditions:
   CreateProvider: !Equals [!Ref ExistingOidcProviderArn, '']
 
 Resources:
+  # Every role the deploy role creates must carry this boundary, so a role made for the relay
+  # server can never do more than run the server, whatever policy is attached to it.
+  RelayBoundary:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: wavrel-relay-boundary
+      Description: Upper limit for roles created by the Wavrel deploy role
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: SessionManager
+            Effect: Allow
+            Action:
+              - ssm:UpdateInstanceInformation
+              - ssmmessages:*
+              - ec2messages:*
+            Resource: '*'
+          - Sid: OwnParameters
+            Effect: Allow
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
+              - ssm:GetParametersByPath
+              - ssm:PutParameter
+            Resource: !Sub arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/wavrel/*
+          - Sid: DecryptParametersOnly
+            Effect: Allow
+            Action: kms:Decrypt
+            Resource: '*'
+            Condition:
+              StringLike:
+                kms:ViaService: ssm.*.amazonaws.com
+          - Sid: Logs
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:DescribeLogStreams
+              - cloudwatch:PutMetricData
+            Resource: '*'
+
   GitHubOidc:
     Type: AWS::IAM::OIDCProvider
     Condition: CreateProvider
@@ -88,19 +130,27 @@ Resources:
                   - logs:*
                   - cloudwatch:*
                 Resource: '*'
-              - Sid: RelayServerRoles
+              - Sid: RelayServerRolesWithBoundary
                 Effect: Allow
                 Action:
                   - iam:CreateRole
+                  - iam:PutRolePolicy
+                  - iam:AttachRolePolicy
+                  - iam:PutRolePermissionsBoundary
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-relay-*
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref RelayBoundary
+              - Sid: RelayServerRoles
+                Effect: Allow
+                Action:
                   - iam:DeleteRole
                   - iam:GetRole
                   - iam:UpdateRole
                   - iam:TagRole
                   - iam:UntagRole
-                  - iam:PutRolePolicy
                   - iam:GetRolePolicy
                   - iam:DeleteRolePolicy
-                  - iam:AttachRolePolicy
                   - iam:DetachRolePolicy
                   - iam:ListRolePolicies
                   - iam:ListAttachedRolePolicies
@@ -121,6 +171,10 @@ Resources:
                 Condition:
                   StringEquals:
                     iam:PassedToService: ec2.amazonaws.com
+              - Sid: KeepTheBoundary
+                Effect: Deny
+                Action: iam:DeleteRolePermissionsBoundary
+                Resource: '*'
               - Sid: WhoAmI
                 Effect: Allow
                 Action: sts:GetCallerIdentity
@@ -129,3 +183,5 @@ Resources:
 Outputs:
   RoleArn:
     Value: !GetAtt DeployRole.Arn
+  RelayBoundaryArn:
+    Value: !Ref RelayBoundary

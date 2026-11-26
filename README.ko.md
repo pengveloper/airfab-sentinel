@@ -1,5 +1,7 @@
 # Sentinel Lab
 
+**브라우저에서 바로 보기:** [pengveloper.github.io/airfab-sentinel](https://pengveloper.github.io/airfab-sentinel/?lang=ko) (내장 시뮬레이터, 보드나 설치 없이)
+
 English: [README.md](README.md)
 
 오픈소스 ESP32 감지 펌웨어를 보드별로 올려 놓고 한 화면에서 시험하는 데스크톱 앱입니다.
@@ -42,8 +44,9 @@ Node.js 22가 필요합니다. 첫 실행에서 허브 비밀번호를 정한 �
 
 ## 데모와 개인정보 처리방침 페이지
 
-저장소가 공개되면 `pages` 워크플로가 시뮬레이터 데모와 개인정보 처리방침을 GitHub Pages에 올립니다.
-주소는 `https://pengveloper.github.io/airfab-sentinel/` 과 `/privacy/` 이고, 아직 실행된 적은 없습니다.
+`main`에 올라갈 때마다 `pages` 워크플로가 시뮬레이터 데모와 개인정보 처리방침을 GitHub Pages에 올립니다:
+[데모](https://pengveloper.github.io/airfab-sentinel/?lang=ko), [개인정보 처리방침](https://pengveloper.github.io/airfab-sentinel/privacy/).
+브라우저의 데모는 시뮬레이터로만 돌아가고, 보드에 연결하려면 데스크톱 앱이 필요합니다.
 
 ## 실측 순서
 

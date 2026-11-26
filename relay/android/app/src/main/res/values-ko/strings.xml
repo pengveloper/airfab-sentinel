@@ -13,6 +13,8 @@
     <string name="node_phone">이 휴대폰</string>
     <string name="node_glasses">안경</string>
     <string name="phone_relaying">전달 중</string>
+    <string name="phone_waiting">PC 연결 기다림</string>
+    <string name="service_text">PC: %1$s · 안경: %2$s</string>
     <string name="phone_idle">꺼짐</string>
 
     <string name="hub_off">연결 안 됨</string>
@@ -49,7 +51,7 @@
 
     <string name="section_hub">PC 브로커</string>
     <string name="label_address">주소</string>
-    <string name="hint_address">192.168.0.12</string>
+    <string name="hint_address">예: 192.168.0.12</string>
     <string name="label_password">브로커 비밀번호</string>
     <string name="hint_password">내장 브로커 창에 있는 값</string>
     <string name="hint_saved">저장됨. 입력하면 바뀝니다</string>

@@ -40,9 +40,10 @@ object Notifier {
             ctx, 1, Intent(ctx, RelayService::class.java).setAction(RelayService.ACTION_STOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val text = Labels.hub(ctx, s) + " · " + Labels.glassShort(ctx, s.glass)
+        val text = ctx.getString(R.string.service_text, Labels.hub(ctx, s), Labels.glassShort(ctx, s.glass))
         val b = Notification.Builder(ctx, CH_SERVICE)
             .setSmallIcon(R.drawable.ic_stat_relay)
+            .setColor(ctx.getColor(R.color.gold))
             .setContentTitle(ctx.getString(R.string.service_title))
             .setContentText(text)
             .setOngoing(true)
@@ -58,6 +59,7 @@ object Notifier {
         if (Build.VERSION.SDK_INT >= 24 && !nm.areNotificationsEnabled()) return
         val n = Notification.Builder(ctx, if (a.urgent) CH_ALERT else CH_INFO)
             .setSmallIcon(R.drawable.ic_stat_relay)
+            .setColor(ctx.getColor(if (a.urgent) R.color.gold else R.color.wave))
             .setContentTitle(a.title)
             .setContentText(a.body)
             .setSubText(Relay.sourceLabel(a))

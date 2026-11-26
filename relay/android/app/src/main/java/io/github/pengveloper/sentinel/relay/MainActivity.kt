@@ -308,8 +308,10 @@ class MainActivity : Activity() {
         toggle.setTextColor(getColor(if (stops) R.color.text else R.color.ink))
 
         node(R.id.hub_dot, R.id.hub_state, Labels.hubTone(s.hub), s.hubAddress?.takeIf { s.hub == Relay.Hub.ON } ?: Labels.hub(this, s))
-        node(R.id.phone_dot, R.id.phone_state, if (s.running) Labels.Tone.GOOD else Labels.Tone.IDLE,
-            getString(if (s.running) R.string.phone_relaying else R.string.phone_idle))
+        // The phone only counts as relaying once the PC is connected.
+        val phoneTone = if (!s.running) Labels.Tone.IDLE else if (s.hub == Relay.Hub.ON) Labels.Tone.GOOD else Labels.Tone.BUSY
+        node(R.id.phone_dot, R.id.phone_state, phoneTone,
+            getString(if (!s.running) R.string.phone_idle else if (s.hub == Relay.Hub.ON) R.string.phone_relaying else R.string.phone_waiting))
         node(R.id.glass_dot, R.id.glass_state, Labels.glassTone(s.glass), Labels.glassShort(this, s.glass))
         link(R.id.link1a, R.id.link1b, s.hub == Relay.Hub.ON)
         link(R.id.link2a, R.id.link2b, s.glass == Relay.Glass.ON && s.running)

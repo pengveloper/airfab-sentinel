@@ -13,6 +13,8 @@
     <string name="node_phone">This phone</string>
     <string name="node_glasses">Glasses</string>
     <string name="phone_relaying">Relaying</string>
+    <string name="phone_waiting">Waiting for the PC</string>
+    <string name="service_text">PC: %1$s · Glasses: %2$s</string>
     <string name="phone_idle">Not running</string>
 
     <string name="hub_off">Not connected</string>
@@ -49,7 +51,7 @@
 
     <string name="section_hub">PC broker</string>
     <string name="label_address">Address</string>
-    <string name="hint_address">192.168.0.12</string>
+    <string name="hint_address">For example 192.168.0.12</string>
     <string name="label_password">Broker password</string>
     <string name="hint_password">From the Built-in broker panel</string>
     <string name="hint_saved">Saved. Type to replace it</string>

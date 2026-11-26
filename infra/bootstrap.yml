@@ -1,0 +1,278 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Wavrel, one-time setup. Lets GitHub Actions in this repository deploy the
+  website and the alert relay without stored AWS keys (OpenID Connect). The role can only be
+  assumed by jobs that run in the repository's "aws" environment, and it can only touch
+  resources named wavrel-*. Deploy this stack under a name outside that prefix
+  (bootstrap-wavrel) so the role cannot change it.
+
+Parameters:
+  OwnerId:
+    Type: String
+    Default: '109851425'
+    Description: GitHub ID of the repository owner (pengveloper)
+  RepositoryId:
+    Type: String
+    Default: '1342679245'
+    Description: >-
+      GitHub ID of the repository. GitHub puts immutable owner and repository IDs in the OIDC
+      subject, so the trust survives a rename and cannot be claimed by a new repository that
+      takes the old name.
+  ExistingOidcProviderArn:
+    Type: String
+    Default: ''
+    Description: >-
+      ARN of the account's existing token.actions.githubusercontent.com provider, if there is
+      one (an account can hold only one). Leave empty to create it.
+
+Conditions:
+  CreateProvider: !Equals [!Ref ExistingOidcProviderArn, '']
+
+Resources:
+  # Every role the deploy role creates must carry this boundary, so a role made for the relay
+  # server can never do more than run the server, whatever policy is attached to it.
+  RelayBoundary:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: wavrel-relay-boundary
+      Description: Upper limit for roles created by the Wavrel deploy role
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: SessionManager
+            Effect: Allow
+            Action:
+              - ssm:UpdateInstanceInformation
+              - ssmmessages:*
+              - ec2messages:*
+            Resource: '*'
+          - Sid: OwnParameters
+            Effect: Allow
+            Action:
+              - ssm:GetParameter
+              - ssm:GetParameters
+              - ssm:GetParametersByPath
+              - ssm:PutParameter
+            Resource: !Sub arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/wavrel/*
+          - Sid: DecryptParametersOnly
+            Effect: Allow
+            Action: kms:Decrypt
+            Resource: '*'
+            Condition:
+              StringLike:
+                kms:ViaService: ssm.*.amazonaws.com
+          - Sid: Logs
+            Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:DescribeLogStreams
+              - cloudwatch:PutMetricData
+            Resource: '*'
+
+  GitHubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: wavrel-github-deploy
+      Description: Deploys Wavrel from GitHub Actions (environment "aws" only)
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !If [CreateProvider, !Ref GitHubOidc, !Ref ExistingOidcProviderArn]
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:*@${OwnerId}/*@${RepositoryId}:environment:aws
+      Policies:
+        - PolicyName: wavrel-deploy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: Stacks
+                Effect: Allow
+                Action: cloudformation:*
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/wavrel-*/*
+              - Sid: StackReads
+                Effect: Allow
+                Action:
+                  - cloudformation:ValidateTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:ListStacks
+                  - cloudformation:DescribeStacks
+                Resource: '*'
+              - Sid: Buckets
+                Effect: Allow
+                Action: s3:*
+                Resource:
+                  - !Sub arn:${AWS::Partition}:s3:::wavrel-*
+                  - !Sub arn:${AWS::Partition}:s3:::wavrel-*/*
+              - Sid: Website
+                Effect: Allow
+                Action:
+                  - cloudfront:*
+                  - acm:*
+                Resource: '*'
+              # EC2 rights reach only resources tagged project=wavrel, so other projects in the
+              # account cannot be stopped, changed or reached from this repository.
+              - Sid: Ec2Read
+                Effect: Allow
+                Action:
+                  - ec2:Describe*
+                  - ec2:Get*
+                Resource: '*'
+              # AWS's public parameters, such as the latest Amazon Linux image ID, which a stack
+              # resolves when it launches an instance. Nothing else in the account is readable.
+              - Sid: PublicParameters
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: !Sub arn:${AWS::Partition}:ssm:*::parameter/aws/service/*
+              - Sid: Ec2CreateTagged
+                Effect: Allow
+                Action:
+                  - ec2:RunInstances
+                  - ec2:CreateSecurityGroup
+                  - ec2:AllocateAddress
+                  - ec2:CreateVolume
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:RequestTag/project: wavrel
+              - Sid: Ec2UseShared
+                Effect: Allow
+                Action:
+                  - ec2:RunInstances
+                  - ec2:CreateSecurityGroup
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ec2:*::image/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:subnet/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:vpc/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:network-interface/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:key-pair/*
+              - Sid: Ec2TagOnCreate
+                Effect: Allow
+                Action: ec2:CreateTags
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    ec2:CreateAction:
+                      - RunInstances
+                      - CreateSecurityGroup
+                      - AllocateAddress
+                      - CreateVolume
+              - Sid: Ec2ManageTagged
+                Effect: Allow
+                Action: ec2:*
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/project: wavrel
+              - Sid: ServerParameters
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                  - ssm:AddTagsToResource
+                  - ssm:ListTagsForResource
+                Resource: !Sub arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/wavrel/*
+              - Sid: ServerCommands
+                Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                  - ssm:StartSession
+                Resource: !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ssm:resourceTag/project: wavrel
+              - Sid: ServerCommandDocument
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:*::document/AWS-RunShellScript
+              - Sid: ServerCommandResults
+                Effect: Allow
+                Action:
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: '*'
+              - Sid: ServerLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:DeleteLogGroup
+                  - logs:PutRetentionPolicy
+                  - logs:TagResource
+                  - logs:DescribeLogGroups
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
+                Resource: '*'
+              - Sid: RelayServerRolesWithBoundary
+                Effect: Allow
+                Action:
+                  - iam:CreateRole
+                  - iam:PutRolePolicy
+                  - iam:AttachRolePolicy
+                  - iam:PutRolePermissionsBoundary
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-relay-*
+                Condition:
+                  StringEquals:
+                    iam:PermissionsBoundary: !Ref RelayBoundary
+              - Sid: RelayServerRoles
+                Effect: Allow
+                Action:
+                  - iam:DeleteRole
+                  - iam:GetRole
+                  - iam:UpdateRole
+                  - iam:TagRole
+                  - iam:UntagRole
+                  - iam:GetRolePolicy
+                  - iam:DeleteRolePolicy
+                  - iam:DetachRolePolicy
+                  - iam:ListRolePolicies
+                  - iam:ListAttachedRolePolicies
+                  - iam:CreateInstanceProfile
+                  - iam:DeleteInstanceProfile
+                  - iam:GetInstanceProfile
+                  - iam:AddRoleToInstanceProfile
+                  - iam:RemoveRoleFromInstanceProfile
+                # Only the relay server's own role. The deploy role itself is not wavrel-relay-*,
+                # so it cannot rewrite its own permissions.
+                Resource:
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-relay-*
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:instance-profile/wavrel-relay-*
+              - Sid: PassOnlyToEc2
+                Effect: Allow
+                Action: iam:PassRole
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-relay-*
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: ec2.amazonaws.com
+              - Sid: KeepTheBoundary
+                Effect: Deny
+                Action: iam:DeleteRolePermissionsBoundary
+                Resource: '*'
+              - Sid: WhoAmI
+                Effect: Allow
+                Action: sts:GetCallerIdentity
+                Resource: '*'
+
+Outputs:
+  RoleArn:
+    Value: !GetAtt DeployRole.Arn
+  RelayBoundaryArn:
+    Value: !Ref RelayBoundary

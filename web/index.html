@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wavrel: ESP32 감지 펌웨어를 한 화면에서 시험하는 데스크톱 앱</title>
+<meta name="description" content="보드용 MQTT 허브를 직접 띄우고, 와이파이 움직임 감지와 블루투스 위치를 한 콘솔에서 보고, 감지 결과를 실제로 지나간 기록과 맞춰 보는 오픈소스 데스크톱 앱입니다.">
+<link rel="canonical" href="https://wavrel.com/">
+<link rel="alternate" hreflang="ko" href="https://wavrel.com/">
+<link rel="alternate" hreflang="en" href="https://wavrel.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://wavrel.com/en/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Wavrel">
+<meta property="og:title" content="Wavrel">
+<meta property="og:description" content="ESP32 감지 펌웨어를 한 화면에서 시험하는 오픈소스 데스크톱 앱">
+<meta property="og:url" content="https://wavrel.com/">
+<meta property="og:image" content="https://wavrel.com/img/og.png">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#05080d">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/img/icon.png" type="image/png">
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/" aria-label="Wavrel 처음 화면"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="3.2" fill="#ecb955"/><path d="M6 10.5a7.5 7.5 0 0 1 7.5 7.5M6 5.5A12.5 12.5 0 0 1 18.5 18" fill="none" stroke="#9cc6ff" stroke-width="2.2" stroke-linecap="round"/></svg>Wavrel</a>
+    <nav class="nav" aria-label="사이트">
+      <a class="opt" href="/demo/?lang=ko">데모</a>
+      <a class="opt" href="#get">받기</a>
+      <a class="opt" href="https://github.com/pengveloper/airfab-sentinel">GitHub</a>
+      <a class="lang" href="/en/" hreflang="en" lang="en">English</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <h1 id="hero-title">ESP32 감지 펌웨어를 한 화면에서 시험합니다</h1>
+      <p class="lede">Wavrel은 보드가 보고할 MQTT 허브를 직접 띄우고, 보드가 보낸 값을 한 콘솔에 모으고, 감지 결과를 사람이 실제로 지나간 기록과 맞춰 봅니다. 시뮬레이터 값과 실측 값은 끝까지 섞이지 않습니다.</p>
+      <div class="actions">
+        <a class="btn btn-main" href="/demo/?lang=ko">브라우저에서 데모 열기</a>
+        <a class="btn" href="https://github.com/pengveloper/airfab-sentinel">GitHub에서 소스 보기</a>
+      </div>
+      <p class="note">데모는 설치 없이 내장 시뮬레이터로 돌아갑니다. Windows용 데스크톱 앱은 Microsoft Store 심사 중입니다.</p>
+
+      <figure class="scope">
+        <div class="scope-frame">
+          <svg viewBox="0 0 1000 400" role="img" aria-labelledby="scope-desc">
+            <desc id="scope-desc">보드 두 개 사이의 와이파이 링크와 그 둘레의 감지 영역. 사람이 링크를 가로지르는 동안 아래 움직임 점수가 기준선을 넘고, 넘은 부분이 금색으로 바뀝니다.</desc>
+            <defs><clipPath id="over-ko"><rect x="0" y="0" width="1000" height="330"/></clipPath></defs>
+            <ellipse class="s-zone2" cx="500" cy="140" rx="400" ry="76"/>
+            <ellipse class="s-zone1" cx="500" cy="140" rx="400" ry="44"/>
+            <ellipse class="s-hot" cx="500" cy="140" rx="400" ry="44"/>
+            <line class="s-link" x1="114" y1="140" x2="886" y2="140"/>
+            <line class="s-ant" x1="92" y1="126" x2="92" y2="108"/>
+            <line class="s-ant" x1="908" y1="126" x2="908" y2="108"/>
+            <rect class="s-board" x="70" y="126" width="44" height="28" rx="4"/>
+            <rect class="s-board" x="886" y="126" width="44" height="28" rx="4"/>
+            <line class="s-path" x1="640" y1="24" x2="640" y2="256"/>
+            <g class="s-walker"><circle class="s-ring" cx="640" cy="24" r="16"/><circle class="s-person" cx="640" cy="24" r="8"/></g>
+            <line class="s-base" x1="40" y1="384" x2="960" y2="384"/>
+            <line class="s-thr" x1="40" y1="330" x2="960" y2="330"/>
+            <polyline class="s-score" pathLength="1" points="40,379 60,382 80,378 100,375 120,378 140,378 160,373 180,374 200,379 220,379 240,376 260,379 280,382 300,377 320,373 340,376 360,378 380,374 400,374 420,380 440,380 460,376 480,378 500,380 520,376 540,372 560,374 580,364 600,338 620,318 640,292 660,290 680,322 700,356 720,374 740,376 760,372 780,376 800,380 820,377 840,376 860,381 880,381 900,375 920,374 940,378 960,376"/>
+            <polyline class="s-over" pathLength="1" clip-path="url(#over-ko)" points="40,379 60,382 80,378 100,375 120,378 140,378 160,373 180,374 200,379 220,379 240,376 260,379 280,382 300,377 320,373 340,376 360,378 380,374 400,374 420,380 440,380 460,376 480,378 500,380 520,376 540,372 560,374 580,364 600,338 620,318 640,292 660,290 680,322 700,356 720,374 740,376 760,372 780,376 800,380 820,377 840,376 860,381 880,381 900,375 920,374 940,378 960,376"/>
+          </svg>
+        </div>
+        <figcaption>
+          <ul class="legend">
+            <li><i class="key key-board"></i>ESP32 보드 두 개와 그 사이 와이파이 링크</li>
+            <li><i class="key key-zone"></i>링크가 감지하는 영역(프레넬 영역)</li>
+            <li><i class="key key-score"></i>움직임 점수와 기준선</li>
+            <li><i class="key key-over"></i>기준선을 넘은 구간</li>
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="console-title">
+    <div class="wrap">
+      <h2 id="console-title">보드가 보는 것을 방 안에 그려 줍니다</h2>
+      <p class="intro">3D 화면은 와이파이 링크마다 감지 영역을 바닥에 그리고, 최근 14초의 움직임 점수를 링크 위에 띠로 세웁니다. 블루투스 노드와 추적 중인 기기도 같은 방에 나옵니다.</p>
+      <figure class="shot">
+        <img src="/img/space-ko.webp" width="1480" height="940" loading="lazy" decoding="async" alt="3D 방 화면. 바닥의 와이파이 링크와 감지 영역, 링크 위로 솟은 움직임 점수 띠, 블루투스 노드와 기기 표시">
+        <figcaption>화면의 값은 모두 <span class="sim">내장 시뮬레이터</span>에서 나왔습니다.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="fw-title">
+    <div class="wrap split">
+      <div>
+        <h2 id="fw-title">보드마다 펌웨어 하나, 고치지 않고 그대로</h2>
+        <p class="intro">펌웨어는 각자의 웹 설치기로 올리고 MQTT로 보고합니다. Wavrel은 펌웨어를 담거나 고치지 않고 메시지 단계에서 묶습니다. 앱을 켜면 허브도 같이 켜지고, 첫 화면은 허브 비밀번호 하나만 묻고 보드마다 넣을 값을 보여 줍니다.</p>
+      </div>
+      <table class="fw">
+        <caption>지금 다루는 펌웨어와 보드</caption>
+        <thead><tr><th scope="col">펌웨어</th><th scope="col">하는 일</th><th scope="col">보드</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><a href="https://github.com/francescopace/espectre">ESPectre</a></th><td>와이파이 채널 상태 정보로 움직임 감지</td><td>ESP32-S3</td></tr>
+          <tr><th scope="row"><a href="https://github.com/ESPresense/ESPresense">ESPresense</a></th><td>방마다 블루투스 거리 측정</td><td>ESP32-S3, ESP32-C3</td></tr>
+          <tr><th scope="row"><a href="https://github.com/arendst/Tasmota">Tasmota</a></th><td>작은 카메라 영상 송출</td><td>ESP32-CAM</td></tr>
+          <tr><th scope="row">PIR 센서</th><td>검증할 때 쓰는 정답 신호</td><td>ESPresense 입력에 연결</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="val-title">
+    <div class="wrap split flip">
+      <div>
+        <h2 id="val-title">느낌이 아니라 검증으로</h2>
+        <p class="intro">검증 세션은 사람이 링크를 실제로 지난 순간을 기록하고, 펌웨어가 감지한 구간과 맞춰 봅니다. 정답은 손에 쥔 키, PIR 센서, 또는 데모에서만 시뮬레이터에서 옵니다.</p>
+        <dl class="terms">
+          <div><dt>맞춤</dt><dd>지나갔고 감지했습니다</dd></div>
+          <div><dt>놓침</dt><dd>지나갔는데 감지하지 못했습니다</dd></div>
+          <div><dt>잘못된 감지</dt><dd>아무도 없는데 감지했습니다</dd></div>
+          <div><dt>재현율</dt><dd>지나간 횟수 중 감지한 비율</dd></div>
+        </dl>
+        <p class="cap">세션이 끝나면 메시지 기록을 내보내 나중에 다시 재생할 수 있고, 세션마다 점수 곡선을 담은 HTML 리포트 한 장으로 넘길 수 있습니다.</p>
+      </div>
+      <figure class="shot">
+        <img src="/img/motion-ko.webp" width="1480" height="940" loading="lazy" decoding="async" alt="움직임 화면. 점수 타임라인 위에 검증 세션 구간과 맞춤, 놓침 표시">
+        <figcaption><span class="sim">시뮬레이터</span>로 돌린 검증 세션입니다.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="glass-title">
+    <div class="wrap split">
+      <div>
+        <h2 id="glass-title">알림은 휴대폰을 거쳐 안경까지</h2>
+        <p class="intro">규칙이나 검증 세션이 짧은 문장 하나를 만들면, 받는 쪽은 MQTT 구독만으로 그 문장을 띄울 수 있습니다.</p>
+        <ol class="steps">
+          <li><strong>앱이 문장을 만듭니다</strong><span>링크에서 움직임이 시작되거나, 기기가 방에 들어오거나, 검증 세션에서 한 번 지날 때마다.</span></li>
+          <li><strong>한 토픽으로만 나갑니다</strong><span><code>lab/out/notify</code>에는 앱만 쓸 수 있고 보드는 읽기만 합니다.</span></li>
+          <li><strong>휴대폰이 받습니다</strong><span>안드로이드 앱 Wavrel Relay가 같은 와이파이에서 받아 알림으로 띄웁니다.</span></li>
+          <li><strong>로키드 안경에 뜹니다</strong><span>검은 바탕에 초록 글씨로 보여 주고, 정해진 시간이 지나면 닫습니다.</span></li>
+        </ol>
+      </div>
+      <div class="lens-wrap">
+        <div class="lens" role="img" aria-label="안경 렌즈 화면 예시. 주의, 시뮬레이션. 거실 CSI: 움직임. 점수 1.16, 임계값 0.5.">
+          <p class="l-tag">주의 · 시뮬레이션</p>
+          <p class="l-title">거실 CSI: 움직임</p>
+          <p class="l-body">점수 1.16 · 임계값 0.5</p>
+          <p class="l-time">오후 9:41</p>
+        </div>
+        <p class="cap">안경에 뜨는 화면을 옮겨 그린 예시입니다. 렌즈에서는 검은색이 투명하게 보입니다.</p>
+        <p class="status">휴대폰 앱은 CI의 안드로이드 에뮬레이터에서 Wavrel의 허브와 함께 시험했습니다. 실제 휴대폰과 안경에서는 아직 시험하지 않았습니다.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="sec-title">
+    <div class="wrap">
+      <h2 id="sec-title">집 안 네트워크에서 열리는 앱이라 방어적으로 만들었습니다</h2>
+      <ul class="checks">
+        <li>창은 샌드박스 안에서 앱에 들어 있는 파일만 열고, 검증된 호출 11개로만 시스템에 닿습니다.</li>
+        <li>허브는 비밀번호를 요구하고 사설 주소에서 오는 연결만 받습니다. 로그인 실패, 연결 수, 메시지 크기에 한도가 있습니다.</li>
+        <li>허브 비밀번호는 Windows 자격 증명 보호로 저장합니다.</li>
+        <li>실행 파일은 Electron fuse로 잠그고, 빌드마다 의존성을 감사하고 Microsoft Defender로 검사합니다.</li>
+      </ul>
+      <p class="more"><a href="https://github.com/pengveloper/airfab-sentinel/blob/main/SECURITY.md">보안 설계와 시험 목록 보기</a></p>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="status-title">
+    <div class="wrap">
+      <h2 id="status-title">지금 어디까지 확인했는지</h2>
+      <p class="intro">이 사이트와 저장소는 아직 실측 결과를 주장하지 않습니다.</p>
+      <dl class="ledger">
+        <div><dt><i class="dot-sim"></i>시뮬레이터로 확인</dt><dd>콘솔 화면, PIR 정답 신호, 기록 재생, 리포트, 발표 모드, 알림 미리보기, 안경 화면</dd></div>
+        <div><dt><i class="dot-ok"></i>자동 시험으로 확인</dt><dd>데이터 처리와 세션 통계, 실제 TCP 연결로 시험한 내장 허브, 실제 앱 실행, Windows 빌드와 패키지, 영어 화면, 에뮬레이터 속 휴대폰 알림</dd></div>
+        <div><dt><i class="dot-todo"></i>아직 하지 않음</dt><dd>실제 보드 측정, 실제 휴대폰과 안경에서 알림 보기, Microsoft Store에서 경고 없이 설치하기</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sec" id="get" aria-labelledby="get-title">
+    <div class="wrap">
+      <h2 id="get-title">받기</h2>
+      <ul class="get">
+        <li>
+          <div><h3>Windows 데스크톱 앱</h3><span class="state">Microsoft Store 심사 중</span></div>
+          <p>심사가 끝나면 이 자리에 Store 링크를 둡니다. Store 설치는 Microsoft가 서명하므로 Windows 경고가 뜨지 않습니다. 지금 써 보려면 Node.js 22에서 소스를 받아 <code>npm ci</code> 다음 <code>npm start</code>로 실행합니다.</p>
+          <a class="btn" href="https://github.com/pengveloper/airfab-sentinel/blob/main/README.ko.md">소스에서 실행하는 법</a>
+        </li>
+        <li>
+          <div><h3>Android용 Wavrel Relay</h3><span class="state">시험용 빌드</span></div>
+          <p>GitHub Actions의 relay 워크플로에서 최근 성공한 실행의 APK를 받습니다. GitHub에 로그인해야 받을 수 있습니다.</p>
+          <a class="btn" href="https://github.com/pengveloper/airfab-sentinel/blob/main/relay/README.ko.md">설치 안내 보기</a>
+        </li>
+        <li>
+          <div><h3>브라우저 데모</h3><span class="state">설치 없음</span></div>
+          <p>데스크톱 앱과 같은 콘솔이 내장 시뮬레이터로 돌아갑니다. 보드에 연결하려면 데스크톱 앱이 필요합니다.</p>
+          <a class="btn" href="/demo/?lang=ko">데모 열기</a>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <p>Wavrel은 MIT 라이선스 오픈소스입니다. 2026년 11월까지 이름은 Sentinel Lab이었습니다.</p>
+      <p>© 2026 pengveloper</p>
+    </div>
+    <nav aria-label="바닥글">
+      <a href="/privacy/">개인정보 처리방침</a>
+      <a href="https://github.com/pengveloper/airfab-sentinel">GitHub</a>
+      <a href="/en/" hreflang="en" lang="en">English</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wavrel: test ESP32 sensing firmware side by side</title>
+<meta name="description" content="An open-source desktop app that runs the MQTT hub for your ESP32 boards, shows Wi-Fi motion sensing and Bluetooth presence in one console, and checks each detection against when someone really crossed.">
+<link rel="canonical" href="https://wavrel.com/en/">
+<link rel="alternate" hreflang="ko" href="https://wavrel.com/">
+<link rel="alternate" hreflang="en" href="https://wavrel.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://wavrel.com/en/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Wavrel">
+<meta property="og:title" content="Wavrel">
+<meta property="og:description" content="Test ESP32 sensing firmware side by side, in one open-source desktop app">
+<meta property="og:url" content="https://wavrel.com/en/">
+<meta property="og:image" content="https://wavrel.com/img/og.png">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#05080d">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/img/icon.png" type="image/png">
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/en/" aria-label="Wavrel home"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="3.2" fill="#ecb955"/><path d="M6 10.5a7.5 7.5 0 0 1 7.5 7.5M6 5.5A12.5 12.5 0 0 1 18.5 18" fill="none" stroke="#9cc6ff" stroke-width="2.2" stroke-linecap="round"/></svg>Wavrel</a>
+    <nav class="nav" aria-label="Site">
+      <a class="opt" href="/demo/?lang=en">Demo</a>
+      <a class="opt" href="#get">Get it</a>
+      <a class="opt" href="https://github.com/pengveloper/airfab-sentinel">GitHub</a>
+      <a class="lang" href="/" hreflang="ko" lang="ko">한국어</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="wrap">
+      <h1 id="hero-title">Test ESP32 sensing firmware side by side</h1>
+      <p class="lede">Wavrel runs the MQTT hub your boards report to, gathers what they send in one console, and checks every detection against when someone really crossed. Simulated values and real measurements never mix.</p>
+      <div class="actions">
+        <a class="btn btn-main" href="/demo/?lang=en">Open the demo in your browser</a>
+        <a class="btn" href="https://github.com/pengveloper/airfab-sentinel">View the source on GitHub</a>
+      </div>
+      <p class="note">The demo runs on the built-in simulator, with nothing to install. The Windows desktop app is in Microsoft Store review.</p>
+
+      <figure class="scope">
+        <div class="scope-frame">
+          <svg viewBox="0 0 1000 400" role="img" aria-labelledby="scope-desc">
+            <desc id="scope-desc">A Wi-Fi link between two boards and the region around it that the link senses. While a person crosses the link, the motion score below rises over the threshold, and the part over the threshold turns gold.</desc>
+            <defs><clipPath id="over-en"><rect x="0" y="0" width="1000" height="330"/></clipPath></defs>
+            <ellipse class="s-zone2" cx="500" cy="140" rx="400" ry="76"/>
+            <ellipse class="s-zone1" cx="500" cy="140" rx="400" ry="44"/>
+            <ellipse class="s-hot" cx="500" cy="140" rx="400" ry="44"/>
+            <line class="s-link" x1="114" y1="140" x2="886" y2="140"/>
+            <line class="s-ant" x1="92" y1="126" x2="92" y2="108"/>
+            <line class="s-ant" x1="908" y1="126" x2="908" y2="108"/>
+            <rect class="s-board" x="70" y="126" width="44" height="28" rx="4"/>
+            <rect class="s-board" x="886" y="126" width="44" height="28" rx="4"/>
+            <line class="s-path" x1="640" y1="24" x2="640" y2="256"/>
+            <g class="s-walker"><circle class="s-ring" cx="640" cy="24" r="16"/><circle class="s-person" cx="640" cy="24" r="8"/></g>
+            <line class="s-base" x1="40" y1="384" x2="960" y2="384"/>
+            <line class="s-thr" x1="40" y1="330" x2="960" y2="330"/>
+            <polyline class="s-score" pathLength="1" points="40,379 60,382 80,378 100,375 120,378 140,378 160,373 180,374 200,379 220,379 240,376 260,379 280,382 300,377 320,373 340,376 360,378 380,374 400,374 420,380 440,380 460,376 480,378 500,380 520,376 540,372 560,374 580,364 600,338 620,318 640,292 660,290 680,322 700,356 720,374 740,376 760,372 780,376 800,380 820,377 840,376 860,381 880,381 900,375 920,374 940,378 960,376"/>
+            <polyline class="s-over" pathLength="1" clip-path="url(#over-en)" points="40,379 60,382 80,378 100,375 120,378 140,378 160,373 180,374 200,379 220,379 240,376 260,379 280,382 300,377 320,373 340,376 360,378 380,374 400,374 420,380 440,380 460,376 480,378 500,380 520,376 540,372 560,374 580,364 600,338 620,318 640,292 660,290 680,322 700,356 720,374 740,376 760,372 780,376 800,380 820,377 840,376 860,381 880,381 900,375 920,374 940,378 960,376"/>
+          </svg>
+        </div>
+        <figcaption>
+          <ul class="legend">
+            <li><i class="key key-board"></i>Two ESP32 boards and the Wi-Fi link between them</li>
+            <li><i class="key key-zone"></i>The region the link senses (its Fresnel zones)</li>
+            <li><i class="key key-score"></i>Motion score and threshold</li>
+            <li><i class="key key-over"></i>Over the threshold</li>
+          </ul>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="console-title">
+    <div class="wrap">
+      <h2 id="console-title">See what the boards sense, drawn in the room</h2>
+      <p class="intro">The 3D view draws the sensing region of each Wi-Fi link on the floor and raises the last 14 seconds of motion score as a ribbon along the link. Bluetooth nodes and tracked devices appear in the same room.</p>
+      <figure class="shot">
+        <img src="/img/space-en.webp" width="1480" height="940" loading="lazy" decoding="async" alt="3D room view: a Wi-Fi link and its sensing region on the floor, the motion score rising as a ribbon above the link, Bluetooth nodes and devices">
+        <figcaption>Every value on screen comes from the <span class="sim">built-in simulator</span>.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="fw-title">
+    <div class="wrap split">
+      <div>
+        <h2 id="fw-title">One firmware per board, unmodified</h2>
+        <p class="intro">Each firmware is flashed from its own web installer and reports over MQTT. Wavrel neither bundles nor changes them; it joins them at the message level. Start the app and the hub starts with it. The first-run screen asks for one thing, the hub password, and then shows what to enter on each board.</p>
+      </div>
+      <table class="fw">
+        <caption>Firmware and boards it works with today</caption>
+        <thead><tr><th scope="col">Firmware</th><th scope="col">What it does</th><th scope="col">Board</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><a href="https://github.com/francescopace/espectre">ESPectre</a></th><td>Senses motion from Wi-Fi channel state information</td><td>ESP32-S3</td></tr>
+          <tr><th scope="row"><a href="https://github.com/ESPresense/ESPresense">ESPresense</a></th><td>Measures Bluetooth distance, room by room</td><td>ESP32-S3, ESP32-C3</td></tr>
+          <tr><th scope="row"><a href="https://github.com/arendst/Tasmota">Tasmota</a></th><td>Streams a small camera</td><td>ESP32-CAM</td></tr>
+          <tr><th scope="row">PIR sensor</th><td>Ground truth for validation</td><td>Wired to an ESPresense input</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="val-title">
+    <div class="wrap split flip">
+      <div>
+        <h2 id="val-title">Validation, not a feeling</h2>
+        <p class="intro">A validation session records when a person really crossed the link and matches it against what the firmware detected. Ground truth comes from a key you hold, a PIR sensor, or, in the demo only, the simulator.</p>
+        <dl class="terms">
+          <div><dt>Hit</dt><dd>Someone crossed and it was detected</dd></div>
+          <div><dt>Miss</dt><dd>Someone crossed and nothing was detected</dd></div>
+          <div><dt>False detection</dt><dd>Detected with nobody there</dd></div>
+          <div><dt>Recall</dt><dd>The share of crossings that were detected</dd></div>
+        </dl>
+        <p class="cap">Export the message log to replay it later, and hand over a standalone HTML report with the score curve of every session.</p>
+      </div>
+      <figure class="shot">
+        <img src="/img/motion-en.webp" width="1480" height="940" loading="lazy" decoding="async" alt="Motion view: score timeline with a validation session and its hits and misses">
+        <figcaption>A validation session run on the <span class="sim">simulator</span>.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="glass-title">
+    <div class="wrap split">
+      <div>
+        <h2 id="glass-title">Alerts on your phone, then on your glasses</h2>
+        <p class="intro">Rules and validation sessions turn what happened into one short sentence. A receiver needs nothing but an MQTT subscription to show it.</p>
+        <ol class="steps">
+          <li><strong>The app writes a sentence</strong><span>When motion starts on a link, a device enters a room, or a validation session counts a crossing.</span></li>
+          <li><strong>It goes out on one topic</strong><span>Only the app can write to <code>lab/out/notify</code>; boards can only read it.</span></li>
+          <li><strong>Your phone receives it</strong><span>Wavrel Relay, an Android app on the same Wi-Fi, shows it as a notification.</span></li>
+          <li><strong>Your Rokid glasses show it</strong><span>Green on black, closed again after the alert's set time.</span></li>
+        </ol>
+      </div>
+      <div class="lens-wrap">
+        <div class="lens" role="img" aria-label="Example of the lens screen. Attention, simulated. Living room CSI: motion. Score 1.16, threshold 0.5.">
+          <p class="l-tag">Attention · Simulated</p>
+          <p class="l-title">Living room CSI: motion</p>
+          <p class="l-body">Score 1.16 · threshold 0.5</p>
+          <p class="l-time">9:41 PM</p>
+        </div>
+        <p class="cap">A drawing of what the glasses show. On the lens, black is transparent.</p>
+        <p class="status">The phone app has been tested in an Android emulator in CI against Wavrel's own hub. It has not yet run on a real phone or real glasses.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="sec-title">
+    <div class="wrap">
+      <h2 id="sec-title">It listens on your home network, so it is built defensively</h2>
+      <ul class="checks">
+        <li>The window is sandboxed, loads only files shipped with the app, and reaches the system through eleven validated calls.</li>
+        <li>The hub requires a password and accepts private addresses only. Failed logins, connection count and message size are limited.</li>
+        <li>The hub password is stored with Windows credential protection.</li>
+        <li>The executable is locked down with Electron fuses. Every build audits dependencies and is scanned with Microsoft Defender.</li>
+      </ul>
+      <p class="more"><a href="https://github.com/pengveloper/airfab-sentinel/blob/main/SECURITY.md">Read the security design and its tests</a></p>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="status-title">
+    <div class="wrap">
+      <h2 id="status-title">What has been checked so far</h2>
+      <p class="intro">Neither this site nor the repository claims a hardware result yet.</p>
+      <dl class="ledger">
+        <div><dt><i class="dot-sim"></i>Checked with the simulator</dt><dd>Console views, PIR ground truth, replay, report, presentation mode, alert preview, glasses screen</dd></div>
+        <div><dt><i class="dot-ok"></i>Checked by automated tests</dt><dd>Data handling and session statistics, the embedded hub over real TCP sockets, the real app starting up, the Windows build and package, the English interface, phone alerts in an emulator</dd></div>
+        <div><dt><i class="dot-todo"></i>Not done yet</dt><dd>Measuring with real boards, alerts on a real phone and real glasses, installing from the Microsoft Store without a warning</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="sec" id="get" aria-labelledby="get-title">
+    <div class="wrap">
+      <h2 id="get-title">Get it</h2>
+      <ul class="get">
+        <li>
+          <div><h3>Windows desktop app</h3><span class="state">In Microsoft Store review</span></div>
+          <p>The Store link goes here once review passes. Microsoft signs Store installs, so Windows does not warn. To try it now, get the source and run <code>npm ci</code>, then <code>npm start</code>, with Node.js 22.</p>
+          <a class="btn" href="https://github.com/pengveloper/airfab-sentinel#run-it">Run it from source</a>
+        </li>
+        <li>
+          <div><h3>Wavrel Relay for Android</h3><span class="state">Test build</span></div>
+          <p>Download the APK from the latest successful run of the relay workflow in GitHub Actions. You need to be signed in to GitHub.</p>
+          <a class="btn" href="https://github.com/pengveloper/airfab-sentinel/blob/main/relay/README.md">How to install it</a>
+        </li>
+        <li>
+          <div><h3>Browser demo</h3><span class="state">Nothing to install</span></div>
+          <p>The same console as the desktop app, running on the built-in simulator. Connecting to boards needs the desktop app.</p>
+          <a class="btn" href="/demo/?lang=en">Open the demo</a>
+        </li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div>
+      <p>Wavrel is open source under the MIT license. Until November 2026 it was called Sentinel Lab.</p>
+      <p>© 2026 pengveloper</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/privacy/">Privacy policy</a>
+      <a href="https://github.com/pengveloper/airfab-sentinel">GitHub</a>
+      <a href="/" hreflang="ko" lang="ko">한국어</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

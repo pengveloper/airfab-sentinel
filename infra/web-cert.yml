@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Wavrel website certificate. Must be in us-east-1 for CloudFront. The domain's DNS is
+  on Cloudflare, so the validation record is added there by hand; the stack finishes when
+  ACM sees it.
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: wavrel.com
+
+Resources:
+  Certificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames: [!Sub 'www.${DomainName}']
+      ValidationMethod: DNS
+      KeyAlgorithm: EC_prime256v1
+      Tags:
+        - Key: project
+          Value: wavrel
+
+Outputs:
+  CertificateArn:
+    Value: !Ref Certificate

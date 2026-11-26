@@ -11,7 +11,7 @@ records which channel meets the goal, which do not yet, and what is still to do.
 |---|---|---|---|
 | Microsoft Store (MSIX, re-signed by Microsoft) | No warning | Free for individual developers | Submitted for certification 2026-11-26 (below) |
 | GitHub Releases, signed through SignPath Foundation | Publisher shown as SignPath Foundation; reputation carries over from their certificate | Free for open-source projects that are accepted | Needs a public repository and an application |
-| GitHub Releases, unsigned portable zip | "Windows protected your PC" on first run | Free | Built in CI today. For developers who can verify the checksum |
+| GitHub Releases, unsigned portable zip | "Windows protected your PC" on first run | Free | Published from 0.5.0 by the `release` workflow, with SHA-256 checksums and the Defender report. Linked from wavrel.com |
 | Build from source | None (nothing is downloaded as an executable from this project) | Free | `npm ci && npm start` |
 
 Why the other options are not used:
@@ -68,10 +68,23 @@ executable. What this project does to stay out of trouble:
 
 The Store package has the strongest position: Microsoft scans it during certification and signs it.
 
+## Releases
+
+`release` (`.github/workflows/release.yml`) is started by hand on `main` with the version, which
+must match `package.json` and have a section in `CHANGELOG.md`. It runs the tests and the app smoke
+test on Windows, packages the zip, scans it with Defender, builds the Android relay as a signed
+release APK, and creates the release and its tag `v<version>`. Each release also carries
+`Wavrel-win-x64.zip` and `Wavrel-Relay.apk` under fixed names, so
+`https://github.com/pengveloper/wavrel/releases/latest/download/<name>` always gives the newest one.
+
+The relay's signing key is made on the first release and kept in Parameter Store
+(`/wavrel/relay-android/*`, SecureString); only the `aws` environment, which runs on `main` only,
+can read it. If the key were lost, the next APK could not install over the old one.
+
 ## Verifying a download
 
 ```powershell
-Get-FileHash .\Wavrel-0.4.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\Wavrel-win-x64.zip -Algorithm SHA256
 ```
 
 Compare the result with `SHA256SUMS.txt` from the same CI run or release.

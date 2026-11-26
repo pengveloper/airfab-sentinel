@@ -92,13 +92,21 @@ ESPresense 웹 화면의 Hardware에서 Inputs에 Role을 Motion으로 추가하
 
 무엇을 막지 못하는지까지 [SECURITY.md](SECURITY.md)에 적었습니다. 집 안 망의 MQTT는 암호화되지 않습니다.
 
+## 받기
+
+| | |
+|---|---|
+| Windows 데스크톱 앱 | [Wavrel-win-x64.zip](https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-win-x64.zip): 압축을 풀고 `Wavrel.exe` 실행 (아직 코드 서명 없음, 아래 참고) |
+| Android용 Wavrel Relay | [Wavrel-Relay.apk](https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk) |
+| 체크섬과 변경 내역 | [최신 릴리스](https://github.com/pengveloper/wavrel/releases/latest), [CHANGELOG.md](CHANGELOG.md) |
+
 ## Windows 경고 없이 설치하기
 
 Windows는 코드 내용이 아니라 서명과 평판으로 경고 여부를 정합니다. 그래서 이것은 설계만으로
 해결되지 않고 배포 경로의 문제입니다.
 
-- **경고가 없는 경로는 Microsoft Store입니다.** Microsoft가 패키지에 직접 서명하고, 개인 개발자 등록은 무료입니다. Store용 패키지는 지금 CI에서 빌드되고, 제출은 아직입니다.
-- **CI가 만드는 zip은 서명이 없어서** 처음 실행할 때 Windows가 경고합니다. 체크섬으로 확인할 수 있는 개발자용입니다.
+- **경고가 없는 경로는 Microsoft Store입니다.** Microsoft가 패키지에 직접 서명하고, 개인 개발자 등록은 무료입니다. Store용 패키지는 CI에서 빌드되고 지금 심사 중입니다.
+- **릴리스 zip은 서명이 없어서** 처음 실행할 때 Windows가 경고합니다("추가 정보" → "실행"). 받은 파일은 릴리스의 체크섬으로 확인할 수 있습니다.
 
 경로별 비교, Store 제출 순서, 백신 관련 조치는 [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md)에 있습니다.
 

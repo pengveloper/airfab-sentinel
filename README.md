@@ -82,13 +82,21 @@ scans every build with Microsoft Defender.
 
 Details, test references and the list of what is not covered: [SECURITY.md](SECURITY.md).
 
+## Download
+
+| | |
+|---|---|
+| Windows desktop app | [Wavrel-win-x64.zip](https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-win-x64.zip): unzip and run `Wavrel.exe` (not code-signed yet, see below) |
+| Wavrel Relay for Android | [Wavrel-Relay.apk](https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk) |
+| Checksums and changes | [Latest release](https://github.com/pengveloper/wavrel/releases/latest), [CHANGELOG.md](CHANGELOG.md) |
+
 ## Installing without Windows warnings
 
 Windows decides whether to warn by signature and reputation, so this is a distribution
 question rather than a code question. The warning-free path is the Microsoft Store, which
 signs the package itself and is free for individual developers. The Store package builds in
-CI today; submission is pending. Until then, the portable zip from CI is unsigned and
-Windows will warn on first run.
+CI today and is in certification. Until it is published, the release zip is unsigned and
+Windows will warn on first run ("More info", then "Run anyway").
 
 The full comparison of channels, the Store steps and the antivirus notes are in
 [docs/DISTRIBUTION.md](docs/DISTRIBUTION.md).

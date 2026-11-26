@@ -44,9 +44,9 @@
       <p class="lede">Wavrel runs the MQTT hub your boards report to, gathers what they send in one console, and checks every detection against when someone really crossed. Simulated values and real measurements never mix.</p>
       <div class="actions">
         <a class="btn btn-main" href="/demo/?lang=en">Open the demo in your browser</a>
-        <a class="btn" href="https://github.com/pengveloper/wavrel">View the source on GitHub</a>
+        <a class="btn" href="#get">Get the Windows app</a>
       </div>
-      <p class="note">The demo runs on the built-in simulator, with nothing to install. The Windows desktop app is in Microsoft Store review.</p>
+      <p class="note">The demo runs on the built-in simulator, with nothing to install. To connect boards, get the Windows desktop app.</p>
 
       <figure class="scope">
         <div class="scope-frame">
@@ -186,19 +186,19 @@
       <h2 id="get-title">Get it</h2>
       <ul class="get">
         <li>
-          <div><h3>Windows desktop app</h3><span class="state">In Microsoft Store review</span></div>
-          <p>The Store link goes here once review passes. Microsoft signs Store installs, so Windows does not warn. To try it now, get the source and run <code>npm ci</code>, then <code>npm start</code>, with Node.js 22.</p>
-          <a class="btn" href="https://github.com/pengveloper/wavrel#run-it">Run it from source</a>
+          <div><h3>Windows desktop app</h3><span class="state">0.5.0 · Windows 10, 11 (x64)</span></div>
+          <p>Unzip and run <code>Wavrel.exe</code>. There is no installer and no administrator prompt. The zip is not code-signed yet, so on first run Windows shows "Windows protected your PC": choose "More info", then "Run anyway". The Microsoft Store version, which installs without that warning, is in review.</p>
+          <div class="acts"><a class="btn btn-main" href="https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-win-x64.zip">Download for Windows</a><a class="btn" href="https://github.com/pengveloper/wavrel/releases/latest">Release notes</a></div>
         </li>
         <li>
-          <div><h3>Wavrel Relay for Android</h3><span class="state">Test build</span></div>
-          <p>Download the APK from the latest successful run of the relay workflow in GitHub Actions. You need to be signed in to GitHub.</p>
-          <a class="btn" href="https://github.com/pengveloper/wavrel/blob/main/relay/README.md">How to install it</a>
+          <div><h3>Wavrel Relay for Android</h3><span class="state">0.5.0 · Android 9 or later</span></div>
+          <p>Shows the PC's alerts on Rokid glasses and lets you ask the PC out loud from the glasses. When Android asks, allow installing from this source. Later versions install over this one.</p>
+          <div class="acts"><a class="btn btn-main" href="https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk">Download the APK</a><a class="btn" href="https://github.com/pengveloper/wavrel/blob/main/relay/README.md">How to install it</a></div>
         </li>
         <li>
           <div><h3>Browser demo</h3><span class="state">Nothing to install</span></div>
           <p>The same console as the desktop app, running on the built-in simulator. Connecting to boards needs the desktop app.</p>
-          <a class="btn" href="/demo/?lang=en">Open the demo</a>
+          <div class="acts"><a class="btn" href="/demo/?lang=en">Open the demo</a></div>
         </li>
       </ul>
     </div>

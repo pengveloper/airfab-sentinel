@@ -40,6 +40,8 @@ jobs:
         run: gradle --no-daemon testDebugUnitTest
       - name: Build the debug APK
         run: gradle --no-daemon assembleDebug
+      - name: The release build type compiles too (unsigned here; signed only by the release workflow)
+        run: gradle --no-daemon assembleRelease
       - uses: actions/upload-artifact@v7
         if: always()
         with:

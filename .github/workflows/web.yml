@@ -104,8 +104,9 @@ jobs:
       - name: Check the live site
         continue-on-error: true
         run: |
-          for path in / /demo/ /privacy/ /does-not-exist; do
+          for path in / /en/ /demo/ /privacy/ /does-not-exist/; do
             code=$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN$path" || echo 000)
             echo "$path -> $code"
           done
+          echo "www keeps the query: $(curl -s -o /dev/null -w '%{redirect_url}' "https://www.$DOMAIN/demo/?lang=en")"
           curl -sI "https://$DOMAIN/" | grep -iE '^(strict-transport-security|content-security-policy|x-frame-options|x-content-type-options):' || true

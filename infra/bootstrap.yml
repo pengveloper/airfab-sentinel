@@ -132,8 +132,15 @@ Resources:
                 Action:
                   - ec2:Describe*
                   - ec2:Get*
-                  - ssm:GetParameters
                 Resource: '*'
+              # AWS's public parameters, such as the latest Amazon Linux image ID, which a stack
+              # resolves when it launches an instance. Nothing else in the account is readable.
+              - Sid: PublicParameters
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                Resource: !Sub arn:${AWS::Partition}:ssm:*::parameter/aws/service/*
               - Sid: Ec2CreateTagged
                 Effect: Allow
                 Action:

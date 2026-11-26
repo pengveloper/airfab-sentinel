@@ -62,24 +62,28 @@ Resources:
         Comment: Directory index and trailing slash
         Runtime: cloudfront-js-2.0
       FunctionCode: |
+        function query(r) {
+          var parts = [];
+          Object.keys(r.querystring).forEach(function (k) {
+            var q = r.querystring[k];
+            (q.multiValue || [q]).forEach(function (v) {
+              parts.push(v.value === '' ? k : k + '=' + v.value);
+            });
+          });
+          return parts.length ? '?' + parts.join('&') : '';
+        }
+        function moved(location) {
+          return { statusCode: 301, statusDescription: 'Moved Permanently',
+            headers: { location: { value: location } } };
+        }
         function handler(event) {
           var r = event.request;
           var uri = r.uri;
           var host = r.headers.host && r.headers.host.value;
-          if (host && host.indexOf('www.') === 0) {
-            return { statusCode: 301, statusDescription: 'Moved Permanently',
-              headers: { location: { value: 'https://' + host.slice(4) + uri } } };
-          }
+          if (host && host.indexOf('www.') === 0) return moved('https://' + host.slice(4) + uri + query(r));
           if (uri.endsWith('/')) { r.uri = uri + 'index.html'; return r; }
           var last = uri.substring(uri.lastIndexOf('/') + 1);
-          if (last.indexOf('.') === -1) {
-            var qs = Object.keys(r.querystring).map(function (k) {
-              var v = r.querystring[k];
-              return v.value === '' ? k : k + '=' + v.value;
-            }).join('&');
-            return { statusCode: 301, statusDescription: 'Moved Permanently',
-              headers: { location: { value: uri + '/' + (qs ? '?' + qs : '') } } };
-          }
+          if (last.indexOf('.') === -1) return moved(uri + '/' + query(r));
           return r;
         }
 

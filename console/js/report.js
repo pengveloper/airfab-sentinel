@@ -22,9 +22,9 @@ function plan(cfg){const W=520,k=Math.min((W-40)/cfg.room.w,300/cfg.room.h),w=cf
 function build(){const S=Lab.S,cfg=Lab.cfg,ss=S.sessions.slice().reverse(),anyReal=ss.some(real),allReal=ss.length>0&&ss.every(real);
   const sum=ss.reduce((a,s)=>{a.labels+=s.labels;a.hits+=s.hits;a.miss+=s.miss;a.falses+=s.falses;a.dur+=s.dur;return a;},{labels:0,hits:0,miss:0,falses:0,dur:0});
   const recall=sum.labels?Math.round(sum.hits/sum.labels*100)+'%':'—',fpm=sum.dur?(sum.falses/(sum.dur/60)).toFixed(2):'—';
-  const banner=allReal?L('<p class="tag ok">데이터: 브로커에서 받은 메시지. 보드가 실제로 보낸 값인지는 운영자가 확인합니다.</p>'):anyReal?L('<p class="tag warn">데이터: 브로커 수신과 시뮬레이션이 섞여 있습니다. 세션마다 표시를 확인하세요.</p>'):L('<p class="tag sim">데이터: SIMULATED. 시뮬레이터가 만든 값이며 하드웨어 결과가 아닙니다.</p>');
+  const banner=allReal?L('<p class="tag ok">데이터: 허브에서 받은 메시지. 보드가 실제로 보낸 값인지는 운영자가 확인합니다.</p>'):anyReal?L('<p class="tag warn">데이터: 허브 수신과 시뮬레이션이 섞여 있습니다. 세션마다 표시를 확인하세요.</p>'):L('<p class="tag sim">데이터: SIMULATED. 시뮬레이터가 만든 값이며 하드웨어 결과가 아닙니다.</p>');
   const sess=ss.map((s,i)=>`<section class="sess"><h3>${L`세션 ${i+1} · ${esc(s.alias||Lab.mask(s.node))}`}</h3>
-<p class="meta">${L`${dt(s.start)} 시작, ${Math.round(s.dur)}초 · 정답 출처: ${truthKo(s.truth||'manual')} · ${real(s)?L('<b class="ok">브로커 수신</b>'):'<b class="sim">SIMULATED</b>'}${s.trace&&s.trace.thr!=null?L` · 임계값 ${s.trace.thr}`:''}`}</p>
+<p class="meta">${L`${dt(s.start)} 시작, ${Math.round(s.dur)}초 · 정답 출처: ${truthKo(s.truth||'manual')} · ${real(s)?L('<b class="ok">허브 수신</b>'):'<b class="sim">SIMULATED</b>'}${s.trace&&s.trace.thr!=null?L` · 임계값 ${s.trace.thr}`:''}`}</p>
 ${chart(s)}
 <table><thead><tr><th>${L`정답 구간`}</th><th>${L`감지함`}</th><th>${L`놓침`}</th><th>${L`오탐`}</th><th>${L`재현율`}</th></tr></thead><tbody><tr><td>${s.labels}</td><td>${s.hits}</td><td>${s.miss}</td><td>${s.falses}</td><td>${s.recall==null?'—':Math.round(s.recall*100)+'%'}</td></tr></tbody></table></section>`).join('');
   return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${L`Wavrel 검증 리포트`}</title><style>
@@ -63,7 +63,7 @@ ${plan(cfg)}
 <h2>${L`판정 방법`}</h2>
 <ul><li>${L`정답 구간은 사람이 실제로 링크를 지나간 시간입니다. 출처는 세션마다 적혀 있습니다.`}</li><li>${L`감지 구간이 정답 구간과 앞뒤 2초 안에서 겹치면 감지한 것으로 셉니다.`}</li><li>${L`어떤 정답 구간과도 겹치지 않은 감지 구간은 오탐입니다.`}</li><li>${L`재현율은 정답 구간 가운데 감지한 비율입니다.`}</li></ul>
 <h2>${L`이 리포트가 말하지 않는 것`}</h2>
-<ul><li>${L`브로커 수신으로 표시된 세션도 메시지를 받았다는 기록입니다. 하드웨어 검증 판정은 보드, 펌웨어 버전, 실행한 사람과 함께 따로 적습니다.`}</li><li>${L`다른 방, 다른 공유기, 다른 보드 위치에서의 성능은 이 결과로 알 수 없습니다.`}</li><li>${L`사람 수, 자세, 위치는 재지 않았습니다. 움직임이 있었는지만 봅니다.`}</li></ul>
+<ul><li>${L`허브 수신으로 표시된 세션도 메시지를 받았다는 기록입니다. 하드웨어 검증 판정은 보드, 펌웨어 버전, 실행한 사람과 함께 따로 적습니다.`}</li><li>${L`다른 방, 다른 공유기, 다른 보드 위치에서의 성능은 이 결과로 알 수 없습니다.`}</li><li>${L`사람 수, 자세, 위치는 재지 않았습니다. 움직임이 있었는지만 봅니다.`}</li></ul>
 </main></body></html>`;}
 return{build};
 })();

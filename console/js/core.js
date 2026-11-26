@@ -6,7 +6,7 @@ const mask=s=>String(s).replace(/\b[0-9a-f]{16}\b/gi,m=>m.slice(0,4)+'…').repl
 const LSK='wavrel-console-v1';
 const SLOTS={csi:[[1,6.1],[5,6.3],[1,3.5]],ble:[[0.9,0.9],[5.6,6.2],[9.1,5.6],[9.1,2.6],[3,3.5]]};
 const ROOM_KO={office:L('작업실'),living:L('거실'),entry:L('현관'),bedroom:L('침실'),kitchen:L('주방')};
-const DESK=!!window.desktop; // 데스크톱 앱 안에서는 내장 브로커와 창 사이의 통로를 씁니다
+const DESK=!!window.desktop; // 데스크톱 앱 안에서는 내장 허브와 창 사이의 통로를 씁니다
 const canLive=DESK||location.protocol==='file:'||/^(localhost|127\.0\.0\.1)$/.test(location.hostname);
 function defCfg(){return{room:{w:10,h:7},router:{x:9.2,y:0.8},
   nodes:[{key:'cam',type:'cam',alias:L('카메라'),x:5,y:0.6},{key:'led',type:'led',alias:L('상태 LED'),x:2.4,y:0.7}],
@@ -33,7 +33,7 @@ function reset(){const b=cfg.broker,g=cfg.bring;cfg=defCfg();cfg.broker=b;cfg.br
 const pend=new Map();
 function clearState(){pend.clear();S.csi.clear();S.rooms.clear();S.devs.clear();S.inputs.clear();S.feed.length=0;S.notes.length=0;S.led={color:null,until:0};}
 const node=k=>cfg.nodes.find(n=>n.key===k);
-/* 첫 실측 순서: 브로커에서 받은 것만 기록합니다. 시뮬레이터가 섞인 동안에는 세지 않습니다. */
+/* 첫 실측 순서: 허브에서 받은 것만 기록합니다. 시뮬레이터가 섞인 동안에는 세지 않습니다. */
 function mark(k,v){const b=cfg.bring||(cfg.bring={});if(k!=='cam'&&(S.source!=='live'||S.simMixed||S.simEver))return;
   if(k==='rooms'){const a=b.rooms||(b.rooms={list:[],ts:0});if(a.list.includes(v)||a.list.length>=8)return;a.list.push(v);a.ts=now();save();return;}
   if(!b[k]){b[k]=now();save();}}
@@ -64,7 +64,7 @@ const roomName=r=>{const n=node('ble:'+r);return n?n.alias:(ROOM_KO[r]||r);};
 /* ---- 수신 ---- */
 const subs=[];
 function ingest(topic,text,src,retained){S.count++;_c++;S.lastTs=now();const fresh=src==='live'&&!retained; // 보관(retained) 메시지는 예전 값일 수 있어 단계 확인에 쓰지 않습니다
-  if(S.log.length&&S.log[S.log.length-1].src!==src)S.log.length=0; // 기록 한 벌에는 한 출처만 담습니다. 데모를 보다가 브로커에 연결하면 실측 기록이 새로 시작됩니다
+  if(S.log.length&&S.log[S.log.length-1].src!==src)S.log.length=0; // 기록 한 벌에는 한 출처만 담습니다. 데모를 보다가 허브에 연결하면 실측 기록이 새로 시작됩니다
   const le={t:new Date().toISOString(),src,topic:mask(topic),payload:mask(text)};if(retained)le.retained=true;S.log.push(le);if(S.log.length>8000)S.log.shift();
   if(topic==='lab/sim/active'){S.simMixed=text==='1'&&src==='live';if(text==='1')S.simEver=true;return;}
   let j=null;try{j=JSON.parse(text);}catch(e){}
@@ -95,29 +95,29 @@ function ingest(topic,text,src,retained){S.count++;_c++;S.lastTs=now();const fre
 /* ---- 전송 ---- */
 let client=null;
 function publish(topic,payload){if(S.source==='live'&&client){client.publish(topic,payload);}else if(S.source==='demo'&&window.Sim){Sim.onPublish(topic,payload);}}
-function connect(url,user,pass,cb){if(!canLive){cb(L('이 페이지에서는 브라우저 정책 때문에 브로커에 연결할 수 없습니다. PC에 내려받은 콘솔에서 연결하세요.'));return;}
+function connect(url,user,pass,cb){if(!canLive){cb(L('이 페이지에서는 브라우저 정책 때문에 허브에 연결할 수 없습니다. PC에 내려받은 콘솔에서 연결하세요.'));return;}
   const desk=DESK&&url==='desktop';
   if(!desk&&typeof mqtt==='undefined'){cb(L('vendor/mqtt.min.js를 불러오지 못했습니다.'));return;}
   disconnect();cfg.broker={url,user};save();let done=false;
   client=desk?deskClient():mqtt.connect(url,{username:user,password:pass,reconnectPeriod:3000,connectTimeout:6000,clientId:'wavrel-console-'+Math.random().toString(16).slice(2,8)});
   client.on('connect',()=>{if(window.Sim)Sim.stop();if(S.source!=='live'){clearState();unpark();}S.source='live';if(!cfg.bring)cfg.bring={};if(!cfg.bring.broker){cfg.bring.broker=now();save();}
     client.subscribe(['espectre/v1/devices/+/motion','espectre/v1/devices/+/sensing','espectre/v1/devices/+/health','espresense/devices/#','espresense/rooms/+/+','lab/sim/active','lab/in/ask',cfg.led.topic]);
-    feed(L('브로커에 연결됨'),'sys');if(!done){done=true;cb(null);}});
+    feed(L('허브에 연결됨'),'sys');if(!done){done=true;cb(null);}});
   client.on('message',(t,b,pk)=>ingest(t,b.toString(),'live',!!(pk&&pk.retain)));
-  client.on('error',e=>{if(S.source!=='live'&&client){try{client.end(true);}catch(x){}client=null;}if(!done){done=true;cb(L`연결하지 못했습니다: ${e&&e.message||L('알 수 없는 오류')}. 브로커가 켜져 있는지, 사용자 이름과 비밀번호가 맞는지 확인하세요.`);}});
+  client.on('error',e=>{if(S.source!=='live'&&client){try{client.end(true);}catch(x){}client=null;}if(!done){done=true;cb(L`연결하지 못했습니다: ${e&&e.message||L('알 수 없는 오류')}. 허브가 켜져 있는지, 사용자 이름과 비밀번호가 맞는지 확인하세요.`);}});
   client.on('close',()=>{if(S.source==='live')S.linkDown=true;});client.on('connect',()=>{S.linkDown=false;});}
-/* 데스크톱 앱: MQTT.js 클라이언트와 같은 모양으로, 메인 프로세스의 브로커가 넘겨 주는 메시지를 받습니다. */
+/* 데스크톱 앱: MQTT.js 클라이언트와 같은 모양으로, 메인 프로세스의 허브가 넘겨 주는 메시지를 받습니다. */
 /* 토픽 필터 맞춤: MQTT의 + 는 한 단계, # 는 그 아래 전부 */
 function topicMatch(f,t){const a=f.split('/'),b=t.split('/');for(let i=0;i<a.length;i++){if(a[i]==='#')return true;if(i>=b.length||(a[i]!=='+'&&a[i]!==b[i]))return false;}return a.length===b.length;}
 function deskClient(){const h={},em=(e,...a)=>(h[e]||[]).slice().forEach(f=>f(...a)),D=window.desktop,subs=[];let up=false,offM=null,offB=null;
-  /* 내장 허브는 앱이 보낸 메시지를 기기 값으로 되돌려 보내지 않습니다. 보통의 브로커는 구독 중인 토픽이면 보낸 쪽에도 돌려주고,
+  /* 내장 허브는 앱이 보낸 메시지를 기기 값으로 되돌려 보내지 않습니다. 보통의 허브는 구독 중인 토픽이면 보낸 쪽에도 돌려주고,
      콘솔은 그것을 받아 LED 표시와 기록을 갱신합니다. 같은 동작이 되도록, 허브가 받아들인 메시지 중 구독 중인 토픽은 여기서 돌려줍니다. */
   const c={on(e,f){(h[e]||(h[e]=[])).push(f);return c;},subscribe(l){for(const f of[].concat(l))if(typeof f==='string'&&!subs.includes(f))subs.push(f);},
     publish(t,p){const s=String(p);Promise.resolve(D.publish(t,s)).then(ok=>{if(ok&&up&&subs.some(f=>topicMatch(f,t)))em('message',t,s,{retain:false});},()=>{});},
     end(){if(offM)offM();if(offB)offB();offM=offB=null;}};
   const state=s=>{if(s.running&&!up){up=true;em('connect');D.replayRetained().then(l=>l.forEach(m=>em('message',m.topic,m.payload,{retain:true})));}else if(!s.running&&up){up=false;em('close');}};
   offM=D.onMessage(m=>em('message',m.topic,m.payload,{retain:!!m.retain}));offB=D.onBroker(state);
-  D.status().then(s=>{if(s.running)state(s);else em('error',new Error(s.error==='PORT_IN_USE'?L('1883 포트를 다른 프로그램이 쓰고 있습니다'):L('브로커가 꺼져 있습니다')));});return c;}
+  D.status().then(s=>{if(s.running)state(s);else em('error',new Error(s.error==='PORT_IN_USE'?L('1883 포트를 다른 프로그램이 쓰고 있습니다'):L('허브가 꺼져 있습니다')));});return c;}
 function disconnect(){stopReplay();if(client){try{client.end(true);}catch(e){}client=null;}if(S.source==='live'){S.source='idle';S.simMixed=false;}}
 function demo(){disconnect();clearState();park();S.simEver=false;S.source='demo';feed(L('데모 시작: 내장 시뮬레이터가 보내는 값입니다'),'sys');if(window.Sim)Sim.start();}
 
@@ -132,7 +132,7 @@ function run(r,ev){const a=r.then;if(a.t==='led'){publish(cfg.led.topic,JSON.str
   else if(a.t==='notify'){const m=noteOf(r,ev||{t:r.when.t,node:r.when.node,room:r.when.room});note(r.when.t,a.level||'alert',m[0],m[1]);}
   else if(a.t==='publish'){publish(a.topic,a.payload);}}
 /* ---- 알림: 안경·휴대폰처럼 바깥 화면에 띄울 짧은 문장 ----
-   토픽 하나(lab/out/notify)에 JSON 한 줄로 냅니다. 내장 브로커에서는 앱만 이 토픽에 쓸 수 있어 기기가 알림을 꾸며 낼 수 없습니다.
+   토픽 하나(lab/out/notify)에 JSON 한 줄로 냅니다. 내장 허브에서는 앱만 이 토픽에 쓸 수 있어 기기가 알림을 꾸며 낼 수 없습니다.
    source는 값이 어디서 왔는지 그대로 적습니다. 시뮬레이터 값이면 받는 쪽 화면에도 그렇게 보여야 하기 때문입니다. */
 const NOTIFY='lab/out/notify';let _n=0;
 /* opt: 센서 값이 아닌 알림(모델의 답 등)은 출처와 표시 시간을 따로 적습니다. {source,ttl,re,model} */
@@ -185,7 +185,7 @@ function replay(text,speed,cb){const rows=[];let head=null;for(const ln of Strin
   rp={i:0,timer:null};const sp=speed||1,step=()=>{if(!rp)return;const r=rows[rp.i++];ingest(r[1],r[2],'replay');S.replayInfo.done=rp.i;if(rp.i>=rows.length){feed(L('재생 끝'),'sys');rp=null;return;}rp.timer=setTimeout(step,Math.min(2000,Math.max(0,(rows[rp.i][0]-r[0])/sp)));};
   feed(L`기록 재생 시작: ${rows.length}건`,'sys');step();cb(null,rows.length);}
 function report(){const rows=[L('| 시작 | 노드 | 길이 | 정답 구간 | 감지 | 놓침 | 오탐 | 재현율 | 정답 출처 | 데이터 |'),'|---|---|---|---|---|---|---|---|---|---|'];
-  for(const s of S.sessions){rows.push('| '+new Date(s.start).toISOString().slice(0,19).replace('T',' ')+' | '+(s.alias||mask(s.node))+' | '+L`${Math.round(s.dur)}초`+' | '+s.labels+' | '+s.hits+' | '+s.miss+' | '+s.falses+' | '+(s.recall==null?'-':Math.round(s.recall*100)+'%')+' | '+(s.truth==='manual'?L('버튼'):s.truth==='sim'?L('시뮬레이터'):L('PIR 입력'))+' | '+(s.source==='live'&&!(s.sim??S.simEver)?L('브로커 수신 (운영자 확인 필요)'):'SIMULATED')+' |');}
+  for(const s of S.sessions){rows.push('| '+new Date(s.start).toISOString().slice(0,19).replace('T',' ')+' | '+(s.alias||mask(s.node))+' | '+L`${Math.round(s.dur)}초`+' | '+s.labels+' | '+s.hits+' | '+s.miss+' | '+s.falses+' | '+(s.recall==null?'-':Math.round(s.recall*100)+'%')+' | '+(s.truth==='manual'?L('버튼'):s.truth==='sim'?L('시뮬레이터'):L('PIR 입력'))+' | '+(s.source==='live'&&!(s.sim??S.simEver)?L('허브 수신 (운영자 확인 필요)'):'SIMULATED')+' |');}
   return rows.join('\n');}
 function exportLog(){const o=S.log.length?S.log[0].src:S.source==='live'?'live':S.source==='replay'?'replay':'sim'; // 지금 화면이 아니라 기록에 실제로 담긴 출처를 적습니다
   const sim=o!=='live'||S.simEver||S.simMixed||S.log.some(l=>l.src!==o);if(!sim)mark('export');

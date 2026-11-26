@@ -1,4 +1,4 @@
-/* 창 껍데기: 상단의 메시지 맥박, 빈 공간 안내, 그리고 데스크톱 앱일 때의 브로커 설정과 정보 창.
+/* 창 껍데기: 상단의 메시지 맥박, 빈 공간 안내, 그리고 데스크톱 앱일 때의 허브 설정과 정보 창.
    window.desktop이 없으면(웹 데모, 파일로 연 콘솔) 데스크톱 부분은 건너뜁니다. */
 (()=>{'use strict';
 const $=s=>document.querySelector(s),S=Lab.S,D=window.desktop||null;
@@ -29,7 +29,7 @@ const live=()=>Lab.connect('desktop','lab','',err=>{if(err)open();});
 function draw(){if(!st||drawer.hidden)return;const state=$('#dk-state'),err=st.error;
   state.className='chip '+(st.running?'live':'bad');state.textContent=st.running?L`켜짐 · 포트 ${st.port}`:err==='PORT_IN_USE'?L('꺼짐 · 포트 사용 중'):L('꺼짐');
   $('#dk-count').textContent=st.running?L`메시지 ${st.counts.messages.toLocaleString('en-US')}건 · 거절한 로그인 ${st.counts.authRejected}건`:'';
-  $('#dk-note').textContent=err==='PORT_IN_USE'?L('1883 포트를 다른 프로그램이 쓰고 있습니다. 실행 중인 Mosquitto나 Docker 컨테이너를 끄고 "브로커 다시 켜기"를 누르세요.'):!st.addresses.length?L('연결된 집 안 망을 찾지 못했습니다. PC가 공유기에 연결돼 있는지 확인하세요.'):L('보드가 붙지 않으면 Windows가 처음 띄운 방화벽 창에서 개인 네트워크를 허용했는지 확인하세요.');
+  $('#dk-note').textContent=err==='PORT_IN_USE'?L('1883 포트를 다른 프로그램이 쓰고 있습니다. 실행 중인 Mosquitto나 Docker 컨테이너를 끄고 "허브 다시 켜기"를 누르세요.'):!st.addresses.length?L('연결된 집 안 망을 찾지 못했습니다. PC가 공유기에 연결돼 있는지 확인하세요.'):L('보드가 붙지 않으면 Windows가 처음 띄운 방화벽 창에서 개인 네트워크를 허용했는지 확인하세요.');
   const hosts=st.addresses.length?st.addresses.map(a=>`<span class="val">${esc(a.address)}<button class="mini" type="button" data-copy="${esc(a.address)}">${L`복사`}</button><small>${esc(a.name)}</small></span>`).join(''):L('<span class="val">찾지 못함</span>');
   const pw=shown&&Lab.now()-shownT<20000?`<span class="val">${esc(shown)}<button class="mini" type="button" data-copy="@pw">${L`복사`}</button><button class="mini" type="button" data-pw="hide">${L`가리기`}</button></span>`:L('<span class="val">••••••••••<button class="mini" type="button" data-pw="show">보기</button><button class="mini" type="button" data-copy="@pw">복사</button></span>');
   $('#dk-vals').innerHTML=`<dt>Host</dt><dd>${hosts}</dd><dt>Port</dt><dd><span class="val">${st.port}</span></dd><dt>${L`사용자`}</dt><dd><span class="val">${esc(st.user)}</span></dd><dt>${L`비밀번호`}</dt><dd>${pw}</dd><dt>Scheme</dt><dd><span class="val">mqtt</span></dd>`;

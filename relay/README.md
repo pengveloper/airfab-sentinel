@@ -41,7 +41,7 @@ Screenshots from the CI emulator run against the desktop app's broker.
 
 ## Connect to the PC
 
-1. On the PC, start Wavrel and press **Connect**. The **Built-in broker** panel shows the
+1. On the PC, start Wavrel and press **Connect**. The **Built-in hub** panel shows the
    Host address, the port and the password.
 2. The phone and the PC need to be on the same Wi-Fi. If Windows asked about the firewall when
    the broker first started, private networks must be allowed.

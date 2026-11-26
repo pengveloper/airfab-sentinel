@@ -25,18 +25,18 @@ window.addEventListener('hashchange',()=>show(location.hash.slice(1),false));
 const src=$('#src'),mixed=$('#mixed'),rate=$('#rate'),clock=$('#clock'),openBtn=$('#openConn');
 function status(){const d=new Date();clock.textContent=[d.getHours(),d.getMinutes(),d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
   rate.textContent=S.rate.toFixed(0)+' msg/s';
-  if(S.source==='live'){src.className='chip '+(S.linkDown?'bad':'live');src.textContent=S.linkDown?(window.Desk?L('브로커 꺼짐'):L('연결 끊김, 다시 시도 중')):(window.Desk?L('실측: 내장 브로커'):L('실측: 브로커 연결됨'));openBtn.textContent=L('연결 끊기');}
-  else if(S.source==='demo'){src.className='chip sim';src.textContent=L('데모: 시뮬레이션 값');openBtn.textContent=L('브로커 연결');}
-  else if(S.source==='replay'){src.className='chip rp';src.textContent=L`재생: 기록 파일 ${S.replayInfo.done}/${S.replayInfo.total}`;openBtn.textContent=L('브로커 연결');}
-  else{src.className='chip';src.textContent=L('대기');openBtn.textContent=L('브로커 연결');}
-  if(window.Desk)openBtn.textContent=L('브로커');
+  if(S.source==='live'){src.className='chip '+(S.linkDown?'bad':'live');src.textContent=S.linkDown?(window.Desk?L('허브 꺼짐'):L('연결 끊김, 다시 시도 중')):(window.Desk?L('실측: 내장 허브'):L('실측: 허브 연결됨'));openBtn.textContent=L('연결 끊기');}
+  else if(S.source==='demo'){src.className='chip sim';src.textContent=L('데모: 시뮬레이션 값');openBtn.textContent=L('허브 연결');}
+  else if(S.source==='replay'){src.className='chip rp';src.textContent=L`재생: 기록 파일 ${S.replayInfo.done}/${S.replayInfo.total}`;openBtn.textContent=L('허브 연결');}
+  else{src.className='chip';src.textContent=L('대기');openBtn.textContent=L('허브 연결');}
+  if(window.Desk)openBtn.textContent=L('허브');
   mixed.hidden=!S.simMixed;const sp=$('#sp-src');sp.className=src.className;sp.textContent=src.textContent+(S.simMixed?L(' · 시뮬레이터 포함'):'');}
 setInterval(status,500);
 
 /* 연결 서랍 */
 const drawer=$('#conn'),note=$('#conn-note');let lastFocus=null;
 function openDrawer(){lastFocus=document.activeElement;drawer.hidden=false;$('#c-url').value=Lab.cfg.broker.url;$('#c-user').value=Lab.cfg.broker.user;note.className='muted';
-  if(!Lab.canLive){note.textContent=L('이 페이지는 데모 전용입니다. 브라우저 정책상 여기서는 브로커에 연결할 수 없어서, PC에 내려받은 콘솔(index.html)에서 연결합니다.');$('#c-go').disabled=true;}
+  if(!Lab.canLive){note.textContent=L('이 페이지는 데모 전용입니다. 브라우저 정책상 여기서는 허브에 연결할 수 없어서, PC에 내려받은 콘솔(index.html)에서 연결합니다.');$('#c-go').disabled=true;}
   else note.textContent=L('PC에서 Mosquitto를 켠 뒤 연결합니다. 비밀번호는 이 탭의 메모리에만 둡니다.');
   (Lab.canLive?$('#c-pass'):$('#c-close')).focus();}
 function closeDrawer(){drawer.hidden=true;if(lastFocus)lastFocus.focus();}

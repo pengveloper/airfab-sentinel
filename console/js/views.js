@@ -34,7 +34,7 @@ function space(t){const cfg=Lab.cfg,hot=csiList().filter(n=>n.state==='motion'),
       const rooms=cfg.nodes.filter(n=>n.type==='ble');
       if(rooms.length)h+=`<div class="card" id="cd-ble"><div class="ct"><b>${L`BLE 위치`}</b>${srcChip()}</div><div data-f="rows" class="muted"></div></div>`;
       h+=`<div class="card" id="cd-led"><div class="ct"><b>${L`상태 LED`}</b><span class="kv" data-f="led">${L`꺼짐`}</span></div><div class="swatch"></div></div>`;
-      h+=`<div class="card"><div class="ct"><b>${L`데이터 출처`}</b>${srcChip()}</div><p class="muted">${S.source==='live'?L('브로커에서 받은 메시지입니다. 보드가 보낸 값인지는 운영자가 확인합니다.'):S.source==='demo'?L('내장 시뮬레이터가 실제 펌웨어와 같은 토픽 모양으로 만든 값입니다. 하드웨어 결과가 아닙니다.'):S.source==='replay'?L('내려받은 기록 파일을 다시 흘려보내는 중입니다.'):L('브로커에 연결하거나 데모를 시작하세요.')}</p></div>`;
+      h+=`<div class="card"><div class="ct"><b>${L`데이터 출처`}</b>${srcChip()}</div><p class="muted">${S.source==='live'?L('허브에서 받은 메시지입니다. 보드가 보낸 값인지는 운영자가 확인합니다.'):S.source==='demo'?L('내장 시뮬레이터가 실제 펌웨어와 같은 토픽 모양으로 만든 값입니다. 하드웨어 결과가 아닙니다.'):S.source==='replay'?L('내려받은 기록 파일을 다시 흘려보내는 중입니다.'):L('허브에 연결하거나 데모를 시작하세요.')}</p></div>`;
       $('#sp-cards').innerHTML=h;}
     for(const n of csiList()){const el=$(`.card[data-k="${n.key}"]`);if(!el)continue;const mv=n.state==='motion',ch=$('[data-f=st]',el);ch.className='chip '+(mv?'hot':'');ch.textContent=mv?L('움직임 감지'):L('조용함');$('[data-f=v]',el).textContent=n.last!=null?n.last.toFixed(2):'—';$('[data-f=thr]',el).textContent=n.thr??'—';spark($('canvas',el),n);}
     const be=$('#cd-ble [data-f=rows]');if(be){const pd2=pinnedDevs();be.innerHTML=pd2.length?pd2.map(d=>`${esc(devName(d))}: <span style="color:var(--text)">${d.room?esc(Lab.roomName(d.room)):L('찾는 중')}</span>`).join('<br>'):L('고정한 기기가 없습니다. 위치 화면에서 기기를 고정하세요.');}
@@ -139,10 +139,10 @@ function rules(){if(!every('ru',400))return;const cfg=Lab.cfg,tn=now(),ul=$('#ru
 
 /* ---------- 노드 ---------- */
 const BR=[
-  {k:'broker',t:L('PC에서 브로커 켜기'),d:L('broker 폴더에서 start.ps1을 실행한 뒤, 이 콘솔에서 브로커에 연결합니다.'),
-   more:[[L('주소'),'ws://localhost:9001'],[L('사용자'),'lab'],[L('비밀번호'),L('start.ps1에서 직접 정한 값')]],go:['conn',L('브로커 연결 열기')],
+  {k:'broker',t:L('PC에서 허브 켜기'),d:L('broker 폴더에서 start.ps1을 실행한 뒤, 이 콘솔에서 허브에 연결합니다.'),
+   more:[[L('주소'),'ws://localhost:9001'],[L('사용자'),'lab'],[L('비밀번호'),L('start.ps1에서 직접 정한 값')]],go:['conn',L('허브 연결 열기')],
    help:L('연결되지 않으면 Docker Desktop이 켜져 있는지 먼저 확인하세요.'),
-   desk:{t:L('앱이 브로커를 켭니다'),d:L('이 앱을 켜면 브로커가 함께 켜집니다. 아래 값을 보드에 넣으면 됩니다.'),more:[['Host','@LAN'],['Port','1883'],[L('사용자'),'lab'],[L('비밀번호'),L('브로커 창에서 확인')]],go:['conn',L('브로커 정보 열기')],
+   desk:{t:L('앱이 허브를 켭니다'),d:L('이 앱을 켜면 허브가 함께 켜집니다. 아래 값을 보드에 넣으면 됩니다.'),more:[['Host','@LAN'],['Port','1883'],[L('사용자'),'lab'],[L('비밀번호'),L('허브 창에서 확인')]],go:['conn',L('허브 정보 열기')],
      help:L('보드가 붙지 않으면 Windows가 처음 띄운 방화벽 창에서 개인 네트워크를 허용했는지 확인하세요.')}},
   {k:'csi',t:L('S3 보드 ①에 ESPectre 굽기'),d:L('크롬이나 엣지에서 굽고 와이파이를 넣은 다음, Device settings에 아래 MQTT 값을 넣습니다.'),
    link:['https://espectre.dev/tools/flash/',L('ESPectre 굽기 페이지')],
@@ -175,7 +175,7 @@ function nodes(){if(!every('no',700))return;const tn=now();
   if(bsig!==brSig){brSig=bsig;const ol=$('#br-steps'),nk=nx?nx.k:'',n=BR.filter(s=>brDone(s.k)).length;let open=new Set($$('details[open]',ol).map(d=>d.dataset.k));if(nk!==brNx){brNx=nk;open=new Set(nk?[nk]:[]);} // 다음 단계가 바뀌면 그 단계만 펼칩니다
     $('#br-count').textContent=L`${BR.length}단계 중 ${n}단계`;
     $('#br-bar').innerHTML=BR.map(s=>`<i class="${brDone(s.k)?'done':s===nx?'next':''}"></i>`).join('');
-    $('#br-note').textContent=!Lab.canLive?L('이 페이지는 데모 전용이라 단계가 채워지지 않습니다. PC에 내려받은 콘솔에서 진행하세요.'):S.simMixed?L('브로커에 시뮬레이터 값이 섞여 있어서 지금은 단계를 세지 않습니다.'):S.source==='live'?L('브로커에서 받은 메시지로 단계를 채웁니다. 수신 확인일 뿐이고, 하드웨어 검증 판정은 운영자가 합니다.'):L('데모와 기록 재생 값은 단계로 세지 않습니다. 브로커에 연결하면 채워지기 시작합니다.');
+    $('#br-note').textContent=!Lab.canLive?L('이 페이지는 데모 전용이라 단계가 채워지지 않습니다. PC에 내려받은 콘솔에서 진행하세요.'):S.simMixed?L('허브에 시뮬레이터 값이 섞여 있어서 지금은 단계를 세지 않습니다.'):S.source==='live'?L('허브에서 받은 메시지로 단계를 채웁니다. 수신 확인일 뿐이고, 하드웨어 검증 판정은 운영자가 합니다.'):L('데모와 기록 재생 값은 단계로 세지 않습니다. 허브에 연결하면 채워지기 시작합니다.');
     ol.innerHTML=BR.map(s0=>{const s=brOf(s0),dn=brDone(s.k),rl=s.k==='rooms'&&bg.rooms?bg.rooms.list.length:0,cls=dn?'done':s.k===nk?'next':'wait';
       const chip=dn?`<span class="chip live">${L`확인 · ${md(s.k==='rooms'?bg.rooms.ts:bg[s.k])}`}</span>`:s.k==='rooms'&&rl?`<span class="chip hot">${L`3대 중 ${rl}대`}</span>`:s.k===nk?L('<span class="chip hot">지금 할 일</span>'):L('<span class="chip">대기</span>');
       const more=s.more?'<dl>'+s.more.map(m=>`<dt>${m[0]}</dt><dd>${esc(m[1]==='@LAN'?lanText():m[1])}</dd>`).join('')+'</dl>':'';
@@ -193,11 +193,11 @@ function evidence(){if(!every('ev',700))return;const live=S.source==='live',clea
   $('#ev-status tbody').innerHTML=
     row(L('콘솔 수신과 표시 (내장 시뮬레이터)'),S.source==='demo'&&S.count>0?L('SIMULATED 동작 중'):'SIMULATED','sim')+
     row(L('정답 센서 입력 (PIR)'),S.inputs.size?(clean?L('수신 중, 운영자 확인 필요'):L('시뮬레이션 또는 재생')):'OPERATOR_REQUIRED',S.inputs.size?(clean?'live':'sim'):'')+
-    row(L('브로커 연결 상태'),live?L('연결됨'):'OPERATOR_REQUIRED',live?'live':'')+
+    row(L('허브 연결 상태'),live?L('연결됨'):'OPERATOR_REQUIRED',live?'live':'')+
     row(L('ESPectre 보드의 실제 메시지'),clean&&S.csi.size?L('수신 중, 운영자 확인 필요'):'OPERATOR_REQUIRED',clean&&S.csi.size?'live':'')+
     row(L('ESPresense 보드의 실제 메시지'),clean&&S.rooms.size?L('수신 중, 운영자 확인 필요'):'OPERATOR_REQUIRED',clean&&S.rooms.size?'live':'')+
     row(L('하드웨어 검증 (HARDWARE_VERIFIED)'),L('아직 없음'),'');
-  $('#ev-sessions tbody').innerHTML=S.sessions.slice(0,8).map(s=>`<tr><td class="n">${hms(s.start)}</td><td>${esc(s.alias||Lab.mask(s.node))}</td><td class="n">${L`${Math.round(s.dur)}초`}</td><td class="n">${s.labels}</td><td class="n">${s.hits}</td><td class="n">${s.miss}</td><td class="n">${s.falses}</td><td class="n">${s.recall==null?'—':Math.round(s.recall*100)+'%'}</td><td>${esc(truthName(s.truth||'manual'))}</td><td>${s.source==='live'&&!(s.sim??S.simEver)?L('브로커 수신'):s.source==='replay'?L('기록 재생'):L('시뮬레이션')}</td></tr>`).join('')||L('<tr class="empty"><td colspan="10">끝낸 세션이 없습니다. 움직임 화면에서 세션을 시작하세요.</td></tr>');
+  $('#ev-sessions tbody').innerHTML=S.sessions.slice(0,8).map(s=>`<tr><td class="n">${hms(s.start)}</td><td>${esc(s.alias||Lab.mask(s.node))}</td><td class="n">${L`${Math.round(s.dur)}초`}</td><td class="n">${s.labels}</td><td class="n">${s.hits}</td><td class="n">${s.miss}</td><td class="n">${s.falses}</td><td class="n">${s.recall==null?'—':Math.round(s.recall*100)+'%'}</td><td>${esc(truthName(s.truth||'manual'))}</td><td>${s.source==='live'&&!(s.sim??S.simEver)?L('허브 수신'):s.source==='replay'?L('기록 재생'):L('시뮬레이션')}</td></tr>`).join('')||L('<tr class="empty"><td colspan="10">끝낸 세션이 없습니다. 움직임 화면에서 세션을 시작하세요.</td></tr>');
   $('#ev-count').textContent=L`${S.count.toLocaleString('en-US')}건`;$('#ev-rp').textContent=S.source==='replay'?L`재생 중 ${S.replayInfo.done} / ${S.replayInfo.total}`:S.replayInfo&&S.replayInfo.done>=S.replayInfo.total?L('재생 끝'):'';
   const lg=$('#ev-log');if(document.activeElement!==lg)lg.textContent=S.log.slice(-16).map(l=>l.t.slice(11,19)+'  '+l.topic+'  '+l.payload.slice(0,70)).join('\n');}
 

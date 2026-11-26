@@ -52,7 +52,7 @@ async function run(e){if(e)e.preventDefault();if(!D||st.busy)return;const prompt
   for(const run of st.runs){run.state='run';drawRuns();const r=await D.ask(run.model,prompt,{maxTokens:max});run.r=r;run.state=r.ok?'done':'fail';drawRuns();}
   st.busy=false;picked();}
 /* 센서 기록으로 질문 만들기: 최근 기록 몇 줄과 출처를 붙입니다. 시뮬레이터 값이면 그렇다고 적습니다. */
-function sensorPrompt(){const src=S.source==='live'?(S.simEver||S.simMixed?L('브로커 수신, 시뮬레이터 값 섞임'):L('브로커 수신 실측')):S.source==='replay'?L('기록 재생'):L('내장 시뮬레이터');
+function sensorPrompt(){const src=S.source==='live'?(S.simEver||S.simMixed?L('허브 수신, 시뮬레이터 값 섞임'):L('허브 수신 실측')):S.source==='replay'?L('기록 재생'):L('내장 시뮬레이터');
   const lines=S.feed.slice(0,24).reverse().map(f=>new Date(f.t).toTimeString().slice(0,8)+' '+f.txt);
   return L`다음은 Wavrel 콘솔의 최근 센서 기록입니다. 출처: ${src}.`+'\n'+lines.join('\n')+'\n\n'+L('무슨 일이 있었는지 세 문장 이내로 요약하세요. 기록만으로 알 수 없는 것은 그렇다고 말하세요.');}
 

@@ -94,14 +94,21 @@ jobs:
         run: cat hub.log || true
       - name: Screens in the log, for review without downloading the artifact
         if: always()
+        continue-on-error: true
         run: |
-          shopt -s nullglob
-          for f in relay-shots/*.png; do
-            convert "$f" -resize 540x -strip -define png:compression-level=9 /tmp/small.png
-            echo "SHOT-BEGIN $(basename "$f")"
-            base64 -w 0 /tmp/small.png; echo
-            echo "SHOT-END"
-          done
+          python3 -m pip install --quiet --disable-pip-version-check pillow
+          python3 - <<'PY'
+          import base64, glob, io, os
+          from PIL import Image
+          for f in sorted(glob.glob("relay-shots/*.png")):
+              im = Image.open(f).convert("RGB")
+              im.thumbnail((540, 1400))
+              buf = io.BytesIO()
+              im.save(buf, "PNG", optimize=True)
+              print("SHOT-BEGIN", os.path.basename(f))
+              print(base64.b64encode(buf.getvalue()).decode())
+              print("SHOT-END")
+          PY
       - uses: actions/upload-artifact@v7
         if: always()
         with:

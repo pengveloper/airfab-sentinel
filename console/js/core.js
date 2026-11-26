@@ -90,7 +90,7 @@ function ingest(topic,text,src,retained){S.count++;_c++;S.lastTs=now();const fre
     if(!was||was.on!==on){const ss=S.session;if(ss&&!ss.end&&ss.truth==='pir:'+key)label(on);if(on)feed(L`${roomName(p[2])} 입력 ${p[3].slice(6)}: 감지`,'ble');}}
   else if(topic===cfg.led.topic&&j){const c=j.seg&&j.seg[0]&&j.seg[0].col&&j.seg[0].col[0];if(j.on===false)S.led={color:null,until:0};else if(c)S.led={color:c.slice(0,3),until:now()+(j._sec||8)*1000};}
   else if(topic==='lab/sim/truth'&&j){const ss=S.session;if(ss&&!ss.end&&ss.truth==='sim'&&ss.node==='csi:'+j.node)label(!!j.on);}
-  for(const f of subs)f(topic,text,src);
+  for(const f of subs)f(topic,text,src,!!retained);
 }
 /* ---- 전송 ---- */
 let client=null;
@@ -101,7 +101,7 @@ function connect(url,user,pass,cb){if(!canLive){cb(L('이 페이지에서는 브
   disconnect();cfg.broker={url,user};save();let done=false;
   client=desk?deskClient():mqtt.connect(url,{username:user,password:pass,reconnectPeriod:3000,connectTimeout:6000,clientId:'wavrel-console-'+Math.random().toString(16).slice(2,8)});
   client.on('connect',()=>{if(window.Sim)Sim.stop();if(S.source!=='live'){clearState();unpark();}S.source='live';if(!cfg.bring)cfg.bring={};if(!cfg.bring.broker){cfg.bring.broker=now();save();}
-    client.subscribe(['espectre/v1/devices/+/motion','espectre/v1/devices/+/sensing','espectre/v1/devices/+/health','espresense/devices/#','espresense/rooms/+/+','lab/sim/active',cfg.led.topic]);
+    client.subscribe(['espectre/v1/devices/+/motion','espectre/v1/devices/+/sensing','espectre/v1/devices/+/health','espresense/devices/#','espresense/rooms/+/+','lab/sim/active','lab/in/ask',cfg.led.topic]);
     feed(L('브로커에 연결됨'),'sys');if(!done){done=true;cb(null);}});
   client.on('message',(t,b,pk)=>ingest(t,b.toString(),'live',!!(pk&&pk.retain)));
   client.on('error',e=>{if(S.source!=='live'&&client){try{client.end(true);}catch(x){}client=null;}if(!done){done=true;cb(L`연결하지 못했습니다: ${e&&e.message||L('알 수 없는 오류')}. 브로커가 켜져 있는지, 사용자 이름과 비밀번호가 맞는지 확인하세요.`);}});
@@ -135,8 +135,10 @@ function run(r,ev){const a=r.then;if(a.t==='led'){publish(cfg.led.topic,JSON.str
    토픽 하나(lab/out/notify)에 JSON 한 줄로 냅니다. 내장 브로커에서는 앱만 이 토픽에 쓸 수 있어 기기가 알림을 꾸며 낼 수 없습니다.
    source는 값이 어디서 왔는지 그대로 적습니다. 시뮬레이터 값이면 받는 쪽 화면에도 그렇게 보여야 하기 때문입니다. */
 const NOTIFY='lab/out/notify';let _n=0;
-function note(kind,level,title,body){const t=now(),n={v:1,id:'n'+t.toString(36)+(_n++%1296).toString(36),ts:t,kind,level:level==='alert'?'alert':'info',title:mask(title).slice(0,40),body:mask(body||'').slice(0,90),ttl:8,
-    source:S.source==='live'?(S.simEver||S.simMixed?'broker_with_simulator':'broker'):S.source==='replay'?'replay':'built_in_simulator'};
+/* opt: 센서 값이 아닌 알림(모델의 답 등)은 출처와 표시 시간을 따로 적습니다. {source,ttl,re,model} */
+function note(kind,level,title,body,opt){const t=now(),o=opt||{},n={v:1,id:'n'+t.toString(36)+(_n++%1296).toString(36),ts:t,kind,level:level==='alert'?'alert':'info',title:mask(title).slice(0,40),body:mask(body||'').slice(0,90),ttl:o.ttl>=2&&o.ttl<=60?Math.round(o.ttl):8,
+    source:o.source||(S.source==='live'?(S.simEver||S.simMixed?'broker_with_simulator':'broker'):S.source==='replay'?'replay':'built_in_simulator')};
+  if(o.re)n.re=String(o.re).slice(0,40);if(o.model)n.model=String(o.model).slice(0,40);
   S.notes.unshift(n);if(S.notes.length>30)S.notes.pop();publish(NOTIFY,JSON.stringify(n));return n;}
 function noteOf(r,ev){const alias=k=>{const n=k&&k!=='*'&&node(k);return n?n.alias:L('Wi‑Fi 링크');};
   if(ev.t==='motion'){const n=ev.node&&S.csi.get(ev.node.slice(4)),sc=n&&n.last!=null?n.last.toFixed(2):'-';return[L`${alias(ev.node)}: 움직임`,n&&n.thr!=null?L`점수 ${sc} · 임계값 ${n.thr}`:L`점수 ${sc}`];}

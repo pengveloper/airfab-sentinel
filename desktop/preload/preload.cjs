@@ -18,6 +18,9 @@ contextBridge.exposeInMainWorld('desktop', Object.freeze({
   replayRetained: () => ipcRenderer.invoke('mqtt:replay'),
   publish: (topic, payload) => ipcRenderer.invoke('mqtt:publish', { topic, payload }),
   copy: text => ipcRenderer.invoke('clipboard:write', text),
+  models: () => ipcRenderer.invoke('models:list'),
+  ask: (model, prompt, opts = {}) => ipcRenderer.invoke('models:ask', { model, prompt, system: opts.system, maxTokens: opts.maxTokens }),
+  setModelServer: url => ipcRenderer.invoke('models:url', url),
   onMessage: listen('mqtt:message'),
   onBroker: listen('broker:state'),
 }));

@@ -65,6 +65,15 @@ The relay shows one screen at a time: a line saying whether it is an alert and w
 came from, the title, the body and the time, in green on black (black is clear on the lens). The
 screen closes after the alert's `ttl`. A newer alert replaces it.
 
+## Ask the PC out loud
+
+With the PC connected, "Ask the PC out loud" opens the phone's own voice input. What you say goes
+to the PC as one question on `lab/in/ask`; in the Wavrel desktop app's Models view, turn on
+"Answer questions from phone and glasses" and pick a model. The model answers in under 80
+characters, and the answer comes back as an alert: on the phone and on the glasses, labelled
+"PC model". The relay records nothing itself; the phone's voice input does the listening.
+Format: [docs/NOTIFY.md](../docs/NOTIFY.md).
+
 ## What to check on the device
 
 These are open until someone runs them and records the result in
@@ -77,6 +86,7 @@ These are open until someone runs them and records the result in
 5. A second alert inside the first one's `ttl` replaces the text (update) rather than flashing.
 6. With the phone locked for 30 minutes, alerts still reach the glasses.
 7. Rokid's own phone app: does it need to be closed while the relay holds the glasses?
+8. Ask the PC out loud with a model running in the desktop app: the answer reaches the phone and the glasses, labelled "PC model".
 
 ## Privacy and security
 

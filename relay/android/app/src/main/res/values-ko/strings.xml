@@ -103,4 +103,12 @@
     <string name="ch_info">일반 알림</string>
     <string name="service_title">PC 알림을 전달하는 중</string>
     <string name="action_stop">멈추기</string>
+    <string name="src_model">PC 모델</string>
+    <string name="ask_voice">PC에 말로 묻기</string>
+    <string name="ask_help">Wavrel 데스크톱 앱에서 고른 모델이 답하고, 답은 여기와 안경에 뜹니다.</string>
+    <string name="ask_prompt">질문을 말하세요</string>
+    <string name="ask_sent">PC에 물었습니다. 답은 알림으로 옵니다.</string>
+    <string name="ask_not_connected">먼저 PC에 연결하세요.</string>
+    <string name="ask_nothing">들린 말이 없습니다.</string>
+    <string name="ask_no_speech">이 휴대폰에는 음성 입력이 없습니다.</string>
 </resources>

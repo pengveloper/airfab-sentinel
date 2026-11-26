@@ -100,6 +100,14 @@ object Relay {
         if (vault.flag(Vault.PHONE_ALERTS, true)) Notifier.alert(app, a)
     }
 
+    /** Sends a spoken question to the PC. False when the PC is not connected or nothing was said. */
+    fun ask(text: String): Boolean {
+        if (snapshot.hub != Hub.ON) return false
+        val lang = app.resources.configuration.locales[0].language
+        val payload = Ask.build("q" + System.currentTimeMillis().toString(36), text, lang) ?: return false
+        return hub?.publish(Ask.TOPIC, payload) == true
+    }
+
     /** Sends a made-up alert straight to the glasses, without the hub. */
     fun showTest(): Boolean {
         val a = Alert(
@@ -126,6 +134,7 @@ object Relay {
         "broker_with_simulator" -> app.getString(R.string.src_mixed)
         "replay" -> app.getString(R.string.src_replay)
         "built_in_simulator" -> app.getString(R.string.src_simulator)
+        Alert.SOURCE_MODEL -> app.getString(R.string.src_model)
         else -> app.getString(R.string.src_unknown)
     }
 }

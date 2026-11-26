@@ -19,8 +19,8 @@ data class Alert(
 ) {
     val urgent: Boolean get() = level == LEVEL_ALERT
 
-    /** Anything but live hub data is labelled, so a simulated value is never read as a measurement. */
-    val simulated: Boolean get() = source != SOURCE_BROKER
+    /** Anything but live hub data or a model's answer is labelled, so a simulated value is never read as a measurement. */
+    val simulated: Boolean get() = source != SOURCE_BROKER && source != SOURCE_MODEL
 
     companion object {
         const val TOPIC = "lab/out/notify"
@@ -34,7 +34,9 @@ data class Alert(
         const val LEVEL_INFO = "info"
         const val SOURCE_BROKER = "broker"
         const val SOURCE_UNKNOWN = "unknown"
-        val SOURCES = setOf(SOURCE_BROKER, "broker_with_simulator", "replay", "built_in_simulator")
+        /** An answer from a model on the PC, not a sensor value. */
+        const val SOURCE_MODEL = "local_model"
+        val SOURCES = setOf(SOURCE_BROKER, "broker_with_simulator", "replay", "built_in_simulator", SOURCE_MODEL)
 
         fun parse(payload: String): Alert? {
             if (payload.isEmpty() || payload.length > MAX_PAYLOAD) return null

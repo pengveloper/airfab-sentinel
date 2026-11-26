@@ -30,22 +30,50 @@ With the optional Mosquitto kit in `broker/` there is no such restriction unless
 | `v` | Format version. A receiver ignores versions it does not know |
 | `id` | Unique per alert within a run |
 | `ts` | Time the app created the alert, milliseconds since the epoch |
-| `kind` | `motion`, `enter`, `quiet`, `session` or `test` |
+| `kind` | `motion`, `enter`, `quiet`, `session`, `answer` or `test` |
 | `level` | `alert` (needs attention) or `info` |
 | `title` | Up to 40 characters |
 | `body` | Up to 90 characters |
 | `ttl` | Seconds to keep the alert on screen |
-| `source` | `broker`, `broker_with_simulator`, `replay` or `built_in_simulator` |
+| `source` | `broker`, `broker_with_simulator`, `replay`, `built_in_simulator`, or `local_model` for a model's answer |
+| `re`, `model` | Only on answers: the id of the question and the model that answered |
 
 Device identifiers are masked to four characters before an alert leaves the app (T-CON-011).
 A receiver should show `source` whenever it is not `broker`, so simulated values are never
-mistaken for a measurement (T-CON-012).
+mistaken for a measurement (T-CON-012). A `local_model` answer is labelled as coming from the
+PC's model, not as a sensor value.
 
 ## When an alert is sent
 
 - A rule whose action is "알림 보내기" fires: motion starts on a link, a pinned device enters a room, or a link stays quiet for the set time. One rule fires at most once every 3 seconds.
 - A validation session, when "검증 세션 안내도 보내기" is on: the start, each pass about 2 seconds after it ends (detected or missed, with the running count), and the result when the session is stopped (T-CON-013). This is what lets a person walk the link and read the outcome without returning to the PC.
 - The "시험 알림 보내기" button.
+- An answer to a spoken question, below.
+
+## Questions from the phone or glasses (`lab/in/ask`)
+
+A receiver can also ask. Wavrel Relay's "PC에 말로 묻기" button takes speech through the phone's
+own voice input and publishes one question:
+
+```json
+{"v":1,"id":"qmb1x2k3","text":"거실에 누가 있어?","lang":"ko","from":"relay"}
+```
+
+| Field | Meaning |
+|---|---|
+| `v` | Format version, 1 |
+| `id` | Chosen by the asker; the answer carries it back in `re` |
+| `text` | The question, up to 300 characters |
+| `lang` | `ko` or `en`: the language the answer should be in |
+| `from` | Who asked, for the log only |
+
+In the desktop app's 모델 view, "휴대폰·안경 질문에 답하기" turns answering on and picks the model.
+The question goes to that model on this PC (Ollama), with instructions to answer in at most 80
+characters, and the answer goes out on `lab/out/notify` with `kind` `answer`, `source`
+`local_model` and `ttl` 15. When answering is off, or a question arrives while two are still
+being answered, the app says so in an alert instead of staying silent. Retained questions are
+ignored. Any client that has the hub password can ask, so the app takes at most one new question
+every 1.5 seconds (T-CON-020 and the app smoke test).
 
 ## Trying it without glasses
 
@@ -62,6 +90,7 @@ mosquitto_sub -h <address of this PC> -p 1883 -u lab -P <hub password> -t lab/ou
 - [Wavrel Relay](../relay/README.md) for Android: shows each alert as a phone notification and on
   Rokid glasses through Rokid's CXR-M SDK. Tests T-REL-001 to T-REL-004 check it against this
   format, including that a missing or unknown `source` is labelled rather than shown as a measurement.
+  T-REL-010 and T-REL-011 cover the question it sends and the answer it receives.
 
 ## Writing a receiver
 

@@ -29,7 +29,7 @@ class HubClient(
     private val onAlert: (Alert) -> Unit,
 ) {
     private val worker = Executors.newSingleThreadScheduledExecutor { r -> Thread(r, "hub").apply { isDaemon = true } }
-    private var client: MqttAsyncClient? = null
+    @Volatile private var client: MqttAsyncClient? = null
     @Volatile private var closed = false
     private var attempt = 0
 
@@ -45,6 +45,18 @@ class HubClient(
             client = null
         }
         worker.shutdown()
+    }
+
+    /** Publishes once, without retain. False when the hub is not connected right now. */
+    fun publish(topic: String, payload: String): Boolean {
+        val c = client ?: return false
+        if (closed || !c.isConnected) return false
+        return try {
+            c.publish(topic, payload.toByteArray(Charsets.UTF_8), 0, false)
+            true
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private val callback = object : MqttCallbackExtended {

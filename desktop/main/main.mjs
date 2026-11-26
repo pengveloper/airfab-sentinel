@@ -8,6 +8,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, Menu, clipboard, ipcMain, protocol, session, shell } from 'electron';
 import { Hub } from './broker.mjs';
+import { Models } from './models.mjs';
 import * as store from './store.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -35,6 +36,8 @@ if (!app.commandLine.hasSwitch('user-data-dir') && !existsSync(path.join(app.get
 let win = null;
 const port = Number(process.env.WAVREL_MQTT_PORT) || 1883;
 const hub = new Hub({ port, getPassword: () => store.getPassword() });
+// Local models (Ollama) on this PC or the home network. WAVREL_OLLAMA_URL is for tests.
+const models = new Models({ url: process.env.WAVREL_OLLAMA_URL || store.getModelUrl() });
 const send = (channel, data) => { if (win && !win.isDestroyed()) win.webContents.send(channel, data); };
 const publicStatus = () => ({ ...hub.status(), hasPassword: store.hasPassword(), error: lastError });
 let lastError = null;
@@ -93,6 +96,9 @@ function wireIpc() {
   handle('broker:restart', async () => { await hub.stop(); return startHub(); });
   handle('mqtt:replay', () => hub.retainedList());
   handle('mqtt:publish', arg => !!arg && hub.publish(arg.topic, arg.payload));
+  handle('models:list', () => models.list());
+  handle('models:ask', arg => models.ask(arg && typeof arg === 'object' ? { model: arg.model, prompt: arg.prompt, system: arg.system, maxTokens: arg.maxTokens } : {}));
+  handle('models:url', raw => { if (!models.setUrl(raw)) return { ok: false, url: models.url }; store.setModelUrl(models.url); return { ok: true, url: models.url }; });
   handle('clipboard:write', text => { if (typeof text === 'string' && text.length <= 200_000) { clipboard.writeText(text); return true; } return false; });
 }
 

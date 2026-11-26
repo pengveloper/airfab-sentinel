@@ -43,7 +43,7 @@ function boot(saved, language = 'ko-KR') {
     emit('message', topic, Buffer.from(typeof payload === 'string' ? payload : JSON.stringify(payload)), { retain });
   const motion = (state, score, id = ID) => msg(`espectre/v1/devices/${id}/motion`, { timestamp_ms: 0, state, score });
   const tick = ms => { clock.t += ms; };
-  return { Lab, clock, sent, goLive, msg, motion, tick };
+  return { Lab, clock, sent, goLive, msg, motion, tick, ctx };
 }
 
 test('T-CON-001 식별자는 앞 4자만 남기고 가린다', () => {
@@ -259,4 +259,42 @@ test('T-CON-019 토픽 필터 맞춤: 데스크톱에서 앱이 보낸 메시지
   assert.equal(m('espresense/devices/#', 'espresense/devices/a/office'), true); assert.equal(m('espresense/devices/#', 'espresense/rooms/office'), false);
   assert.equal(m('espectre/v1/devices/+/motion', 'espectre/v1/devices/abc/motion'), true); assert.equal(m('espectre/v1/devices/+/motion', 'espectre/v1/devices/abc/health'), false);
   assert.equal(m('espresense/rooms/+/+', 'espresense/rooms/office'), false); assert.equal(m('lab/sim/active', 'lab/out/notify'), false);
+});
+
+/* 모델 화면(models.js)의 질문 처리. 화면 요소는 아무 일도 하지 않는 가짜로 두고, 데스크톱 다리의 ask만 흉내 냅니다. */
+function bootModels(answer = { ok: true, text: '**거실은**\n 조용합니다.  ' }) {
+  const env = boot();
+  const el = () => { const e = { value: '', checked: false, disabled: false, textContent: '', innerHTML: '', className: '', style: {}, children: [],
+    addEventListener() {}, append(...c) { e.children.push(...c); }, focus() {}, setAttribute() {}, querySelectorAll: () => [] }; return e; };
+  const els = new Map();
+  env.ctx.document = { querySelector: q => { if (!els.has(q)) els.set(q, el()); return els.get(q); }, createElement: el, activeElement: null };
+  const asked = [];
+  env.ctx.desktop = { models: async () => ({ ok: true, url: 'http://127.0.0.1:11434', models: [{ name: 'm:4b' }] }), ask: async (model, prompt, opts) => { asked.push({ model, prompt, opts }); return answer; }, setModelServer: async u => ({ ok: true, url: u }) };
+  vm.runInContext(read('models.js'), env.ctx);
+  env.ctx.Models.wire();
+  return { ...env, asked, Models: env.ctx.Models };
+}
+const flush = () => new Promise(r => setImmediate(r));
+
+test('T-CON-020 안경에서 온 질문: 꺼져 있으면 그렇다고 답하고, 켜면 고른 모델의 답을 알림으로 낸다', async () => {
+  const { Lab, Models, goLive, msg, sent, tick, asked } = bootModels();
+  const P = Models.parseAsk;
+  assert.equal(P('not json'), null); assert.equal(P('{"v":2,"text":"hi"}'), null); assert.equal(P('{"v":1,"text":"   "}'), null);
+  assert.deepEqual(JSON.parse(JSON.stringify(P(JSON.stringify({ v: 1, id: 'q', text: 'a\nb', lang: 'en' })))), { id: 'q', q: 'a b', lang: 'en' });
+  assert.equal(Array.from(P(JSON.stringify({ v: 1, text: '가'.repeat(400) })).q).length, 300);
+  goLive();
+  const answers = () => sent.filter(([t]) => t === 'lab/out/notify').map(([, p]) => JSON.parse(p)).filter(n => n.kind === 'answer');
+  msg('lab/in/ask', { v: 1, id: 'q1', text: '거실에 누가 있어?', lang: 'ko' }); await flush();
+  assert.equal(asked.length, 0, 'nothing is asked while answering is off');
+  assert.match(answers()[0].body, /꺼져 있습니다/);
+  Lab.cfg.models.glass = true; Lab.cfg.models.gmodel = 'm:4b'; tick(2000);
+  msg('lab/in/ask', { v: 1, id: 'q2', text: '거실에 누가 있어?', lang: 'ko' }); await flush(); await flush();
+  const a = answers().find(n => n.re === 'q2');
+  assert.ok(a, 'the answer goes out on the alert topic');
+  assert.deepEqual([a.body, a.source, a.ttl, a.level, a.model, a.title], ['거실은 조용합니다.', 'local_model', 15, 'info', 'm:4b', '거실에 누가 있어?']);
+  assert.equal(asked[0].model, 'm:4b'); assert.match(asked[0].opts.system, /80자/); assert.equal(asked[0].opts.maxTokens, 96);
+  tick(500); msg('lab/in/ask', { v: 1, id: 'q3', text: '또?', lang: 'ko' }); await flush();
+  assert.match(answers().find(n => n.re === 'q3').body, /답하는 중/, 'a question right after another is turned away, not queued forever');
+  tick(5000); msg('lab/in/ask', { v: 1, id: 'q4', text: '보관된 질문' }, true); await flush();
+  assert.equal(answers().some(n => n.re === 'q4'), false, 'a retained question is old and gets no answer');
 });

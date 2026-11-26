@@ -192,4 +192,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:accessibilityLiveRegion="polite" />
+
+    <Button
+        android:id="@+id/ask"
+        style="@style/Action.Secondary"
+        android:layout_width="match_parent"
+        android:layout_marginTop="14dp"
+        android:text="@string/ask_voice" />
+
+    <TextView
+        style="@style/Text.Help"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ask_help" />
 </LinearLayout>

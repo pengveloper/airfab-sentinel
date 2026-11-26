@@ -29,6 +29,8 @@ import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import android.speech.RecognizerIntent
+import android.content.ActivityNotFoundException
 
 class MainActivity : Activity() {
     private val main = Handler(Looper.getMainLooper())
@@ -36,6 +38,7 @@ class MainActivity : Activity() {
     private lateinit var runState: TextView
     private lateinit var toggle: Button
     private lateinit var toggleHint: TextView
+    private lateinit var ask: Button
     private lateinit var address: EditText
     private lateinit var password: EditText
     private lateinit var secret: EditText
@@ -71,6 +74,7 @@ class MainActivity : Activity() {
         lens = findViewById(R.id.lens)
         runState = findViewById(R.id.run_state)
         toggle = findViewById(R.id.toggle)
+        ask = findViewById(R.id.ask)
         toggleHint = findViewById(R.id.toggle_hint)
         address = findViewById(R.id.address)
         password = findViewById(R.id.password)
@@ -100,6 +104,18 @@ class MainActivity : Activity() {
         }
         findViewById<Button>(R.id.licence).setOnClickListener {
             startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), REQ_LICENCE)
+        }
+        ask.setOnClickListener {
+            if (Relay.snapshot.hub != Relay.Hub.ON) { toast(R.string.ask_not_connected); return@setOnClickListener }
+            val speak = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                .putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.ask_prompt))
+                .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            try {
+                startActivityForResult(speak, REQ_ASK)
+            } catch (e: ActivityNotFoundException) {
+                toast(R.string.ask_no_speech)
+            }
         }
         findViewById<Button>(R.id.test).setOnClickListener {
             saveSecret()
@@ -275,6 +291,12 @@ class MainActivity : Activity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQ_ASK) {
+            if (resultCode != RESULT_OK) return
+            val said = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull().orEmpty()
+            toast(if (said.isBlank()) R.string.ask_nothing else if (Relay.ask(said)) R.string.ask_sent else R.string.ask_not_connected)
+            return
+        }
         if (requestCode != REQ_LICENCE || resultCode != RESULT_OK) return
         val uri = data?.data ?: return
         val bytes = try {
@@ -315,6 +337,9 @@ class MainActivity : Activity() {
         node(R.id.glass_dot, R.id.glass_state, Labels.glassTone(s.glass), Labels.glassShort(this, s.glass))
         link(R.id.link1a, R.id.link1b, s.hub == Relay.Hub.ON)
         link(R.id.link2a, R.id.link2b, s.glass == Relay.Glass.ON && s.running)
+        // A spoken question needs the PC; the answer then comes back like any alert.
+        ask.isEnabled = s.hub == Relay.Hub.ON
+        ask.alpha = if (ask.isEnabled) 1f else 0.45f
 
         val help = when (s.hub) {
             Relay.Hub.WRONG_PASSWORD -> R.string.hub_wrong_password_help
@@ -396,5 +421,6 @@ class MainActivity : Activity() {
         private const val REQ_NOTIFY = 1
         private const val REQ_BLUETOOTH = 2
         private const val REQ_LICENCE = 3
+        private const val REQ_ASK = 4
     }
 }

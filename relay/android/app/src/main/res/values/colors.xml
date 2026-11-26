@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Sentinel Lab console palette (console/css/app.css), plus the lens phosphor. -->
+<resources>
+    <color name="ink">#05080D</color>
+    <color name="surface">#0A1018</color>
+    <color name="raise">#111A28</color>
+    <color name="line">#1B2737</color>
+    <color name="line2">#2B3C53</color>
+    <color name="edge">#299CC6FF</color>
+    <color name="text">#E8EEF6</color>
+    <color name="muted">#8C9DB3</color>
+    <color name="gold">#ECB955</color>
+    <color name="gold_pressed">#C99A3F</color>
+    <color name="wave">#9CC6FF</color>
+    <color name="sim">#B9A8FF</color>
+    <color name="ok">#5FD3A2</color>
+    <color name="ok_soft">#1A5FD3A2</color>
+    <color name="bad">#FF5C77</color>
+
+    <color name="lens">#000000</color>
+    <color name="phosphor">#6BFF8E</color>
+    <color name="phosphor_dim">#3BB863</color>
+    <color name="phosphor_faint">#1F5A33</color>
+
+    <color name="launcher_bg">#05080D</color>
+</resources>

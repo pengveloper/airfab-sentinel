@@ -1,0 +1,53 @@
+name: relay
+on:
+  push:
+    paths:
+      - 'relay/**'
+      - '.github/workflows/relay.yml'
+  pull_request:
+    paths:
+      - 'relay/**'
+      - '.github/workflows/relay.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: relay-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Phone relay (Android)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: relay/android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: 8.14.3
+      - name: Rokid SDK versions on offer
+        run: |
+          curl -fsS --max-time 30 https://maven.rokid.com/repository/maven-public/com/rokid/cxr/client-m/maven-metadata.xml \
+            | grep -o '<version>[^<]*' | sed 's/<version>//' | tail -n 15 || echo "Rokid repository did not answer"
+          echo "Building with $(grep rokidCxrVersion gradle.properties)"
+      - name: Unit tests
+        run: gradle --no-daemon testDebugUnitTest
+      - name: Build the debug APK
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sentinel-relay-test-report
+          path: relay/android/app/build/reports/tests/
+          if-no-files-found: ignore
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sentinel-relay-debug-apk
+          path: relay/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error

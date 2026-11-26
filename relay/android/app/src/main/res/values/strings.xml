@@ -6,6 +6,7 @@
     <string name="state_running">Running</string>
     <string name="state_stopped">Stopped</string>
     <string name="start_relay">Start relay</string>
+    <string name="retry_relay">Reconnect with this password</string>
     <string name="stop_relay">Stop relay</string>
 
     <string name="node_hub">PC</string>

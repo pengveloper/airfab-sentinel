@@ -56,9 +56,10 @@ class MainActivity : Activity() {
         Relay.init(this)
         Notifier.channels(this)
         // Draw behind the system bars on every Android version, as Android 15 does by default.
-        if (Build.VERSION.SDK_INT >= 30) {
+        if (Build.VERSION.SDK_INT in 30..34) {
+            @Suppress("DEPRECATION")
             window.setDecorFitsSystemWindows(false)
-        } else {
+        } else if (Build.VERSION.SDK_INT < 30) {
             @Suppress("DEPRECATION")
             window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
                 View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
@@ -86,7 +87,10 @@ class MainActivity : Activity() {
         phoneAlerts.isChecked = v.flag(Vault.PHONE_ALERTS, true)
         phoneAlerts.setOnCheckedChangeListener { _, on -> v.putFlag(Vault.PHONE_ALERTS, on) }
 
-        toggle.setOnClickListener { if (Relay.snapshot.running) RelayService.stop(this) else startRelay() }
+        toggle.setOnClickListener {
+            val s = Relay.snapshot
+            if (s.running && s.hub != Relay.Hub.WRONG_PASSWORD) RelayService.stop(this) else startRelay()
+        }
         findViewById<Button>(R.id.find).setOnClickListener { saveSecret(); withBluetooth { findGlasses() } }
         glassAction.setOnClickListener {
             saveSecret()
@@ -289,9 +293,12 @@ class MainActivity : Activity() {
         runState.text = getString(if (s.running) R.string.state_running else R.string.state_stopped)
         runState.setTextColor(getColor(if (s.running) R.color.ok else R.color.muted))
         runState.backgroundTintList = ColorStateList.valueOf(getColor(if (s.running) R.color.ok_soft else R.color.raise))
-        toggle.text = getString(if (s.running) R.string.stop_relay else R.string.start_relay)
-        toggle.setBackgroundResource(if (s.running) R.drawable.bg_secondary else R.drawable.bg_primary)
-        toggle.setTextColor(getColor(if (s.running) R.color.text else R.color.ink))
+        // After a wrong password the button retries with what is in the field instead of stopping.
+        val retry = s.running && s.hub == Relay.Hub.WRONG_PASSWORD
+        val stops = s.running && !retry
+        toggle.text = getString(if (retry) R.string.retry_relay else if (stops) R.string.stop_relay else R.string.start_relay)
+        toggle.setBackgroundResource(if (stops) R.drawable.bg_secondary else R.drawable.bg_primary)
+        toggle.setTextColor(getColor(if (stops) R.color.text else R.color.ink))
 
         node(R.id.hub_dot, R.id.hub_state, Labels.hubTone(s.hub), s.hubAddress?.takeIf { s.hub == Relay.Hub.ON } ?: Labels.hub(this, s))
         node(R.id.phone_dot, R.id.phone_state, if (s.running) Labels.Tone.GOOD else Labels.Tone.IDLE,

@@ -44,7 +44,10 @@ class RelayService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
-        if (!Relay.snapshot.running && !Relay.start()) {
+        // From the app (ACTION_START) the relay starts again with the saved settings, for example
+        // after a new password. After Android restarts the service (no intent) it only resumes.
+        val fresh = intent?.action == ACTION_START || !Relay.snapshot.running
+        if (fresh && !Relay.start()) {
             Relay.vault.putFlag(Vault.RELAY_ON, false)
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
@@ -63,9 +66,10 @@ class RelayService : Service() {
 
     companion object {
         const val ACTION_STOP = "io.github.pengveloper.sentinel.relay.STOP"
+        const val ACTION_START = "io.github.pengveloper.sentinel.relay.START"
 
         fun start(ctx: Context) {
-            ctx.startForegroundService(Intent(ctx, RelayService::class.java))
+            ctx.startForegroundService(Intent(ctx, RelayService::class.java).setAction(ACTION_START))
         }
 
         fun stop(ctx: Context) {

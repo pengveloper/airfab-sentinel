@@ -21,7 +21,7 @@ function save(obj) {
 // The flag does nothing on Windows or macOS.
 function secure() {
   if (safeStorage.isEncryptionAvailable()) return true;
-  if (process.platform === 'linux' && process.env.SENTINEL_DEV_BASIC_STORE === '1') { safeStorage.setUsePlainTextEncryption(true); return safeStorage.isEncryptionAvailable(); }
+  if (process.platform === 'linux' && process.env.WAVREL_DEV_BASIC_STORE === '1') { safeStorage.setUsePlainTextEncryption(true); return safeStorage.isEncryptionAvailable(); }
   return false;
 }
 

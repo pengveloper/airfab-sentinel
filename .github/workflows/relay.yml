@@ -43,7 +43,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: sentinel-relay-test-report
+          name: wavrel-relay-test-report
           path: relay/android/app/build/reports/tests/
           if-no-files-found: ignore
       - name: APK in the log, for handing over without the artifact store (manual runs only)
@@ -56,7 +56,7 @@ jobs:
           echo "APK-END"
       - uses: actions/upload-artifact@v7
         with:
-          name: sentinel-relay-debug-apk
+          name: wavrel-relay-debug-apk
           path: relay/android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
 
@@ -76,7 +76,7 @@ jobs:
         run: npm ci --omit=dev --ignore-scripts
       - uses: actions/download-artifact@v8
         with:
-          name: sentinel-relay-debug-apk
+          name: wavrel-relay-debug-apk
           path: apk
       - name: Enable KVM
         run: |
@@ -124,7 +124,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: sentinel-relay-emulator-screens
+          name: wavrel-relay-emulator-screens
           path: |
             relay-shots/
             hub.log

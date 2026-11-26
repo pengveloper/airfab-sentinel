@@ -1,18 +1,19 @@
 # Microsoft Store listing text
 
-Text prepared for the Partner Center submission of Sentinel Lab (Store ID `9NVR2WGRQB9X`).
-Paste as is or edit. Nothing here claims a hardware result.
+Text prepared for the Partner Center submission of Wavrel (Store ID `9NVR2WGRQB9X`).
+Paste as is or edit. Nothing here claims a hardware result. The first submission (2026-11-26) used
+the same text under the former name, Sentinel Lab.
 
 ## Properties
 
 - Category: Developer tools
-- Privacy policy: entered in Partner Center as hosted text (the wording of [PRIVACY.md](../PRIVACY.md) in English and Korean). The same text is live at `https://pengveloper.github.io/airfab-sentinel/privacy/` if a URL is preferred
-- Website: `https://pengveloper.github.io/airfab-sentinel/` (the simulator demo) or the repository address
+- Privacy policy: entered in Partner Center as hosted text (the wording of [PRIVACY.md](../PRIVACY.md) in English and Korean). The same text is live at `https://wavrel.com/privacy/` if a URL is preferred
+- Website: `https://wavrel.com/demo/` (the simulator demo) or the repository address
 - Support contact: the repository's issue tracker
 
 ## Why the package needs `runFullTrust`
 
-Sentinel Lab is a packaged desktop (Win32) application built with Electron. It runs a local
+Wavrel is a packaged desktop (Win32) application built with Electron. It runs a local
 MQTT broker on TCP port 1883 so that ESP32 boards on the user's own network can report to it,
 which requires the full-trust desktop runtime. It does not require administrator rights,
 does not install drivers or services, and does not start with Windows.
@@ -20,7 +21,7 @@ does not install drivers or services, and does not start with Windows.
 Partner Center limits the justification field under Submission options to 500 characters. The
 text entered there:
 
-> Sentinel Lab is a packaged desktop (Win32) app built with Electron, so it runs with runFullTrust. It hosts a local MQTT broker on TCP port 1883 that ESP32 boards on the user's own network connect to, and shows their readings. The broker needs a password and accepts only private network addresses. No admin rights, drivers, services or startup entries; no internet connection.
+> Wavrel is a packaged desktop (Win32) app built with Electron, so it runs with runFullTrust. It hosts a local MQTT broker on TCP port 1883 that ESP32 boards on the user's own network connect to, and shows their readings. The broker needs a password and accepts only private network addresses. No admin rights, drivers, services or startup entries; no internet connection.
 
 ## Notes for certification
 
@@ -41,9 +42,9 @@ Try open-source ESP32 sensing firmware side by side: a built-in MQTT hub, a 3D c
 
 **Description**
 
-Sentinel Lab is a desktop console for people who experiment with ESP32 boards.
+Wavrel is a desktop console for people who experiment with ESP32 boards.
 
-Open-source firmware can already sense motion from Wi-Fi signals, measure Bluetooth distance room by room, or stream a small camera. Each project comes with its own setup and its own screen. Sentinel Lab puts them on one bench: flash each board with its unmodified firmware, point it at this app, and watch everything in one place.
+Open-source firmware can already sense motion from Wi-Fi signals, measure Bluetooth distance room by room, or stream a small camera. Each project comes with its own setup and its own screen. Wavrel puts them on one bench: flash each board with its unmodified firmware, point it at this app, and watch everything in one place.
 
 What you get
 
@@ -92,9 +93,9 @@ Entered as above in both listings (19 words).
 
 **설명**
 
-Sentinel Lab은 ESP32 보드로 실험하는 사람을 위한 데스크톱 콘솔입니다.
+Wavrel은 ESP32 보드로 실험하는 사람을 위한 데스크톱 콘솔입니다.
 
-Wi‑Fi 신호로 움직임을 감지하거나, 방마다 블루투스 거리를 재거나, 작은 카메라 영상을 보내는 오픈소스 펌웨어는 이미 있습니다. 다만 프로젝트마다 설정과 화면이 따로입니다. Sentinel Lab은 이들을 한 시험대에 올립니다. 보드마다 원본 펌웨어를 굽고 이 앱 주소를 넣으면 한곳에서 볼 수 있습니다.
+Wi‑Fi 신호로 움직임을 감지하거나, 방마다 블루투스 거리를 재거나, 작은 카메라 영상을 보내는 오픈소스 펌웨어는 이미 있습니다. 다만 프로젝트마다 설정과 화면이 따로입니다. Wavrel은 이들을 한 시험대에 올립니다. 보드마다 원본 펌웨어를 굽고 이 앱 주소를 넣으면 한곳에서 볼 수 있습니다.
 
 들어 있는 것
 

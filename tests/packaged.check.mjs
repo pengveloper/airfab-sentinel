@@ -9,22 +9,22 @@ import { chromium } from 'playwright-core';
 
 const exe = process.argv[2];
 if (!exe || !fs.existsSync(exe)) { console.error('usage: node tests/packaged.check.mjs <path to executable>'); process.exit(2); }
-const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-pkg-'));
+const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'wavrel-pkg-'));
 const linux = process.platform === 'linux';
-const child = spawn(exe, [...(linux ? ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : []), '--remote-debugging-port=9339', `--user-data-dir=${userData}`], { env: { ...process.env, SENTINEL_MQTT_PORT: '18839' }, stdio: 'ignore' });
+const child = spawn(exe, [...(linux ? ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : []), '--remote-debugging-port=9339', `--user-data-dir=${userData}`], { env: { ...process.env, WAVREL_MQTT_PORT: '18839' }, stdio: 'ignore' });
 let code = 1;
 try {
   let browser = null;
   for (let i = 0; i < 40 && !browser; i++) { await new Promise(r => setTimeout(r, 750)); browser = await chromium.connectOverCDP('http://127.0.0.1:9339').catch(() => null); }
   if (!browser) throw new Error('the packaged app did not open a window');
   let page = null;
-  for (let i = 0; i < 40 && !page; i++) { page = browser.contexts().flatMap(c => c.pages()).find(p => p.url().startsWith('app://sentinel/')); if (!page) await new Promise(r => setTimeout(r, 500)); }
+  for (let i = 0; i < 40 && !page; i++) { page = browser.contexts().flatMap(c => c.pages()).find(p => p.url().startsWith('app://wavrel/')); if (!page) await new Promise(r => setTimeout(r, 500)); }
   if (!page) throw new Error('no app:// window found');
   await page.waitForFunction(() => window.Lab && window.Desk && window.Desk.status(), null, { timeout: 20_000 });
   const r = await page.evaluate(async () => ({ info: await window.desktop.info(), require: typeof window.require, status: await window.desktop.status(), setup: !document.querySelector('#setup').hidden }));
   console.log(JSON.stringify(r));
   if (!r.info.packaged || r.require !== 'undefined' || r.status.running || !r.setup) throw new Error('unexpected state in the packaged app');
-  console.log('ok   packaged app starts, loads app://sentinel, is isolated, and waits for a password before starting the broker');
+  console.log('ok   packaged app starts, loads app://wavrel, is isolated, and waits for a password before starting the broker');
   await browser.close().catch(() => {}); code = 0;
 } catch (e) { console.error('FAIL', e.message); }
 // Windows에서는 창 프로세스들이 파일을 잠시 더 붙잡고 있어서, 프로세스 트리를 끝내고 정리는 실패해도 넘어갑니다.

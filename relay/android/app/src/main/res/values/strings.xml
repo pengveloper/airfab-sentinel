@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Sentinel Relay</string>
-    <string name="lede">Carries alerts from Sentinel Lab on your PC to this phone and your Rokid glasses.</string>
+    <string name="app_name">Wavrel Relay</string>
+    <string name="lede">Carries alerts from Wavrel on your PC to this phone and your Rokid glasses.</string>
 
     <string name="state_running">Running</string>
     <string name="state_stopped">Stopped</string>
@@ -55,7 +55,7 @@
     <string name="label_password">Broker password</string>
     <string name="hint_password">From the Built-in broker panel</string>
     <string name="hint_saved">Saved. Type to replace it</string>
-    <string name="help_hub">In Sentinel Lab on your PC, press Connect. The Built-in broker panel shows the Host address and the password. The phone and the PC need to be on the same Wi-Fi.</string>
+    <string name="help_hub">In Wavrel on your PC, press Connect. The Built-in broker panel shows the Host address and the password. The phone and the PC need to be on the same Wi-Fi.</string>
     <string name="addr_empty">Enter the Host address from the Built-in broker panel.</string>
     <string name="addr_bad_host">That isn\'t an address. Use the Host numbers from the Built-in broker panel, such as 192.168.0.12.</string>
     <string name="addr_bad_port">The port must be a number from 1 to 65535. The broker uses 1883 unless you changed it.</string>
@@ -82,7 +82,7 @@
     <string name="test_glasses">Show a test on the glasses</string>
     <string name="test_not_connected">Connect the glasses first.</string>
     <string name="test_failed">The glasses didn\'t accept the screen.</string>
-    <string name="test_title">Sentinel Relay test</string>
+    <string name="test_title">Wavrel Relay test</string>
     <string name="test_body">If you can read this, alerts will show here.</string>
     <string name="phone_alerts">Also notify on this phone</string>
 

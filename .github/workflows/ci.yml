@@ -47,7 +47,7 @@ jobs:
           APPX_PUBLISHER: ${{ vars.APPX_PUBLISHER }}
           APPX_PUBLISHER_DISPLAY_NAME: ${{ vars.APPX_PUBLISHER_DISPLAY_NAME }}
       - name: Packaged app starts
-        run: node tests/packaged.check.mjs "dist/win-unpacked/Sentinel Lab.exe"
+        run: node tests/packaged.check.mjs "dist/win-unpacked/Wavrel.exe"
       - name: Microsoft Defender scan of the build output
         shell: pwsh
         run: |
@@ -71,7 +71,7 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: sentinel-lab-windows
+          name: wavrel-windows
           path: |
             dist/*.appx
             dist/*.zip

@@ -1,10 +1,13 @@
-# Sentinel Lab
+# Wavrel
 
 A desktop app for trying open-source ESP32 sensing firmware side by side. It runs an MQTT
 hub for your boards, shows what they report in one console, checks detections against
 ground truth, and keeps simulated data and real measurements strictly apart.
 
-**Try it in the browser:** [pengveloper.github.io/airfab-sentinel](https://pengveloper.github.io/airfab-sentinel/) (the built-in simulator; no board or install needed)
+Wavrel was called Sentinel Lab until November 2026. The name changed to avoid clashing with an
+existing security brand; nothing else changed.
+
+**Try it in the browser:** [wavrel.com/demo](https://wavrel.com/demo/) (the built-in simulator; no board or install needed)
 
 한국어 문서: [README.ko.md](README.ko.md)
 
@@ -21,7 +24,7 @@ claimed in this repository yet. See [Status](#status).
 - **Validation, not vibes.** A session records when a person really crossed the link and matches that against the firmware's detections: hits, misses, false detections, recall. Ground truth comes from a held key, a PIR sensor, or (demo only) the simulator.
 - **Evidence you can hand over.** Export the message log, replay it later, and generate a standalone HTML report with the score curve of every session.
 - **English and Korean.** The interface follows the system language and switches with one button. A test fails the build if any sentence lacks a translation.
-- **Alerts for glasses and phones.** Rules and validation sessions publish one short sentence at a time on a single topic that only the app can write to, so a wearable app needs nothing but an MQTT subscription. A full-screen black page previews what the glasses would show. [Sentinel Relay](relay/README.md), an Android app, receives them as phone notifications and puts them on Rokid glasses. It is built, unit tested and run in an emulator against the app's broker in CI; it has not run on real glasses yet. Format: [docs/NOTIFY.md](docs/NOTIFY.md).
+- **Alerts for glasses and phones.** Rules and validation sessions publish one short sentence at a time on a single topic that only the app can write to, so a wearable app needs nothing but an MQTT subscription. A full-screen black page previews what the glasses would show. [Wavrel Relay](relay/README.md), an Android app, receives them as phone notifications and puts them on Rokid glasses. It is built, unit tested and run in an emulator against the app's broker in CI; it has not run on real glasses yet. Format: [docs/NOTIFY.md](docs/NOTIFY.md).
 
 | First run | Hub panel |
 |---|---|
@@ -45,7 +48,7 @@ flowchart LR
     P["PIR on an ESPresense input<br/>ground truth"]
     E["ESP32-CAM · Tasmota<br/>MJPEG stream"]
   end
-  subgraph APP["Sentinel Lab (desktop)"]
+  subgraph APP["Wavrel (desktop)"]
     H["Main process<br/>MQTT hub: auth, limits, private addresses only"]
     W["Sandboxed window<br/>console, 3D, validation, reports"]
     H -- "11 validated IPC calls" --> W
@@ -90,10 +93,10 @@ The full comparison of channels, the Store steps and the antivirus notes are in
 
 ## Demo and privacy page
 
-The `pages` workflow publishes the simulator demo and the privacy policy to GitHub Pages on every
-push to `main`: [the demo](https://pengveloper.github.io/airfab-sentinel/) and
-[the privacy policy](https://pengveloper.github.io/airfab-sentinel/privacy/). In the browser the demo runs
-on the simulator only; connecting to boards needs the desktop app.
+[The demo](https://wavrel.com/demo/) and [the privacy policy](https://wavrel.com/privacy/) are
+on wavrel.com. In the browser the demo runs on the simulator only; connecting to boards needs the
+desktop app. The old GitHub Pages address still works: the `pages` workflow now publishes only
+pages that forward each visitor to the same page on wavrel.com.
 
 ## Run it
 

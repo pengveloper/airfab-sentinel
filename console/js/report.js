@@ -1,4 +1,4 @@
-/* Sentinel Lab Console: 검증 리포트. 끝낸 세션을 혼자 열리는 HTML 한 장으로 만듭니다. 바깥으로 나가는 요청이 없습니다. */
+/* Wavrel Console: 검증 리포트. 끝낸 세션을 혼자 열리는 HTML 한 장으로 만듭니다. 바깥으로 나가는 요청이 없습니다. */
 window.Report=(()=>{'use strict';
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const p2=n=>String(n).padStart(2,'0');
@@ -27,7 +27,7 @@ function build(){const S=Lab.S,cfg=Lab.cfg,ss=S.sessions.slice().reverse(),anyRe
 <p class="meta">${L`${dt(s.start)} 시작, ${Math.round(s.dur)}초 · 정답 출처: ${truthKo(s.truth||'manual')} · ${real(s)?L('<b class="ok">브로커 수신</b>'):'<b class="sim">SIMULATED</b>'}${s.trace&&s.trace.thr!=null?L` · 임계값 ${s.trace.thr}`:''}`}</p>
 ${chart(s)}
 <table><thead><tr><th>${L`정답 구간`}</th><th>${L`감지함`}</th><th>${L`놓침`}</th><th>${L`오탐`}</th><th>${L`재현율`}</th></tr></thead><tbody><tr><td>${s.labels}</td><td>${s.hits}</td><td>${s.miss}</td><td>${s.falses}</td><td>${s.recall==null?'—':Math.round(s.recall*100)+'%'}</td></tr></tbody></table></section>`).join('');
-  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${L`Sentinel Lab 검증 리포트`}</title><style>
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${L`Wavrel 검증 리포트`}</title><style>
 :root{--bg:#05080d;--fg:#e8eef6;--mu:#93a1b3;--ln:#1c2a3c;--gold:#ecb955;--blue:#9cc6ff;--vio:#b9a8ff;--ok:#5fd3a2;--warn:#ffb057;--pn:#0a1019}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 "IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;word-break:keep-all}
 main{max-width:1000px;margin:0 auto;padding:48px 24px 72px}
@@ -49,7 +49,7 @@ table{border-collapse:collapse;width:100%;font-size:14.5px;margin-top:6px}th,td{
 ul{padding-left:1.2em;margin:0;max-width:44em}li{margin:4px 0}.none{color:var(--mu)}
 @media print{:root{--bg:#fff;--fg:#111;--mu:#555;--ln:#ccc;--pn:#fff;--gold:#9a6a00;--blue:#1f5fbf;--vio:#5b3fc4;--ok:#0b7a4b;--warn:#b35a00}main{padding:0}.ev{fill:rgba(154,106,0,.15)}}
 </style></head><body><main>
-<h1>${L`Sentinel Lab 검증 리포트`}</h1>
+<h1>${L`Wavrel 검증 리포트`}</h1>
 <p class="lead">${L`Wi‑Fi 신호(CSI)만으로 움직임을 감지한 결과를, 따로 기록한 정답 구간과 맞춰 본 기록입니다. ${dt(Lab.now())} 작성.`}</p>
 ${banner}
 <h2>${L`요약`}</h2>

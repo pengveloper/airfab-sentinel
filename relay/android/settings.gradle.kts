@@ -18,5 +18,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "sentinel-relay"
+rootProject.name = "wavrel-relay"
 include(":app")

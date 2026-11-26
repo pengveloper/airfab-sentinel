@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The Sentinel Lab console palette (console/css/app.css), plus the lens phosphor. -->
+<!-- The Wavrel console palette (console/css/app.css), plus the lens phosphor. -->
 <resources>
     <color name="ink">#05080D</color>
     <color name="surface">#0A1018</color>

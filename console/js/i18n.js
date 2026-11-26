@@ -3,7 +3,7 @@
    L`노드 ${n}대` 처럼 쓰면 열쇠는 "노드 {0}대"가 되고, 영어 문장에서는 {0}의 자리를 옮길 수 있습니다.
    언어는 주소의 ?lang=, 저장해 둔 선택, 기기 언어 순으로 정합니다. 바꾸면 화면을 다시 엽니다. */
 (function(g){'use strict';
-const EN=g.I18N_EN||{},HANGUL=/[ㄱ-ㆎ가-힣]/,KEY='sentinel-lab-lang',ATTRS=['title','aria-label','placeholder','alt','data-title'];
+const EN=g.I18N_EN||{},HANGUL=/[ㄱ-ㆎ가-힣]/,KEY='wavrel-lang',ATTRS=['title','aria-label','placeholder','alt','data-title'];
 const ok=x=>x==='ko'||x==='en';
 let saved=null,asked=null;
 try{saved=g.localStorage.getItem(KEY);}catch(e){}

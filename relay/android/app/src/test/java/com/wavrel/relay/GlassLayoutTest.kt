@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import com.google.gson.JsonParser
 import org.junit.Assert.assertEquals
@@ -32,7 +32,7 @@ class GlassLayoutTest {
     private interface Cb
     private class CbImpl : Cb
 
-    private val v = ConnectArgs.Values(Ctx(), "uuid", "mac", "Sentinel Relay", CbImpl(), byteArrayOf(1, 2), "secret")
+    private val v = ConnectArgs.Values(Ctx(), "uuid", "mac", "Wavrel Relay", CbImpl(), byteArrayOf(1, 2), "secret")
     private fun build(vararg types: Class<*>) = ConnectArgs.build(types.toList(), Ctx::class.java, Cb::class.java, v)?.toList()
 
     @Test fun `T-REL-008 fills each known connectBluetooth shape`() {
@@ -40,7 +40,7 @@ class GlassLayoutTest {
         val b = ByteArray::class.java
         assertEquals(listOf(v.context, "uuid", "mac", v.callback), build(Ctx::class.java, s, s, Cb::class.java))
         assertEquals(listOf(v.context, "uuid", "mac", v.callback, v.licence, "secret"), build(Ctx::class.java, s, s, Cb::class.java, b, s))
-        assertEquals(listOf(v.context, "uuid", "mac", "Sentinel Relay", v.callback, v.licence, "secret"), build(Ctx::class.java, s, s, s, Cb::class.java, b, s))
+        assertEquals(listOf(v.context, "uuid", "mac", "Wavrel Relay", v.callback, v.licence, "secret"), build(Ctx::class.java, s, s, s, Cb::class.java, b, s))
         // Shapes it does not understand are refused rather than guessed.
         assertEquals(null, build(Ctx::class.java, s, Cb::class.java))
         assertEquals(null, build(Ctx::class.java, s, s, Cb::class.java, Int::class.java))

@@ -1,6 +1,6 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
-import io.github.pengveloper.sentinel.relay.HubAddress.Problem
+import com.wavrel.relay.HubAddress.Problem
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

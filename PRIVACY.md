@@ -2,7 +2,7 @@
 
 The published version of this policy, in Korean and English, is the page in `web/privacy/`.
 
-Sentinel Lab does not collect, transmit or sell any data.
+Wavrel does not collect, transmit or sell any data.
 
 - The app makes no connection to the internet. It has no account, analytics, crash reporting or advertising.
 - Messages from your own boards on your local network are processed in memory on your PC. They can include Bluetooth device names and identifiers seen by your boards, and a camera stream from your own camera. This data stays on your PC.

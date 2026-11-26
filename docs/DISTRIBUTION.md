@@ -1,6 +1,6 @@
 # Distribution and Windows warnings
 
-The goal is that someone can install Sentinel Lab without Windows calling it an unknown
+The goal is that someone can install Wavrel without Windows calling it an unknown
 publisher and without an antivirus product stopping it. Design alone cannot guarantee that:
 Windows SmartScreen decides by signature and reputation, not by what the code does. This page
 records which channel meets the goal, which do not yet, and what is still to do.
@@ -27,7 +27,7 @@ Source for the comparison: Microsoft Learn, "Code signing options for Windows ap
 
 What the project already does:
 
-- `npm run dist` produces `SentinelLab-<version>-store.appx` on Windows. CI builds it on every push.
+- `npm run dist` produces `Wavrel-<version>-store.appx` on Windows. CI builds it on every push.
 - The package declares only `runFullTrust` (required for a packaged desktop app) and `privateNetworkClientServer` (the hub listens on the LAN).
 - The app does not update itself, so Store delivery is the single update path.
 
@@ -36,16 +36,17 @@ Progress:
 | Step | State |
 |---|---|
 | Individual developer account | Registered 2026-11-24 |
-| Name reserved | "Sentinel Lab", Store ID `9NVR2WGRQB9X` (a reservation lapses if nothing is submitted within three months) |
-| Package identity | `Pengveloper.SentinelLab`, set in `desktop/builder.config.js`; CI builds the package with it |
+| Name reserved | "Sentinel Lab", Store ID `9NVR2WGRQB9X` (a reservation lapses if nothing is submitted within three months). "Wavrel" is to be reserved on the same product before the next submission |
+| Package identity | `Pengveloper.SentinelLab`, set in `desktop/builder.config.js`; CI builds the package with it. The identity name stays the same after the rename, only the display name changes |
 | Submission draft: pricing and availability | Done: free, all markets, public |
 | Submission draft: properties | Done: Developer tools; declares that the app handles personal information (device names and identifiers from the user's own boards, processed locally); privacy policy entered as text hosted by Microsoft; OneDrive backup of app data turned off |
 | Submission draft: age rating | Done: all ages in every system |
 | Submission draft: submission options | Done: published only when "Publish now" is pressed after certification; reviewer notes entered under Additional testing information; runFullTrust justification entered |
 | Submission draft: package | Done: `SentinelLab-0.3.0-store.appx`, validated (x64, Windows desktop only) |
-| Store listing | Done for Korean and English from [STORE_LISTING.md](STORE_LISTING.md): text, five screenshots each, seven search keywords |
+| Store listing | Done for Korean and English, under the name Sentinel Lab: text, five screenshots each, seven search keywords |
 | Submitted for certification | 2026-11-26 |
 | Certification | Waiting for Microsoft |
+| Rename to Wavrel | Code and [STORE_LISTING.md](STORE_LISTING.md) renamed. Next: reserve "Wavrel" on the product, then a submission with the `Wavrel-<version>-store.appx` package and the renamed listing. The first submission is not to be published under the old name |
 | Publish and first Store install | Not done. Because publishing is manual, the account owner presses "Publish now" after certification passes |
 
 If certification fails, Partner Center gives the reason in the submission's certification
@@ -53,8 +54,7 @@ report; the fix goes into a new submission.
 
 Partner Center accepts the privacy policy either as a URL or as text that Microsoft hosts. The
 draft uses hosted text. The same policy is published at
-https://pengveloper.github.io/airfab-sentinel/privacy/ with the simulator demo, by the `pages`
-workflow on every push to `main`.
+https://wavrel.com/privacy/, next to the simulator demo at https://wavrel.com/demo/.
 
 ## Antivirus
 
@@ -71,7 +71,7 @@ The Store package has the strongest position: Microsoft scans it during certific
 ## Verifying a download
 
 ```powershell
-Get-FileHash .\SentinelLab-0.3.0-win-x64.zip -Algorithm SHA256
+Get-FileHash .\Wavrel-0.3.0-win-x64.zip -Algorithm SHA256
 ```
 
 Compare the result with `SHA256SUMS.txt` from the same CI run or release.

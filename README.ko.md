@@ -1,8 +1,10 @@
-# Sentinel Lab
+# Wavrel
 
-**브라우저에서 바로 보기:** [pengveloper.github.io/airfab-sentinel](https://pengveloper.github.io/airfab-sentinel/?lang=ko) (내장 시뮬레이터, 보드나 설치 없이)
+**브라우저에서 바로 보기:** [wavrel.com/demo](https://wavrel.com/demo/?lang=ko) (내장 시뮬레이터, 보드나 설치 없이)
 
 English: [README.md](README.md)
+
+2026년 11월까지 이름이 Sentinel Lab이었습니다. 이미 있는 보안 브랜드와 겹치지 않도록 이름만 바꿨고, 기능은 그대로입니다.
 
 오픈소스 ESP32 감지 펌웨어를 보드별로 올려 놓고 한 화면에서 시험하는 데스크톱 앱입니다.
 앱이 보드용 MQTT 허브를 직접 띄우고, 보드가 보낸 값을 한 콘솔에 모으고, 감지 결과를 정답과
@@ -21,7 +23,7 @@ English: [README.md](README.md)
 - **느낌이 아니라 검증.** 세션은 사람이 실제로 링크를 지나간 시간을 기록해 펌웨어의 감지와 맞춰 봅니다. 감지, 놓침, 오탐, 재현율이 나옵니다. 정답은 키를 누르거나, PIR 센서로, 데모에서는 시뮬레이터로 기록합니다.
 - **넘겨줄 수 있는 증거.** 메시지 기록을 내려받고, 나중에 재생하고, 세션별 점수 곡선이 든 HTML 리포트를 만듭니다.
 - **한국어와 영어.** 화면은 기기 언어를 따르고 버튼 하나로 바꿉니다. 번역이 빠진 문장이 하나라도 있으면 시험이 실패합니다.
-- **안경·휴대폰 알림.** 규칙과 검증 세션이 짧은 문장을 토픽 하나로 내보냅니다. 이 토픽에는 앱만 쓸 수 있어서, 받는 쪽 앱은 MQTT 구독만 하면 됩니다. 검은 바탕의 전체 화면에서 안경에 뜰 모습을 미리 봅니다. 안드로이드 앱 [Sentinel Relay](relay/README.ko.md)가 이 알림을 휴대폰 알림으로 받고 로키드 안경에 띄웁니다. CI에서 빌드와 단위 시험, 에뮬레이터에서 앱 브로커와 실제로 주고받는 시험까지 하지만 실제 안경에서는 아직 확인하지 않았습니다. 형식: [docs/NOTIFY.md](docs/NOTIFY.md).
+- **안경·휴대폰 알림.** 규칙과 검증 세션이 짧은 문장을 토픽 하나로 내보냅니다. 이 토픽에는 앱만 쓸 수 있어서, 받는 쪽 앱은 MQTT 구독만 하면 됩니다. 검은 바탕의 전체 화면에서 안경에 뜰 모습을 미리 봅니다. 안드로이드 앱 [Wavrel Relay](relay/README.ko.md)가 이 알림을 휴대폰 알림으로 받고 로키드 안경에 띄웁니다. CI에서 빌드와 단위 시험, 에뮬레이터에서 앱 브로커와 실제로 주고받는 시험까지 하지만 실제 안경에서는 아직 확인하지 않았습니다. 형식: [docs/NOTIFY.md](docs/NOTIFY.md).
 
 | 첫 실행 | 허브 정보 |
 |---|---|
@@ -44,9 +46,9 @@ Node.js 22가 필요합니다. 첫 실행에서 허브 비밀번호를 정한 �
 
 ## 데모와 개인정보 처리방침 페이지
 
-`main`에 올라갈 때마다 `pages` 워크플로가 시뮬레이터 데모와 개인정보 처리방침을 GitHub Pages에 올립니다:
-[데모](https://pengveloper.github.io/airfab-sentinel/?lang=ko), [개인정보 처리방침](https://pengveloper.github.io/airfab-sentinel/privacy/).
+[데모](https://wavrel.com/demo/?lang=ko)와 [개인정보 처리방침](https://wavrel.com/privacy/)은 wavrel.com에 있습니다.
 브라우저의 데모는 시뮬레이터로만 돌아가고, 보드에 연결하려면 데스크톱 앱이 필요합니다.
+예전 GitHub Pages 주소도 그대로 열립니다. `pages` 워크플로는 이제 같은 페이지의 wavrel.com 주소로 넘겨 주는 페이지만 올립니다.
 
 ## 실측 순서
 

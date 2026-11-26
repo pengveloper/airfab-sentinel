@@ -1,9 +1,9 @@
-/* Sentinel Lab Console: 데이터 모델, 버스, 위치 추정, 자동화, 검증 세션 */
+/* Wavrel Console: 데이터 모델, 버스, 위치 추정, 자동화, 검증 세션 */
 window.Lab=(()=>{'use strict';
 const now=()=>Date.now(),clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 // 식별자 가림: 16자리 기기 ID와 MAC 꼴은 앞 4자만 남깁니다.
 const mask=s=>String(s).replace(/\b[0-9a-f]{16}\b/gi,m=>m.slice(0,4)+'…').replace(/\b(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}\b/gi,m=>m.slice(0,5)+':…').replace(/\b[0-9a-f]{12}\b/gi,m=>m.slice(0,4)+'…');
-const LSK='sentinel-lab-console-v1';
+const LSK='wavrel-console-v1';
 const SLOTS={csi:[[1,6.1],[5,6.3],[1,3.5]],ble:[[0.9,0.9],[5.6,6.2],[9.1,5.6],[9.1,2.6],[3,3.5]]};
 const ROOM_KO={office:L('작업실'),living:L('거실'),entry:L('현관'),bedroom:L('침실'),kitchen:L('주방')};
 const DESK=!!window.desktop; // 데스크톱 앱 안에서는 내장 브로커와 창 사이의 통로를 씁니다
@@ -99,7 +99,7 @@ function connect(url,user,pass,cb){if(!canLive){cb(L('이 페이지에서는 브
   const desk=DESK&&url==='desktop';
   if(!desk&&typeof mqtt==='undefined'){cb(L('vendor/mqtt.min.js를 불러오지 못했습니다.'));return;}
   disconnect();cfg.broker={url,user};save();let done=false;
-  client=desk?deskClient():mqtt.connect(url,{username:user,password:pass,reconnectPeriod:3000,connectTimeout:6000,clientId:'sentinel-console-'+Math.random().toString(16).slice(2,8)});
+  client=desk?deskClient():mqtt.connect(url,{username:user,password:pass,reconnectPeriod:3000,connectTimeout:6000,clientId:'wavrel-console-'+Math.random().toString(16).slice(2,8)});
   client.on('connect',()=>{if(window.Sim)Sim.stop();if(S.source!=='live'){clearState();unpark();}S.source='live';if(!cfg.bring)cfg.bring={};if(!cfg.bring.broker){cfg.bring.broker=now();save();}
     client.subscribe(['espectre/v1/devices/+/motion','espectre/v1/devices/+/sensing','espectre/v1/devices/+/health','espresense/devices/#','espresense/rooms/+/+','lab/sim/active',cfg.led.topic]);
     feed(L('브로커에 연결됨'),'sys');if(!done){done=true;cb(null);}});
@@ -177,7 +177,7 @@ function sessionStop(){const ss=S.session;if(!ss||ss.end)return;label(false);ss.
 /* ---- 기록 재생: 내려받은 JSONL을 같은 수신 경로로 다시 흘립니다 ---- */
 let rp=null;
 function stopReplay(){if(rp){clearTimeout(rp.timer);rp=null;if(S.source==='replay')S.source='idle';}}
-function replay(text,speed,cb){const rows=[];let head=null;for(const ln of String(text).split('\n')){if(!ln.trim())continue;let o;try{o=JSON.parse(ln);}catch(e){continue;}if(o.kind==='sentinel-lab-log'||o.kind==='sentinel-lab-p1-log'){head=o;continue;}if(o.topic&&o.t&&typeof o.payload==='string'){const t=Date.parse(o.t);if(!isNaN(t))rows.push([t,o.topic,o.payload]);}}
+function replay(text,speed,cb){const rows=[];let head=null;for(const ln of String(text).split('\n')){if(!ln.trim())continue;let o;try{o=JSON.parse(ln);}catch(e){continue;}if(/^(wavrel|sentinel-lab)(-p1)?-log$/.test(o.kind)){head=o;continue;}if(o.topic&&o.t&&typeof o.payload==='string'){const t=Date.parse(o.t);if(!isNaN(t))rows.push([t,o.topic,o.payload]);}}
   if(!rows.length){cb(L('재생할 메시지를 찾지 못했습니다. 콘솔에서 내려받은 JSONL 파일인지 확인하세요.'));return;}
   disconnect();if(window.Sim)Sim.stop();clearState();unpark();S.source='replay';S.replayInfo={total:rows.length,done:0,origin:head?head.data_source:'unknown'};S.simEver=!head||head.data_source!=='broker';
   rp={i:0,timer:null};const sp=speed||1,step=()=>{if(!rp)return;const r=rows[rp.i++];ingest(r[1],r[2],'replay');S.replayInfo.done=rp.i;if(rp.i>=rows.length){feed(L('재생 끝'),'sys');rp=null;return;}rp.timer=setTimeout(step,Math.min(2000,Math.max(0,(rows[rp.i][0]-r[0])/sp)));};
@@ -187,7 +187,7 @@ function report(){const rows=[L('| 시작 | 노드 | 길이 | 정답 구간 | �
   return rows.join('\n');}
 function exportLog(){const o=S.log.length?S.log[0].src:S.source==='live'?'live':S.source==='replay'?'replay':'sim'; // 지금 화면이 아니라 기록에 실제로 담긴 출처를 적습니다
   const sim=o!=='live'||S.simEver||S.simMixed||S.log.some(l=>l.src!==o);if(!sim)mark('export');
-  const head={kind:'sentinel-lab-log',exported_at:new Date().toISOString(),data_source:o==='live'?(sim?'broker_with_simulator':'broker'):o==='replay'?'replay':'built_in_simulator',verification:sim?'SIMULATED':'OPERATOR_TO_CONFIRM',messages:S.log.length,
+  const head={kind:'wavrel-log',exported_at:new Date().toISOString(),data_source:o==='live'?(sim?'broker_with_simulator':'broker'):o==='replay'?'replay':'built_in_simulator',verification:sim?'SIMULATED':'OPERATOR_TO_CONFIRM',messages:S.log.length,
     sessions:S.sessions.map(x=>Object.assign({},x,{node:mask(x.node)})),note:L('식별자는 앞 4자만 남기고 가렸습니다.')};
   return JSON.stringify(head)+'\n'+S.log.map(l=>JSON.stringify(l)).join('\n')+'\n';}
 return{S,get cfg(){return cfg;},canLive,now,clamp,mask,save,reset,node,roomName,ingest,publish,connect,disconnect,demo,on:f=>subs.push(f),feed,

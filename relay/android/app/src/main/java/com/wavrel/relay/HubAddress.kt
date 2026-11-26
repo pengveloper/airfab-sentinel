@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 /**
  * Where the PC hub listens, as typed by the user: `192.168.0.12`, `192.168.0.12:1883`,

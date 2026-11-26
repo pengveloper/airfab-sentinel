@@ -1,4 +1,4 @@
-"""CI only: drives Sentinel Relay in an Android emulator with adb and uiautomator.
+"""CI only: drives Wavrel Relay in an Android emulator with adb and uiautomator.
 
 Checks the path from the desktop app's broker to the phone: a wrong password is reported and
 not retried, the right one connects, and a published alert reaches the screen, the recent list
@@ -6,7 +6,7 @@ and a phone notification. Saves screenshots for review. Exits non-zero on the fi
 """
 import os, re, subprocess, sys, time, xml.etree.ElementTree as ET
 
-PKG = "io.github.pengveloper.sentinel.relay"
+PKG = "com.wavrel.relay"
 OUT = sys.argv[1] if len(sys.argv) > 1 else "shots"
 TRIG = sys.argv[2] if len(sys.argv) > 2 else "/tmp/relay-ci"
 PASSWORD = os.environ["RELAY_CI_PASSWORD"]

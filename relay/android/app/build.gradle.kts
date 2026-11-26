@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "io.github.pengveloper.sentinel.relay"
+    namespace = "com.wavrel.relay"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "io.github.pengveloper.sentinel.relay"
+        applicationId = "com.wavrel.relay"
         minSdk = 28 // the Rokid SDK needs Android 9 or later
         targetSdk = 35
         versionCode = 1

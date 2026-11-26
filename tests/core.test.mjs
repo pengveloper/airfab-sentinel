@@ -17,7 +17,7 @@ function boot(saved, language = 'ko-KR') {
     static now() { return clock.t; }
   }
   const store = new Map();
-  if (saved) store.set('sentinel-lab-console-v1', JSON.stringify(saved)); // 예전에 저장해 둔 설정에서 시작하는 경우
+  if (saved) store.set('wavrel-console-v1', JSON.stringify(saved)); // 예전에 저장해 둔 설정에서 시작하는 경우
   const sent = [];
   const handlers = {};
   const client = {

@@ -54,7 +54,7 @@ const rp=$('#rp');let rpHtml='',rpBack=null;
 const rpClose=()=>{rp.hidden=true;$('#rp-frame').srcdoc='';if(rpBack)rpBack.focus();};
 $('#ev-html').addEventListener('click',e=>{rpBack=e.currentTarget;rpHtml=Report.build();$('#rp-frame').srcdoc=rpHtml;$('#rp-note').textContent=S.sessions.length?L`세션 ${S.sessions.length}개`:L('끝낸 세션이 없습니다');rp.hidden=false;$('#rp-close').focus();});
 $('#rp-close').addEventListener('click',rpClose);window.addEventListener('keydown',e=>{if(e.key==='Escape'&&!rp.hidden)rpClose();});
-$('#rp-save').addEventListener('click',()=>{try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rpHtml],{type:'text/html'}));a.download='sentinel-lab-report-'+new Date().toISOString().slice(0,10)+'.html';document.body.appendChild(a);a.click();a.remove();}catch(err){$('#rp-note').textContent=L('이 페이지에서는 내려받기가 막혀 있습니다. PC에 내려받은 콘솔에서 하세요.');}});
+$('#rp-save').addEventListener('click',()=>{try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rpHtml],{type:'text/html'}));a.download='wavrel-report-'+new Date().toISOString().slice(0,10)+'.html';document.body.appendChild(a);a.click();a.remove();}catch(err){$('#rp-note').textContent=L('이 페이지에서는 내려받기가 막혀 있습니다. PC에 내려받은 콘솔에서 하세요.');}});
 $('#c-demo').addEventListener('click',()=>{Lab.demo();closeDrawer();});
 $('#conn-form').addEventListener('submit',e=>{e.preventDefault();note.className='muted';note.textContent=L('연결하는 중입니다.');
   Lab.connect($('#c-url').value.trim(),$('#c-user').value,$('#c-pass').value,err=>{if(err){note.className='muted err';note.textContent=err;if(S.source!=='live'&&S.source!=='demo')Lab.demo();}else{$('#c-pass').value='';closeDrawer();}});});

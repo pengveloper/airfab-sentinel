@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        style="@style/Text.Section"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:accessibilityHeading="true"
+        android:text="@string/section_hub" />
+
+    <TextView
+        style="@style/Text.Label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/address"
+        android:text="@string/label_address" />
+
+    <EditText
+        android:id="@+id/address"
+        style="@style/Field"
+        android:hint="@string/hint_address"
+        android:imeOptions="actionNext"
+        android:inputType="textUri" />
+
+    <TextView
+        style="@style/Text.Label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/password"
+        android:text="@string/label_password" />
+
+    <EditText
+        android:id="@+id/password"
+        style="@style/Field"
+        android:imeOptions="actionDone"
+        android:inputType="textPassword" />
+
+    <TextView
+        style="@style/Text.Help"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/help_hub" />
+
+    <TextView
+        style="@style/Text.Section"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:accessibilityHeading="true"
+        android:text="@string/section_glasses" />
+
+    <TextView
+        android:id="@+id/glass_line"
+        style="@style/Text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:accessibilityLiveRegion="polite" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/find"
+            style="@style/Action.Secondary"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:text="@string/find_glasses" />
+
+        <Button
+            android:id="@+id/glass_action"
+            style="@style/Action.Secondary"
+            android:layout_width="0dp"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/Text.Label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:labelFor="@+id/secret"
+        android:text="@string/label_secret" />
+
+    <EditText
+        android:id="@+id/secret"
+        style="@style/Field"
+        android:imeOptions="actionDone"
+        android:inputType="textPassword" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/licence"
+            style="@style/Action.Secondary"
+            android:layout_width="wrap_content"
+            android:text="@string/choose_licence" />
+
+        <TextView
+            android:id="@+id/licence_state"
+            style="@style/Text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:textColor="@color/muted"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/Text.Help"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/help_licence" />
+
+    <Button
+        android:id="@+id/test"
+        style="@style/Action.Secondary"
+        android:layout_width="match_parent"
+        android:layout_marginTop="16dp"
+        android:text="@string/test_glasses" />
+
+    <Switch
+        android:id="@+id/phone_alerts"
+        style="@style/Text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="18dp"
+        android:minHeight="48dp"
+        android:text="@string/phone_alerts" />
+</LinearLayout>

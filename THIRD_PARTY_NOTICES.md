@@ -12,6 +12,21 @@
 
 The typefaces are not committed to this repository. `npm install` copies them from the Fontsource packages, and the desktop build bundles them, so the app never requests fonts over the network. Opened straight from a clone without `npm install`, the console falls back to system fonts.
 
+## Used by the Android relay (`relay/android`)
+
+Not stored in this repository. Gradle downloads them when the APK is built, and they are packed
+into the APK.
+
+| Component | Version | License |
+|---|---|---|
+| Eclipse Paho MQTT client for Java | 1.2.5 | Eclipse Public License 2.0 or Eclipse Distribution License 1.0 (BSD-3-Clause), Copyright Eclipse Foundation and contributors |
+| Gson | 2.10.1 | Apache License 2.0, Copyright Google LLC |
+| Retrofit, converter-gson | 2.9.0 | Apache License 2.0, Copyright Square, Inc. |
+| OkHttp, logging-interceptor | 4.9.3, 4.9.1 | Apache License 2.0, Copyright Square, Inc. |
+| Okio | 2.8.0 | Apache License 2.0, Copyright Square, Inc. |
+| Kotlin standard library | 2.1.0 | Apache License 2.0, Copyright JetBrains s.r.o. and Kotlin contributors |
+| Rokid CXR-M SDK (`com.rokid.cxr:client-m`) | 1.0.8 | Rokid's terms. Proprietary, from Rokid's Maven repository (`maven.rokid.com`). Not covered by this project's MIT license |
+
 ### three.js (MIT)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software

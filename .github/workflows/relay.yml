@@ -1,0 +1,131 @@
+name: relay
+on:
+  push:
+    paths:
+      - 'relay/**'
+      - '.github/workflows/relay.yml'
+  pull_request:
+    paths:
+      - 'relay/**'
+      - '.github/workflows/relay.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: relay-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Phone relay (Android)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: relay/android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: 8.14.3
+      - name: Rokid SDK versions on offer
+        run: |
+          curl -fsS --max-time 30 https://maven.rokid.com/repository/maven-public/com/rokid/cxr/client-m/maven-metadata.xml \
+            | grep -o '<version>[^<]*' | sed 's/<version>//' | tail -n 15 || echo "Rokid repository did not answer"
+          echo "Building with $(grep rokidCxrVersion gradle.properties)"
+      - name: Unit tests
+        run: gradle --no-daemon testDebugUnitTest
+      - name: Build the debug APK
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sentinel-relay-test-report
+          path: relay/android/app/build/reports/tests/
+          if-no-files-found: ignore
+      - name: APK in the log, for handing over without the artifact store (manual runs only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          f=$(ls app/build/outputs/apk/debug/*.apk | head -n 1)
+          sha256sum "$f"
+          echo "APK-BEGIN $(basename "$f")"
+          base64 -w 4000 "$f" | sed 's/^/APK-DATA /'
+          echo "APK-END"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: sentinel-relay-debug-apk
+          path: relay/android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  emulator:
+    name: Phone relay against the desktop broker (emulator)
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RELAY_CI_PASSWORD: relay-ci-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install the broker's runtime dependency only
+        run: npm ci --omit=dev --ignore-scripts
+      - uses: actions/download-artifact@v8
+        with:
+          name: sentinel-relay-debug-apk
+          path: apk
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Start the desktop app's broker
+        run: |
+          nohup node relay/ci/hub.mjs /tmp/relay-ci > hub.log 2>&1 &
+          sleep 3
+          cat hub.log
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
+          script: bash relay/ci/emulator.sh
+      - name: Broker log
+        if: always()
+        run: cat hub.log || true
+      - name: Screens in the log, for review without downloading the artifact
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check pillow
+          python3 - <<'PY'
+          import base64, glob, io, os
+          from PIL import Image
+          for f in sorted(glob.glob("relay-shots/*.png")):
+              im = Image.open(f).convert("RGB")
+              im.thumbnail((540, 1400))
+              im = im.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+              buf = io.BytesIO()
+              im.save(buf, "PNG", optimize=True)
+              data = base64.b64encode(buf.getvalue()).decode()
+              # GitHub drops very long log lines, so the image goes out in short pieces.
+              print("SHOT-BEGIN", os.path.basename(f))
+              for i in range(0, len(data), 4000):
+                  print("SHOT-DATA", data[i:i + 4000])
+              print("SHOT-END")
+          PY
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: sentinel-relay-emulator-screens
+          path: |
+            relay-shots/
+            hub.log
+          if-no-files-found: ignore

@@ -6,3 +6,10 @@ console/css/fonts.css
 passwd
 .env
 .DS_Store
+
+# Android relay
+relay/android/.gradle/
+relay/android/**/build/
+relay/android/local.properties
+relay/android/.idea/
+*.apk

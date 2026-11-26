@@ -9,7 +9,7 @@ records which channel meets the goal, which do not yet, and what is still to do.
 
 | Channel | SmartScreen | Cost | State |
 |---|---|---|---|
-| Microsoft Store (MSIX, re-signed by Microsoft) | No warning | Free for individual developers | Account registered and name reserved. Package builds in CI. Submission pending (below) |
+| Microsoft Store (MSIX, re-signed by Microsoft) | No warning | Free for individual developers | Submitted for certification 2026-11-26 (below) |
 | GitHub Releases, signed through SignPath Foundation | Publisher shown as SignPath Foundation; reputation carries over from their certificate | Free for open-source projects that are accepted | Needs a public repository and an application |
 | GitHub Releases, unsigned portable zip | "Windows protected your PC" on first run | Free | Built in CI today. For developers who can verify the checksum |
 | Build from source | None (nothing is downloaded as an executable from this project) | Free | `npm ci && npm start` |
@@ -41,21 +41,20 @@ Progress:
 | Submission draft: pricing and availability | Done: free, all markets, public |
 | Submission draft: properties | Done: Developer tools; declares that the app handles personal information (device names and identifiers from the user's own boards, processed locally); privacy policy entered as text hosted by Microsoft; OneDrive backup of app data turned off |
 | Submission draft: age rating | Done: all ages in every system |
-| Submission draft: submission options | Done: published only when "Publish now" is pressed after certification; reviewer notes entered under Additional testing information |
-| Submission draft: package | Not uploaded. The file comes from the CI artifact |
-| Submission draft: Store listing | Waiting for the package (listing languages appear after upload). Text is prepared in [STORE_LISTING.md](STORE_LISTING.md) |
-| Certification and first Store install | Not done |
+| Submission draft: submission options | Done: published only when "Publish now" is pressed after certification; reviewer notes entered under Additional testing information; runFullTrust justification entered |
+| Submission draft: package | Done: `SentinelLab-0.3.0-store.appx`, validated (x64, Windows desktop only) |
+| Store listing | Done for Korean and English from [STORE_LISTING.md](STORE_LISTING.md): text, five screenshots each, seven search keywords |
+| Submitted for certification | 2026-11-26 |
+| Certification | Waiting for Microsoft |
+| Publish and first Store install | Not done. Because publishing is manual, the account owner presses "Publish now" after certification passes |
 
-To finish: tick the IARC terms box on the age-rating summary and save; download
-`SentinelLab-<version>-store.appx` from the latest CI run (artifact `sentinel-lab-windows`) and
-upload it under Packages; paste the listing text and add screenshots for Korean and English;
-then submit for certification.
+If certification fails, Partner Center gives the reason in the submission's certification
+report; the fix goes into a new submission.
 
 Partner Center accepts the privacy policy either as a URL or as text that Microsoft hosts. The
-draft uses hosted text, so the submission does not depend on this repository being public. The
-page in `web/privacy/` is the same policy for the public site; the `pages` workflow publishes it
-with the simulator demo once the repository is public and Pages is set to deploy from GitHub
-Actions.
+draft uses hosted text. The same policy is published at
+https://pengveloper.github.io/airfab-sentinel/privacy/ with the simulator demo, by the `pages`
+workflow on every push to `main`.
 
 ## Antivirus
 
@@ -81,8 +80,7 @@ Compare the result with `SHA256SUMS.txt` from the same CI run or release.
 
 | Item | Blocked on |
 |---|---|
-| Store submission | The privacy page being live, then upload and review by the account owner |
-| SignPath Foundation application | Repository made public |
-| Tagged releases with build provenance attestation | Repository made public |
-| Public web demo and privacy page (GitHub Pages) | Repository made public and Pages enabled; the workflow is written but has not run yet |
+| Store submission | Package upload and submission by the account owner |
+| SignPath Foundation application | Application by the owner (the repository is public since 2026-11-25) |
+| Tagged releases with build provenance attestation | Release workflow not written yet |
 | First install and run on a real Windows PC outside CI | Operator |

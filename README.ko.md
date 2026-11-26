@@ -1,5 +1,7 @@
 # Sentinel Lab
 
+**브라우저에서 바로 보기:** [pengveloper.github.io/airfab-sentinel](https://pengveloper.github.io/airfab-sentinel/?lang=ko) (내장 시뮬레이터, 보드나 설치 없이)
+
 English: [README.md](README.md)
 
 오픈소스 ESP32 감지 펌웨어를 보드별로 올려 놓고 한 화면에서 시험하는 데스크톱 앱입니다.
@@ -19,7 +21,7 @@ English: [README.md](README.md)
 - **느낌이 아니라 검증.** 세션은 사람이 실제로 링크를 지나간 시간을 기록해 펌웨어의 감지와 맞춰 봅니다. 감지, 놓침, 오탐, 재현율이 나옵니다. 정답은 키를 누르거나, PIR 센서로, 데모에서는 시뮬레이터로 기록합니다.
 - **넘겨줄 수 있는 증거.** 메시지 기록을 내려받고, 나중에 재생하고, 세션별 점수 곡선이 든 HTML 리포트를 만듭니다.
 - **한국어와 영어.** 화면은 기기 언어를 따르고 버튼 하나로 바꿉니다. 번역이 빠진 문장이 하나라도 있으면 시험이 실패합니다.
-- **안경·휴대폰 알림.** 규칙과 검증 세션이 짧은 문장을 토픽 하나로 내보냅니다. 이 토픽에는 앱만 쓸 수 있어서, 받는 쪽 앱은 MQTT 구독만 하면 됩니다. 검은 바탕의 전체 화면에서 안경에 뜰 모습을 미리 봅니다. 실제 안경에서는 아직 확인하지 않았습니다. 형식: [docs/NOTIFY.md](docs/NOTIFY.md).
+- **안경·휴대폰 알림.** 규칙과 검증 세션이 짧은 문장을 토픽 하나로 내보냅니다. 이 토픽에는 앱만 쓸 수 있어서, 받는 쪽 앱은 MQTT 구독만 하면 됩니다. 검은 바탕의 전체 화면에서 안경에 뜰 모습을 미리 봅니다. 안드로이드 앱 [Sentinel Relay](relay/README.ko.md)가 이 알림을 휴대폰 알림으로 받고 로키드 안경에 띄웁니다. CI에서 빌드와 단위 시험, 에뮬레이터에서 앱 브로커와 실제로 주고받는 시험까지 하지만 실제 안경에서는 아직 확인하지 않았습니다. 형식: [docs/NOTIFY.md](docs/NOTIFY.md).
 
 | 첫 실행 | 허브 정보 |
 |---|---|
@@ -42,8 +44,9 @@ Node.js 22가 필요합니다. 첫 실행에서 허브 비밀번호를 정한 �
 
 ## 데모와 개인정보 처리방침 페이지
 
-저장소가 공개되면 `pages` 워크플로가 시뮬레이터 데모와 개인정보 처리방침을 GitHub Pages에 올립니다.
-주소는 `https://pengveloper.github.io/airfab-sentinel/` 과 `/privacy/` 이고, 아직 실행된 적은 없습니다.
+`main`에 올라갈 때마다 `pages` 워크플로가 시뮬레이터 데모와 개인정보 처리방침을 GitHub Pages에 올립니다:
+[데모](https://pengveloper.github.io/airfab-sentinel/?lang=ko), [개인정보 처리방침](https://pengveloper.github.io/airfab-sentinel/privacy/).
+브라우저의 데모는 시뮬레이터로만 돌아가고, 보드에 연결하려면 데스크톱 앱이 필요합니다.
 
 ## 실측 순서
 
@@ -105,7 +108,8 @@ Windows는 코드 내용이 아니라 서명과 평판으로 경고 여부를 �
 | 데스크톱 앱 (창 격리, 첫 실행, 비밀번호 저장, 메시지 흐름, 규칙 전달, 알림 전달, 이동 차단) | Linux에서 실제 앱 연기 시험 통과, 묶은 빌드 기동 확인 (SOFTWARE_VERIFIED) |
 | Windows 빌드, DPAPI, MSIX 패키징, Defender 검사 | GitHub Actions `windows-latest`에서 통과 (EVD-P1-011). 최신 실행 결과 참고 |
 | 영어 화면 (모든 문장 번역, 화면과 리포트에 한글이 남지 않음) | 자동 시험 4건과 실제 앱 영어 단계 통과 (SOFTWARE_VERIFIED) |
-| 실제 안경이나 휴대폰 앱에 알림 표시 | 아직 안 함 (OPERATOR_REQUIRED) |
+| 앱 브로커에서 안드로이드 릴레이로 알림 전달 | CI의 안드로이드 에뮬레이터에서 확인 (`relay` 워크플로) |
+| 실제 안경이나 실제 휴대폰에 알림 표시 | 아직 안 함 (OPERATOR_REQUIRED) |
 | Microsoft Store로 경고 없이 설치 | 아직 안 함 (OPERATOR_REQUIRED) |
 | 실제 보드 | 아직 측정 안 함 (OPERATOR_REQUIRED) |
 
@@ -135,6 +139,7 @@ npm run test:app    # 실제 앱을 띄워 격리, 첫 실행, 인증, 메시지
 - `console/` 콘솔 (데스크톱 창 안에서도, 정적 페이지로도 동작)
 - `tests/` 데이터 계층, 허브, 앱 연기 시험, 묶은 빌드 확인
 - `broker/` 데스크톱 앱 없이 쓰는 Mosquitto 구성
+- `relay/` 알림을 휴대폰과 로키드 안경으로 옮기는 안드로이드 앱과 CI 구동 스크립트
 - `tools/` 실제 브로커로 시뮬레이션 메시지를 보내는 도구
 - `evidence/`, `docs/` 증거표, 스크린샷, 추적표, 배포 문서
 

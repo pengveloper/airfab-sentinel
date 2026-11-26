@@ -169,6 +169,40 @@
       </div>
     </section>
 
+    <!-- 모델 -->
+    <section class="view" id="v-models" data-title="모델" hidden>
+      <div class="cols">
+        <div class="panel w360">
+          <div class="ph"><h2>이 PC의 모델</h2><span class="chip" id="md-state">확인 중</span></div>
+          <div class="pb">
+            <p class="muted" id="md-note"></p>
+            <label for="md-url">모델 서버 주소<input id="md-url" spellcheck="false" autocomplete="off" placeholder="http://127.0.0.1:11434"></label>
+            <div class="row"><button class="btn" type="button" id="md-save">주소 저장</button><button class="btn" type="button" id="md-refresh">다시 찾기</button></div>
+          </div>
+          <ul class="mdl" id="md-list"></ul>
+        </div>
+        <div class="stack grow">
+          <div class="panel">
+            <div class="ph"><h2>같은 질문, 여러 모델</h2><span class="kv" id="md-picked"></span></div>
+            <form class="pb" id="md-form">
+              <label for="md-prompt">질문<textarea id="md-prompt" rows="4" maxlength="8000"></textarea></label>
+              <div class="row"><button class="btn" type="button" id="md-sensors">센서 기록으로 질문 만들기</button><label for="md-len">답 길이<select id="md-len"><option value="128">짧게</option><option value="512">보통</option><option value="1024">길게</option></select></label><button class="btn primary" type="submit" id="md-run">고른 모델에 묻기</button></div>
+            </form>
+          </div>
+          <div class="md-out" id="md-out" aria-live="polite"></div>
+        </div>
+        <div class="panel w360">
+          <div class="ph"><h2>안경에서 온 질문</h2></div>
+          <div class="pb">
+            <label class="inl" for="md-glass"><input type="checkbox" id="md-glass">휴대폰·안경 질문에 답하기</label>
+            <label for="md-gmodel">답할 모델<select id="md-gmodel"></select></label>
+            <p class="muted">Wavrel Relay에서 말로 물으면 이 PC로 질문이 들어옵니다. 고른 모델이 80자 안으로 답하고, 답은 알림으로 나가 렌즈에 뜹니다.</p>
+          </div>
+          <ol class="feed pad" id="md-asks"></ol>
+        </div>
+      </div>
+    </section>
+
     <!-- 노드 -->
     <section class="view" id="v-nodes" data-title="노드" hidden>
       <div class="banner"><img src="img/bench.webp" alt="" width="1376" height="768" loading="lazy"><div><h2>가진 보드 다섯 대로 하는 첫 실측</h2><p>위에서부터 차례로 합니다. 콘솔이 보드의 메시지를 받으면 해당 단계가 자동으로 채워집니다.</p></div></div>
@@ -269,6 +303,7 @@
 <script src="js/space.js"></script>
 <script src="js/views.js"></script>
 <script src="js/glass.js"></script>
+<script src="js/models.js"></script>
 <script src="js/app.js"></script>
 <script src="js/desktop.js"></script>
 </body>

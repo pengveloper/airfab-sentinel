@@ -11,7 +11,7 @@ import * as acorn from 'acorn';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'console');
 const HANGUL = /[ㄱ-ㆎ가-힣]/;
-const JS = ['core.js', 'sim.js', 'space.js', 'views.js', 'report.js', 'glass.js', 'desktop.js', 'app.js'];
+const JS = ['core.js', 'sim.js', 'space.js', 'views.js', 'report.js', 'glass.js', 'models.js', 'desktop.js', 'app.js'];
 const ATTRS = ['title', 'aria-label', 'placeholder', 'alt', 'data-title', 'value', 'content'];
 
 export const norm = s => s.replace(/\s+/g, ' ').trim();
@@ -20,7 +20,7 @@ export const templateKey = quasis => quasis.reduce((a, q, i) => a + (i ? '{' + (
 /* Walks the syntax tree and reports Korean string and template literals: tagged (already translatable) or not. */
 export function scanJs(src) {
   const ast = acorn.parse(src, { ecmaVersion: 'latest', sourceType: 'script' });
-  const tagged = [], untagged = [], odd = [];
+  const tagged = [], untagged = [], odd = [], kept = [];
   (function walk(n, parent, key) {
     if (!n || typeof n.type !== 'string') return;
     if (n.type === 'TemplateLiteral') {
@@ -37,7 +37,9 @@ export function scanJs(src) {
         const logic = (parent.type === 'BinaryExpression' && /^[!=]==?$/.test(parent.operator)) || parent.type === 'SwitchCase' || (parent.type === 'Property' && key === 'key' && !parent.computed) ||
           (parent.type === 'MemberExpression' && key === 'property') ||
           (parent.type === 'CallExpression' && parent.callee.type === 'MemberExpression' && /^(includes|startsWith|endsWith|indexOf|test|match|split)$/.test(parent.callee.property.name || ''));
-        (logic ? odd : untagged).push(item);
+        // { ko: '…', en: '…' }: text kept in both languages on purpose, such as a model's instructions
+        const both = parent.type === 'Property' && key === 'value' && !parent.computed && parent.key && (parent.key.name === 'ko' || parent.key.value === 'ko');
+        (both ? kept : logic ? odd : untagged).push(item);
       }
     }
     for (const k of Object.keys(n)) {
@@ -45,7 +47,7 @@ export function scanJs(src) {
       if (Array.isArray(v)) v.forEach(c => walk(c, n, k)); else if (v && typeof v.type === 'string') walk(v, n, k);
     }
   })(ast, { type: 'Root' }, null);
-  return { tagged, untagged, odd };
+  return { tagged, untagged, odd, kept };
 }
 
 /* Static text and attributes in index.html. Scripts and styles are skipped. */

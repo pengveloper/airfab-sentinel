@@ -48,3 +48,7 @@ export function suggestPassword() {
   const abc = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
   return Array.from({ length: 20 }, () => abc[crypto.randomInt(abc.length)]).join('');
 }
+
+/** Where the local model server (Ollama) listens. Not a secret; checked again by models.mjs. */
+export function getModelUrl() { const v = load().modelUrl; return typeof v === 'string' ? v : undefined; }
+export function setModelUrl(url) { const s = load(); s.modelUrl = String(url).slice(0, 200); save(s); }

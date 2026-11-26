@@ -286,3 +286,19 @@ body.present .hud-bl{left:36px;bottom:30px}
   .rules .kv{display:none}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.boot{display:none}}
+
+/* 모델 화면 */
+textarea{background:var(--raise);border:1px solid var(--line);border-radius:4px;padding:9px 10px;color:var(--text);min-width:0;resize:vertical;line-height:1.55;font-size:14px}
+.mdl{list-style:none;margin:0;padding:0 16px 14px;display:flex;flex-direction:column}
+.mdl li{display:flex;flex-direction:column;gap:3px;padding:10px 0;border-top:1px solid var(--line)}
+.mdl b{font-weight:600;overflow-wrap:anywhere}
+.mdl .kv{padding-left:24px;white-space:normal}
+.md-out{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;align-content:start}
+.md-card{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.md-card header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.md-card b{font-weight:600;overflow-wrap:anywhere}
+.md-card .kv{white-space:normal}
+.md-text{white-space:pre-wrap;line-height:1.6;font-size:14px;margin:0;overflow-wrap:anywhere}
+.md-hint{padding:4px 2px}
+.md-empty{padding:16px 18px}.md-empty h3{margin:0 0 8px;font-size:15px}.md-empty ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;color:var(--muted);list-style:decimal}
+.feed li.none{display:block;color:var(--muted)}

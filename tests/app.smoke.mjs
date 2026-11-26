@@ -6,6 +6,7 @@ import os from 'node:os';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import http from 'node:http';
 import mqtt from 'mqtt';
 import { _electron } from 'playwright-core';
 
@@ -17,6 +18,12 @@ const linux = process.platform === 'linux';
 const common = [...(linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader'] : []), '--enable-unsafe-swiftshader'];
 const args = [...common, '--lang=ko', root, `--user-data-dir=${userData}`];   // 화면 언어는 기기 언어를 따르므로, 한국어 문장을 확인하는 첫 실행은 한국어로 띄웁니다
 const ID = 'a1b2c3d4e5f60718';
+// Ollama 대신 같은 API로 답하는 작은 서버. 모델 화면과 안경 질문 경로를 실제 앱에서 확인합니다.
+const ollama = http.createServer((req, res) => { let b = ''; req.on('data', c => { b += c; }); req.on('end', () => {
+  const j = b ? JSON.parse(b) : null; res.writeHead(200, { 'content-type': 'application/json' });
+  if (req.url === '/api/tags') res.end(JSON.stringify({ models: [{ name: 'tiny-test:1b', size: 1e9, details: { family: 'test', parameter_size: '1B', quantization_level: 'Q4_0' } }] }));
+  else res.end(JSON.stringify({ message: { role: 'assistant', content: j.messages.some(m => m.role === 'system') ? '거실은 지금 조용합니다.' : '시험용 답입니다.' }, eval_count: 8, eval_duration: 4e8, load_duration: 1e6 })); }); });
+await new Promise(r => ollama.listen(0, '127.0.0.1', r));
 // 창을 다루는 동작은 모두 창 안에서 직접 실행합니다.
 // Windows 빌드 서버에서는 시험 도구가 창이 열리는 순간을 놓치는 일이 있었고, 그러면 도구의 누르기와 기다림이 창은 멀쩡한데도 끝나지 않았습니다.
 // 창 안에서 식을 실행하는 길은 그때도 동작했으므로, 조건 기다리기와 누르기를 그 길 위에 다시 만들었습니다.
@@ -42,7 +49,7 @@ const tryConnect = password => new Promise(resolve => {
   c.once('connect', () => resolve(c)); c.once('error', () => { c.end(true); resolve(null); });
 });
 
-const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LANGUAGE: 'ko', WAVREL_MQTT_PORT: String(port), ...(linux ? { WAVREL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
+const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LANGUAGE: 'ko', WAVREL_MQTT_PORT: String(port), WAVREL_OLLAMA_URL: `http://127.0.0.1:${ollama.address().port}`, ...(linux ? { WAVREL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
 let failed = false;
 try {
   let win = await app.firstWindow(); const ui = drive(() => win);
@@ -68,7 +75,8 @@ try {
     csp: (await fetch('index.html')).headers.get('content-security-policy'), outside: await fetch('app://wavrel/../package.json').then(r => r.status, () => 0) }));
   assert.equal(iso.url, 'app://wavrel/index.html'); assert.equal(iso.require, 'undefined'); assert.equal(iso.process, 'undefined');
   assert.ok(iso.csp.includes("script-src 'self'") && iso.csp.includes("object-src 'none'")); assert.notEqual(iso.outside, 200);
-  assert.deepEqual(iso.bridge, ['copy', 'info', 'onBroker', 'onMessage', 'publish', 'replayRetained', 'restart', 'revealPassword', 'setup', 'status', 'suggestPassword']);
+  assert.deepEqual(iso.bridge, ['ask', 'copy', 'info', 'models', 'onBroker', 'onMessage', 'publish', 'replayRetained', 'restart', 'revealPassword', 'setModelServer', 'setup', 'status', 'suggestPassword']);
+  assert.equal((await win.evaluate(() => window.desktop.setModelServer('http://8.8.8.8:11434'))).ok, false, 'the model server must be on this PC or the home network');
   step('window is isolated: no Node, fixed bridge, CSP header, no path escape');
 
   // 2. 첫 실행: 비밀번호를 정하기 전에는 브로커가 꺼져 있다
@@ -150,6 +158,25 @@ try {
   await shot(win, '04-glass.png'); await ui.key('Escape');
   await ui.until(() => !Glass.isOpen(), null, 5000);
   step('alerts reach a subscriber as v1 JSON, cannot be forged by a device, and the glasses screen opens and closes');
+  // 5-2. 모델 화면: 이 PC의 모델 서버에서 목록을 읽고 답을 받는다. 안경에서 온 질문에는 고른 모델이 답하고, 답은 알림으로 나간다
+  await ui.click('#tab-models'); await ui.present('#md-list input[value="tiny-test:1b"]', 10_000);
+  await win.evaluate(() => { const cb = document.querySelector('#md-list input'); cb.checked = true; cb.dispatchEvent(new Event('change', { bubbles: true })); document.querySelector('#md-prompt').value = '안녕'; });
+  await ui.click('#md-run'); await ui.until(() => /시험용 답/.test(document.querySelector('#md-out').textContent), null, 10_000);
+  await win.evaluate(() => { const g = document.querySelector('#md-glass'); g.checked = true; g.dispatchEvent(new Event('change', { bubbles: true }));
+    const s = document.querySelector('#md-gmodel'); s.value = 'tiny-test:1b'; s.dispatchEvent(new Event('change', { bubbles: true })); });
+  // 휴대폰 앱 자리: 따로 붙은 클라이언트가 질문을 보내고 알림 토픽에서 답을 받습니다. (위 시험의 보드는 알림을 꾸며 내려다 허브가 끊었습니다)
+  const phone = await new Promise((resolve, reject) => { const c = mqtt.connect(`mqtt://127.0.0.1:${port}`, { username: 'lab', password, reconnectPeriod: 0, connectTimeout: 8000, clientId: 'wavrel-relay-smoke' });
+    c.once('connect', () => resolve(c)); c.once('error', reject); });
+  const answers = []; phone.on('message', (topic, p) => { if (topic === 'lab/out/notify') answers.push(p.toString()); });
+  await new Promise(r => phone.subscribe('lab/out/notify', r));
+  phone.publish('lab/in/ask', JSON.stringify({ v: 1, id: 'q-smoke', text: '거실에 누가 있어?', lang: 'ko', from: 'relay' }));
+  for (let i = 0; i < 40 && !answers.some(a => a.includes('q-smoke')); i++) await sleep(250);
+  const answer = answers.map(a => JSON.parse(a)).find(a => a.re === 'q-smoke');
+  phone.end(true);
+  if (!answer) console.log('note models state:', JSON.stringify(await win.evaluate(() => ({ cfg: Lab.cfg.models, asks: document.querySelector('#md-asks').textContent }))));
+  assert.ok(answer && answer.kind === 'answer' && answer.source === 'local_model' && answer.body === '거실은 지금 조용합니다.' && answer.model === 'tiny-test:1b', 'a question from the glasses is answered on the alert topic: ' + JSON.stringify(answer));
+  await shot(win, '06-models.png');
+  step('models view reads the local model server, compares answers, and answers a question from the glasses as an alert');
   clearInterval(timer); board.end(true);
 
   // 6. 화면 기록 (데모)
@@ -192,7 +219,7 @@ async function english() {
       return seen; });
     const korean = (await leftover()).map(t => 'first run: ' + t); await shot(win, '07-en-first-run.png');
     await ui.click('#su-demo'); await sleep(4000);
-    for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'nodes', 'evidence']) { await ui.click('#tab-' + v); await sleep(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
+    for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'models', 'nodes', 'evidence']) { await ui.click('#tab-' + v); await sleep(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
     await win.evaluate(() => Glass.open()); await sleep(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.evaluate(() => Glass.close());
     await ui.click('#openConn'); await sleep(500); korean.push(...(await leftover()).map(t => 'broker panel: ' + t)); await ui.click('#dk-close');
     const report = await win.evaluate(() => Report.build().replace(/<style[\s\S]*?<\/style>/, ''));

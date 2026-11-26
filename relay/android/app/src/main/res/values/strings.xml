@@ -103,4 +103,12 @@
     <string name="ch_info">Notices</string>
     <string name="service_title">Relaying alerts from your PC</string>
     <string name="action_stop">Stop</string>
+    <string name="src_model">PC model</string>
+    <string name="ask_voice">Ask the PC out loud</string>
+    <string name="ask_help">The model you picked in the Wavrel desktop app answers, and the answer shows here and on the glasses.</string>
+    <string name="ask_prompt">Ask a question</string>
+    <string name="ask_sent">Asked the PC. The answer comes back as an alert.</string>
+    <string name="ask_not_connected">Connect to the PC first.</string>
+    <string name="ask_nothing">Nothing was heard.</string>
+    <string name="ask_no_speech">This phone has no voice input.</string>
 </resources>

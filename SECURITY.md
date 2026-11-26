@@ -26,7 +26,8 @@ vulnerability). Please do not put details in a public issue.
 | Content Security Policy sent with every file: scripts only from the app, no plugins, no `<base>`, no form posts | `CSP` in `main.mjs` |
 | Navigation away from the app and new windows are blocked; a short allowlist of HTTPS documentation hosts opens in the system browser instead | `web-contents-created` handlers |
 | `<webview>` is disabled; permission requests are denied except full screen and reaching a camera on the LAN | `main.mjs` |
-| The bridge exposes eleven fixed functions. The window never receives `ipcRenderer`, Node or Electron objects | `desktop/preload/preload.cjs` |
+| The bridge exposes fourteen fixed functions. The window never receives `ipcRenderer`, Node or Electron objects | `desktop/preload/preload.cjs` |
+| The window never reaches a model server itself. The main process asks for it, and only over plain HTTP to localhost, a loopback address or a private address written as an IP (no host names, so a name cannot later resolve elsewhere); no redirects, a 2 MB reply limit, one question at a time | `desktop/main/models.mjs`, T-MOD-001..007 |
 | Every IPC call checks that it came from the app's own main frame, and validates its arguments | `trusted()` and `handle()` in `main.mjs` |
 | No remote code, no auto-updater, no telemetry, no analytics | whole app |
 
@@ -42,6 +43,7 @@ vulnerability). Please do not put details in a public issue.
 | At most 32 connections; payloads over 64 KB and topics over 200 characters are refused | `LIMITS` |
 | Topics starting with `$` and `lab/console/` are reserved; devices cannot publish to them | `validTopic` |
 | Topics under `lab/out/` carry what the app itself says (alerts for glasses and phones). Devices can subscribe but cannot publish there, so a device cannot forge an alert | `HUB_ONLY`, T-HUB-010 |
+| `lab/in/ask` carries spoken questions from the phone. Any client with the hub password can publish there, so the app answers only when answering is turned on, ignores retained questions, takes at most one new question every 1.5 seconds and cuts questions to 300 characters. Model output reaches the window as text only, never as markup | `console/js/models.js`, T-CON-020 |
 | The hub speaks plain MQTT on the LAN. There is no WebSocket or HTTP listener | `broker.mjs` |
 
 ### Secrets and data

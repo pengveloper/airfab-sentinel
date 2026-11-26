@@ -7,6 +7,7 @@ const TABS=[
   ['presence',L('위치'),'<circle cx="12" cy="10" r="3"/><path d="M12 21s7-6.1 7-11a7 7 0 1 0-14 0c0 4.9 7 11 7 11z"/>'],
   ['camera',L('카메라'),'<rect x="3" y="7" width="13" height="10" rx="1.5"/><path d="M16 11l5-3v8l-5-3"/>'],
   ['rules',L('자동화'),'<path d="M13 2L5 14h6l-1 8 8-12h-6l1-8z"/>'],
+  ['models',L('모델'),'<path d="M4 5h16v11H10l-5 4v-4H4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/>'],
   ['nodes',L('노드'),'<rect x="7" y="7" width="10" height="10" rx="1"/><path d="M10 3v4M14 3v4M10 17v4M14 17v4M3 10h4M3 14h4M17 10h4M17 14h4"/>'],
   ['evidence',L('기록'),'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/>']];
 const nav=$('#nav');
@@ -60,7 +61,7 @@ $('#conn-form').addEventListener('submit',e=>{e.preventDefault();note.className=
   Lab.connect($('#c-url').value.trim(),$('#c-user').value,$('#c-pass').value,err=>{if(err){note.className='muted err';note.textContent=err;if(S.source!=='live'&&S.source!=='demo')Lab.demo();}else{$('#c-pass').value='';closeDrawer();}});});
 
 /* 시작 */
-Views.wire();Space.init($('#space3d'));
+Views.wire();Views.update.models=Models.update;Models.wire();Space.init($('#space3d'));
 const boot=$('#boot');if(boot){const kill=()=>boot.remove();boot.addEventListener('click',kill);setTimeout(kill,2400);}
 $('#main').addEventListener('pointermove',e=>{const p=e.target.closest('.panel');if(!p)return;const r=p.getBoundingClientRect();p.style.setProperty('--mx',(e.clientX-r.left)+'px');p.style.setProperty('--my',(e.clientY-r.top)+'px');});
 show(location.hash.slice(1)||'space',false);

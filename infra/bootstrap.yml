@@ -122,13 +122,94 @@ Resources:
                   - cloudfront:*
                   - acm:*
                 Resource: '*'
-              - Sid: RelayServer
+              # EC2 rights reach only resources tagged project=wavrel, so other projects in the
+              # account cannot be stopped, changed or reached from this repository.
+              - Sid: Ec2Read
                 Effect: Allow
                 Action:
-                  - ec2:*
-                  - ssm:*
-                  - logs:*
-                  - cloudwatch:*
+                  - ec2:Describe*
+                  - ec2:Get*
+                  - ssm:GetParameters
+                Resource: '*'
+              - Sid: Ec2CreateTagged
+                Effect: Allow
+                Action:
+                  - ec2:RunInstances
+                  - ec2:CreateSecurityGroup
+                  - ec2:AllocateAddress
+                  - ec2:CreateVolume
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:RequestTag/project: wavrel
+              - Sid: Ec2UseShared
+                Effect: Allow
+                Action:
+                  - ec2:RunInstances
+                  - ec2:CreateSecurityGroup
+                Resource:
+                  - !Sub arn:${AWS::Partition}:ec2:*::image/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:subnet/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:vpc/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:network-interface/*
+                  - !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:key-pair/*
+              - Sid: Ec2TagOnCreate
+                Effect: Allow
+                Action: ec2:CreateTags
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    ec2:CreateAction:
+                      - RunInstances
+                      - CreateSecurityGroup
+                      - AllocateAddress
+                      - CreateVolume
+              - Sid: Ec2ManageTagged
+                Effect: Allow
+                Action: ec2:*
+                Resource: '*'
+                Condition:
+                  StringEquals:
+                    aws:ResourceTag/project: wavrel
+              - Sid: ServerParameters
+                Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                  - ssm:AddTagsToResource
+                  - ssm:ListTagsForResource
+                Resource: !Sub arn:${AWS::Partition}:ssm:*:${AWS::AccountId}:parameter/wavrel/*
+              - Sid: ServerCommands
+                Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                  - ssm:StartSession
+                Resource: !Sub arn:${AWS::Partition}:ec2:*:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ssm:resourceTag/project: wavrel
+              - Sid: ServerCommandDocument
+                Effect: Allow
+                Action: ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:*::document/AWS-RunShellScript
+              - Sid: ServerCommandResults
+                Effect: Allow
+                Action:
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: '*'
+              - Sid: ServerLogs
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:DeleteLogGroup
+                  - logs:PutRetentionPolicy
+                  - logs:TagResource
+                  - logs:DescribeLogGroups
+                  - logs:GetLogEvents
+                  - logs:FilterLogEvents
                 Resource: '*'
               - Sid: RelayServerRolesWithBoundary
                 Effect: Allow

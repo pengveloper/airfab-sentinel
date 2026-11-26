@@ -9,7 +9,7 @@ records which channel meets the goal, which do not yet, and what is still to do.
 
 | Channel | SmartScreen | Cost | State |
 |---|---|---|---|
-| Microsoft Store (MSIX, re-signed by Microsoft) | No warning | Free for individual developers | Account registered and name reserved. Package builds in CI. Submission pending (below) |
+| Microsoft Store (MSIX, re-signed by Microsoft) | No warning | Free for individual developers | Submitted for certification 2026-11-26 (below) |
 | GitHub Releases, signed through SignPath Foundation | Publisher shown as SignPath Foundation; reputation carries over from their certificate | Free for open-source projects that are accepted | Needs a public repository and an application |
 | GitHub Releases, unsigned portable zip | "Windows protected your PC" on first run | Free | Built in CI today. For developers who can verify the checksum |
 | Build from source | None (nothing is downloaded as an executable from this project) | Free | `npm ci && npm start` |
@@ -43,11 +43,13 @@ Progress:
 | Submission draft: age rating | Done: all ages in every system |
 | Submission draft: submission options | Done: published only when "Publish now" is pressed after certification; reviewer notes entered under Additional testing information; runFullTrust justification entered |
 | Submission draft: package | Done: `SentinelLab-0.3.0-store.appx`, validated (x64, Windows desktop only) |
-| Submission draft: Store listing | Text entered for Korean and English from [STORE_LISTING.md](STORE_LISTING.md); screenshots still to be uploaded |
-| Certification and first Store install | Not done |
+| Store listing | Done for Korean and English from [STORE_LISTING.md](STORE_LISTING.md): text, five screenshots each, seven search keywords |
+| Submitted for certification | 2026-11-26 |
+| Certification | Waiting for Microsoft |
+| Publish and first Store install | Not done. Because publishing is manual, the account owner presses "Publish now" after certification passes |
 
-To finish: upload screenshots to the Korean and English listings, then submit for
-certification. The account owner uploads files and submits.
+If certification fails, Partner Center gives the reason in the submission's certification
+report; the fix goes into a new submission.
 
 Partner Center accepts the privacy policy either as a URL or as text that Microsoft hosts. The
 draft uses hosted text. The same policy is published at

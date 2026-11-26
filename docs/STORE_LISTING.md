@@ -78,9 +78,11 @@ Demo mode with a labelled simulator
 English and Korean interface
 No account, no telemetry, no ads
 
-**Keywords (up to 7)**
+**Keywords (up to 7, 21 words in all)**
 
-ESP32, MQTT, Wi-Fi sensing, CSI, IoT, presence detection, home lab
+ESP32 desktop console, Wi-Fi motion detection, Bluetooth distance measurement, Open source firmware, MQTT, IoT sensor dashboard, ESP32 test bench
+
+Entered as above in both listings (19 words).
 
 ## 한국어 (ko-kr)
 
@@ -128,12 +130,13 @@ LED로 알려 주는 자동화 규칙
 
 **키워드**
 
-ESP32, MQTT, Wi-Fi 감지, CSI, IoT, 재실 감지, 홈랩
+영어 목록과 같은 일곱 개를 넣었습니다: ESP32 desktop console, Wi-Fi motion detection, Bluetooth distance measurement, Open source firmware, MQTT, IoT sensor dashboard, ESP32 test bench
 
 ## Other fields (both languages)
 
 - Copyright and trademark: `Copyright (c) 2026 pengveloper. MIT License.`
 - Developer: `Pengveloper`
+- Additional license terms: left empty. The app is MIT licensed and Microsoft's standard application license terms apply in the Store.
 - What's new in this version: left empty for the first submission.
 - Screenshots: at least one desktop screenshot per language is required. Use the Korean screens
   for the Korean listing and the English screens for the English listing (1480 x 940 PNG).

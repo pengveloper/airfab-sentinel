@@ -14,6 +14,12 @@ starting on a link, a device entering a room, or the outcome of each pass in a v
 The phone only listens. It never publishes to the broker, and the desktop app refuses alerts from
 any client but itself (T-HUB-010), so the relay cannot be used to fake an alert.
 
+| Unfolded (Galaxy Fold inner screen proportions) | After a wrong password |
+|---|---|
+| ![The relay on an unfolded screen: lens preview with a simulated alert, the PC, phone and glasses path, recent alerts and settings](../docs/screenshots/relay/unfolded-en.png) | ![The relay after a wrong password, with the retry button and the reason](../docs/screenshots/relay/phone-en-wrong-password.png) |
+
+Screenshots from the CI emulator run against the desktop app's broker.
+
 ## Status
 
 | | |

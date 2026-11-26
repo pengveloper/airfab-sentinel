@@ -3,23 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>페이지를 찾을 수 없습니다 · Sentinel Lab</title>
+<title>페이지를 찾을 수 없습니다 | Page not found | Wavrel</title>
 <meta name="robots" content="noindex">
-<style>
-:root{--ink:#05080d;--text:#e8eef6;--muted:#93a3b8;--gold:#ecb955;--blue:#9cc6ff}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--ink);color:var(--text);font:17px/1.6 "IBM Plex Sans KR","Malgun Gothic",system-ui,sans-serif;word-break:keep-all}
-main{max-width:520px;padding:32px}
-h1{font-size:28px;margin:0 0 8px}
-p{color:var(--muted);margin:0 0 20px}
-a{color:var(--blue)}a:focus-visible{outline:2px solid var(--blue);outline-offset:3px}
-nav{display:flex;gap:20px}
-</style>
+<meta name="theme-color" content="#05080d">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="stylesheet" href="/css/fonts.css">
+<link rel="stylesheet" href="/css/site.css">
 </head>
 <body>
-<main>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="3.2" fill="#ecb955"/><path d="M6 10.5a7.5 7.5 0 0 1 7.5 7.5M6 5.5A12.5 12.5 0 0 1 18.5 18" fill="none" stroke="#9cc6ff" stroke-width="2.2" stroke-linecap="round"/></svg>Wavrel</a>
+  </div>
+</header>
+<main class="lost wrap">
   <h1>이 주소에는 페이지가 없습니다</h1>
-  <p>This page does not exist. 주소를 다시 확인하거나 아래에서 이어 가세요.</p>
-  <nav><a href="/">Sentinel Lab</a><a href="/demo/">데모 열기 · Open the demo</a></nav>
+  <p>주소를 다시 확인하거나 아래에서 이어 가세요.</p>
+  <p lang="en">There is no page at this address. Check it, or continue below.</p>
+  <div class="actions">
+    <a class="btn btn-main" href="/demo/">데모 열기 <span lang="en">/ Open the demo</span></a>
+    <a class="btn" href="/">처음 화면</a>
+    <a class="btn" href="/en/" lang="en">Home in English</a>
+  </div>
 </main>
 </body>
 </html>

@@ -4,6 +4,7 @@
 // short list of validated IPC calls.
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, Menu, clipboard, ipcMain, protocol, session, shell } from 'electron';
 import { Hub } from './broker.mjs';
@@ -21,6 +22,15 @@ const CSP = [
 ].join('; ');
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, supportFetchAPI: true } }]);
+
+// Wavrel was called Sentinel Lab, and Electron names the data folder after the product. When this
+// computer has settings from the old name and none under the new one, keep using the old folder:
+// on Windows the hub password is sealed with a key kept in that folder, so moving only settings.json
+// would lose it.
+// An explicit --user-data-dir always wins.
+const legacyData = path.join(app.getPath('appData'), 'Sentinel Lab');
+if (!app.commandLine.hasSwitch('user-data-dir') && !existsSync(path.join(app.getPath('userData'), 'settings.json'))
+  && existsSync(path.join(legacyData, 'settings.json'))) app.setPath('userData', legacyData);
 
 let win = null;
 const port = Number(process.env.WAVREL_MQTT_PORT) || 1883;

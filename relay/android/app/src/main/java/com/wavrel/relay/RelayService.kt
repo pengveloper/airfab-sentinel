@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import android.app.NotificationManager
 import android.app.Service
@@ -65,8 +65,8 @@ class RelayService : Service() {
     }
 
     companion object {
-        const val ACTION_STOP = "io.github.pengveloper.sentinel.relay.STOP"
-        const val ACTION_START = "io.github.pengveloper.sentinel.relay.START"
+        const val ACTION_STOP = "com.wavrel.relay.STOP"
+        const val ACTION_START = "com.wavrel.relay.START"
 
         fun start(ctx: Context) {
             ctx.startForegroundService(Intent(ctx, RelayService::class.java).setAction(ACTION_START))

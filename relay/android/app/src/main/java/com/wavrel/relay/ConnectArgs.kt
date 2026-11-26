@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 /**
  * Arguments for `CxrApi.connectBluetooth`, whose parameter list has changed between SDK

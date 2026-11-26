@@ -1,4 +1,4 @@
-/* Sentinel Lab 디자인 레이어. app.css의 구조 위에 재질, 깊이, 타이포그래피, 창 프레임을 올립니다.
+/* Wavrel 디자인 레이어. app.css의 구조 위에 재질, 깊이, 타이포그래피, 창 프레임을 올립니다.
    색의 역할: 금색은 Wi-Fi 감지 에너지, 파랑은 RF 구조와 BLE, 보라는 시뮬레이션 값. */
 :root{
   --display:"Archivo Variable","Archivo","IBM Plex Sans KR","Malgun Gothic",system-ui,sans-serif;

@@ -1,4 +1,5 @@
-# Publishes the simulator demo and the privacy policy to GitHub Pages.
+# The demo and the privacy policy moved to wavrel.com. GitHub Pages keeps the old addresses
+# working: each one sends the visitor to the same page on wavrel.com, query string included.
 # Runs only when the repository is public, because Pages on a private repository needs a paid plan.
 name: pages
 on:
@@ -22,20 +23,8 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - name: Install without running package scripts
-        run: npm ci --ignore-scripts
-      - name: Bundle typefaces
-        run: node desktop/scripts/fonts.mjs
-      - name: Assemble the site
-        run: |
-          mkdir -p _site/privacy
-          cp -r console/. _site/
-          cp web/privacy/index.html _site/privacy/index.html
-          touch _site/.nojekyll
+      - name: Write the redirects
+        run: python3 .github/scripts/pages_redirects.py _site
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

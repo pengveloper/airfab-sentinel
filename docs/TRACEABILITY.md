@@ -41,7 +41,7 @@ Status words: SIMULATED, SOFTWARE_VERIFIED, HARDWARE_VERIFIED, OPERATOR_REQUIRED
 | REQ-SL-034 | The relay sends the broker password only to a private, non-loopback address, including after resolving a host name, and says what is wrong with any other entry. | T-REL-005, T-REL-006, T-REL-009 | EVD-P1-020 | SOFTWARE_VERIFIED |
 | REQ-SL-035 | What the relay sends to Rokid glasses opens one screen with four lines and updates the same lines for the next alert. | T-REL-007 | EVD-P1-020 | SOFTWARE_VERIFIED (format); glasses OPERATOR_REQUIRED |
 | REQ-SL-036 | The relay connects with whichever known form of Rokid's `connectBluetooth` the SDK has and refuses forms it does not know. | T-REL-008 | EVD-P1-020 | SOFTWARE_VERIFIED |
-| REQ-SL-037 | A wrong broker password stops the relay instead of retrying into the broker's lockout. Secrets are sealed with a Keystore key and backups are off. | emulator job, wrong-password step; code review of [Vault.kt](../relay/android/app/src/main/java/io/github/pengveloper/sentinel/relay/Vault.kt) | EVD-P1-021 | Lockout behaviour SOFTWARE_VERIFIED in an emulator; Keystore sealing reviewed, not tested |
+| REQ-SL-037 | A wrong broker password stops the relay instead of retrying into the broker's lockout. Secrets are sealed with a Keystore key and backups are off. | emulator job, wrong-password step; code review of [Vault.kt](../relay/android/app/src/main/java/com/wavrel/relay/Vault.kt) | EVD-P1-021 | Lockout behaviour SOFTWARE_VERIFIED in an emulator; Keystore sealing reviewed, not tested |
 
 Hardware results are added only with the board, firmware version, operator and time recorded.
 Failed results stay in the table.

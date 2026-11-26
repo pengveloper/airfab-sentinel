@@ -1,6 +1,6 @@
 # Security
 
-Sentinel Lab runs an MQTT hub on your LAN and shows what boards send to it. This page says
+Wavrel runs an MQTT hub on your LAN and shows what boards send to it. This page says
 what the app defends against, how, and what it does not cover.
 
 ## Reporting a problem
@@ -22,7 +22,7 @@ vulnerability). Please do not put details in a public issue.
 | Control | Where |
 |---|---|
 | Renderer sandbox on, context isolation on, Node integration off | `desktop/main/main.mjs` |
-| The window loads only files shipped with the app, through `app://sentinel`, with a path-escape check | `serve()` in `main.mjs` |
+| The window loads only files shipped with the app, through `app://wavrel`, with a path-escape check | `serve()` in `main.mjs` |
 | Content Security Policy sent with every file: scripts only from the app, no plugins, no `<base>`, no form posts | `CSP` in `main.mjs` |
 | Navigation away from the app and new windows are blocked; a short allowlist of HTTPS documentation hosts opens in the system browser instead | `web-contents-created` handlers |
 | `<webview>` is disabled; permission requests are denied except full screen and reaching a camera on the LAN | `main.mjs` |

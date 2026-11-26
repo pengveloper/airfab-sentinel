@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken

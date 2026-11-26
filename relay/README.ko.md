@@ -1,13 +1,13 @@
-# Sentinel Relay (안드로이드)
+# Wavrel Relay (안드로이드)
 
 [English](README.md)
 
-Sentinel Relay는 PC의 Sentinel Lab이 보내는 알림을 안드로이드 휴대폰으로 받아 로키드 안경에
+Wavrel Relay는 PC의 Wavrel이 보내는 알림을 안드로이드 휴대폰으로 받아 로키드 안경에
 띄웁니다. 링크에서 움직임이 시작되거나, 기기가 방에 들어오거나, 검증 세션에서 한 번 지나갈 때마다
 결과를 PC 앞으로 돌아가지 않고 렌즈에서 읽을 수 있습니다.
 
 ```
- PC: Sentinel Lab ── 와이파이, MQTT ──▶ 휴대폰: Sentinel Relay ── 블루투스, Rokid CXR-M ──▶ 로키드 안경
+ PC: Wavrel ── 와이파이, MQTT ──▶ 휴대폰: Wavrel Relay ── 블루투스, Rokid CXR-M ──▶ 로키드 안경
    lab/out/notify                          휴대폰 알림                                검은 바탕에 초록 글자
 ```
 
@@ -32,7 +32,7 @@ CI 에뮬레이터가 데스크톱 앱의 브로커에 붙어 찍은 화면입�
 ## 설치
 
 1. [relay 워크플로](https://github.com/pengveloper/airfab-sentinel/actions/workflows/relay.yml)의
-   가장 최근 성공한 실행에서 `sentinel-relay-debug-apk`를 내려받습니다. GitHub에 로그인해야 받을 수
+   가장 최근 성공한 실행에서 `wavrel-relay-debug-apk`를 내려받습니다. GitHub에 로그인해야 받을 수
    있습니다.
 2. 압축을 풀어 APK를 휴대폰으로 옮기고 엽니다. 처음 한 번 그 앱(내 파일, 크롬 등)에서 설치를
    허용할지 묻습니다.
@@ -41,7 +41,7 @@ CI 에뮬레이터가 데스크톱 앱의 브로커에 붙어 찍은 화면입�
 
 ## PC와 연결
 
-1. PC에서 Sentinel Lab을 켜고 **브로커 연결**을 누릅니다. **내장 브로커** 창에 Host 주소, 포트,
+1. PC에서 Wavrel을 켜고 **브로커 연결**을 누릅니다. **내장 브로커** 창에 Host 주소, 포트,
    비밀번호가 나옵니다.
 2. 휴대폰과 PC가 같은 와이파이에 있어야 합니다. 브로커를 처음 켤 때 Windows 방화벽 창이 떴다면 개인
    네트워크가 허용되어 있어야 합니다.
@@ -57,6 +57,7 @@ CI 에뮬레이터가 데스크톱 앱의 브로커에 붙어 찍은 화면입�
 2. Rokid SDK는 다시 연결할 때 Rokid 개발자 프로그램에서 내 안경용으로 발급한 client secret과 인증
    파일(`.lc`)을 확인합니다. secret을 넣고 파일을 고릅니다. 둘이 없어도 Rokid SDK가 확인하지 않는
    첫 연결은 시도합니다.
+   Rokid 개발자 콘솔이 앱의 패키지 이름을 물으면 `com.wavrel.relay`를 넣습니다.
 3. **안경에 시험 화면 띄우기**를 누릅니다.
 
 안경에는 한 번에 한 화면만 띄웁니다. 주의인지 알림인지와 값의 출처를 적은 줄, 제목, 본문, 시각을
@@ -98,7 +99,7 @@ gradle testDebugUnitTest assembleDebug
 Rokid SDK 버전은 `gradle.properties`의 `rokidCxrVersion`입니다. 워크플로 기록에 Rokid 저장소가 내놓은
 버전 목록이 찍힙니다. Rokid가 버전마다 `connectBluetooth`의 매개변수를 바꿔 왔기 때문에, 릴레이는
 쓰는 SDK에 있는 형태에 맞춰 값을 채웁니다
-([ConnectArgs.kt](android/app/src/main/java/io/github/pengveloper/sentinel/relay/ConnectArgs.kt)).
+([ConnectArgs.kt](android/app/src/main/java/com/wavrel/relay/ConnectArgs.kt)).
 
 ## 외부 코드
 

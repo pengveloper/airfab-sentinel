@@ -1,13 +1,13 @@
-# Sentinel Relay (Android)
+# Wavrel Relay (Android)
 
 [한국어](README.ko.md)
 
-Sentinel Relay carries Sentinel Lab's alerts from your PC to an Android phone and on to Rokid
+Wavrel Relay carries Wavrel's alerts from your PC to an Android phone and on to Rokid
 glasses. When something happens, you read it on the lens without going back to the PC: motion
 starting on a link, a device entering a room, or the outcome of each pass in a validation walk.
 
 ```
- PC: Sentinel Lab ── Wi-Fi, MQTT ──▶ Phone: Sentinel Relay ── Bluetooth, Rokid CXR-M ──▶ Rokid glasses
+ PC: Wavrel ── Wi-Fi, MQTT ──▶ Phone: Wavrel Relay ── Bluetooth, Rokid CXR-M ──▶ Rokid glasses
    lab/out/notify                        phone notification                         green text on black
 ```
 
@@ -33,7 +33,7 @@ Screenshots from the CI emulator run against the desktop app's broker.
 
 1. Open the latest successful run of the
    [relay workflow](https://github.com/pengveloper/airfab-sentinel/actions/workflows/relay.yml)
-   and download `sentinel-relay-debug-apk`. You need to be signed in to GitHub to download it.
+   and download `wavrel-relay-debug-apk`. You need to be signed in to GitHub to download it.
 2. Unzip it, copy the APK to the phone and open it. Android asks once to allow installs from
    that app (Files, Chrome and so on).
 3. Debug builds are signed with a key made for each build. To install a newer one, uninstall
@@ -41,7 +41,7 @@ Screenshots from the CI emulator run against the desktop app's broker.
 
 ## Connect to the PC
 
-1. On the PC, start Sentinel Lab and press **Connect**. The **Built-in broker** panel shows the
+1. On the PC, start Wavrel and press **Connect**. The **Built-in broker** panel shows the
    Host address, the port and the password.
 2. The phone and the PC need to be on the same Wi-Fi. If Windows asked about the firewall when
    the broker first started, private networks must be allowed.
@@ -58,6 +58,7 @@ address for a minute after five failed logins.
 2. Rokid's SDK checks a client secret and a licence file (`.lc`) issued for your glasses through
    Rokid's developer program before it reconnects. Enter the secret and choose the file. Without
    them the relay still tries the first connection, which Rokid's SDK does not check.
+   When Rokid's developer console asks for the app's package name, it is `com.wavrel.relay`.
 3. Press **Show a test on the glasses**.
 
 The relay shows one screen at a time: a line saying whether it is an alert and where the values
@@ -101,7 +102,7 @@ gradle testDebugUnitTest assembleDebug
 The Rokid SDK version is `rokidCxrVersion` in `gradle.properties`. The workflow log lists the
 versions Rokid's repository offers. Rokid has changed the parameters of `connectBluetooth`
 between releases, so the relay fills whichever form the SDK in use has
-([ConnectArgs.kt](android/app/src/main/java/io/github/pengveloper/sentinel/relay/ConnectArgs.kt)).
+([ConnectArgs.kt](android/app/src/main/java/com/wavrel/relay/ConnectArgs.kt)).
 
 ## Third-party code
 

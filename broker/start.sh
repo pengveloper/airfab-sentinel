@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Sentinel Lab 브로커 시작 (macOS, Linux). Windows에서는 start.ps1을 씁니다.
+# Wavrel 브로커 시작 (macOS, Linux). Windows에서는 start.ps1을 씁니다.
 # 비밀번호는 직접 입력하며, 해시는 Docker 볼륨에만 저장됩니다.
 cd "$(dirname "$0")" || exit 1
 docker info >/dev/null 2>&1 || { echo 'Docker가 꺼져 있습니다. 켠 다음 다시 실행하세요.'; exit 1; }

@@ -246,7 +246,7 @@ function wire(){camMain=CamBox($('#cam-main'),false);camInset=CamBox($('#mo-cam'
   $('#ev-file').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{Lab.replay(String(rd.result),+$('#ev-speed').value,err=>{$('#ev-rp').textContent=err||'';});};rd.readAsText(f);e.target.value='';});
   $('#ev-report').addEventListener('click',()=>{const md=Lab.report(),out=$('#ev-out'),b=$('#ev-report');out.hidden=false;out.value=md;out.focus();out.select();if(navigator.clipboard)navigator.clipboard.writeText(md).then(()=>{b.textContent=L('복사했습니다');setTimeout(()=>{b.textContent=L('검증 요약 복사');},1600);},()=>{});});
   $('#ev-export').addEventListener('click',()=>{const data=Lab.exportLog(),out=$('#ev-out');
-    if(Lab.canLive){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/x-ndjson'}));a.download='sentinel-lab-'+new Date().toISOString().replace(/[:.]/g,'-')+'.jsonl';document.body.appendChild(a);a.click();a.remove();return;}catch(err){}}
+    if(Lab.canLive){try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/x-ndjson'}));a.download='wavrel-'+new Date().toISOString().replace(/[:.]/g,'-')+'.jsonl';document.body.appendChild(a);a.click();a.remove();return;}catch(err){}}
     out.hidden=false;out.value=data.split('\n').slice(0,400).join('\n');out.focus();out.select();
     if(navigator.clipboard)navigator.clipboard.writeText(data).then(()=>{$('#ev-export').textContent=L('클립보드에 복사함');},()=>{});});
 }

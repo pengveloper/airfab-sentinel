@@ -1,16 +1,17 @@
-// Sentinel Lab desktop: one window, one embedded MQTT hub.
+// Wavrel desktop: one window, one embedded MQTT hub.
 // Security posture: the window is sandboxed, loads only files shipped with the app through
-// app://sentinel, cannot navigate away or open windows, and talks to this process over a
+// app://wavrel, cannot navigate away or open windows, and talks to this process over a
 // short list of validated IPC calls.
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, Menu, clipboard, ipcMain, protocol, session, shell } from 'electron';
 import { Hub } from './broker.mjs';
 import * as store from './store.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ORIGIN = 'app://sentinel/';
+const ORIGIN = 'app://wavrel/';
 const ROOT = () => path.join(app.getAppPath(), 'console');
 const EXTERNAL = new Set(['espectre.dev', 'espresense.com', 'tasmota.github.io', 'templates.blakadder.com', 'github.com', 'mosquitto.org']);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json', '.md': 'text/plain; charset=utf-8' };
@@ -22,8 +23,17 @@ const CSP = [
 
 protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, supportFetchAPI: true } }]);
 
+// Wavrel was called Sentinel Lab, and Electron names the data folder after the product. When this
+// computer has settings from the old name and none under the new one, keep using the old folder:
+// on Windows the hub password is sealed with a key kept in that folder, so moving only settings.json
+// would lose it.
+// An explicit --user-data-dir always wins.
+const legacyData = path.join(app.getPath('appData'), 'Sentinel Lab');
+if (!app.commandLine.hasSwitch('user-data-dir') && !existsSync(path.join(app.getPath('userData'), 'settings.json'))
+  && existsSync(path.join(legacyData, 'settings.json'))) app.setPath('userData', legacyData);
+
 let win = null;
-const port = Number(process.env.SENTINEL_MQTT_PORT) || 1883;
+const port = Number(process.env.WAVREL_MQTT_PORT) || 1883;
 const hub = new Hub({ port, getPassword: () => store.getPassword() });
 const send = (channel, data) => { if (win && !win.isDestroyed()) win.webContents.send(channel, data); };
 const publicStatus = () => ({ ...hub.status(), hasPassword: store.hasPassword(), error: lastError });
@@ -46,7 +56,7 @@ function openExternal(url) {
 
 async function serve(request) {
   const url = new URL(request.url);
-  if (url.host !== 'sentinel' || request.method !== 'GET') return new Response('', { status: 404 });
+  if (url.host !== 'wavrel' || request.method !== 'GET') return new Response('', { status: 404 });
   const rel = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
   const file = path.normalize(path.join(ROOT(), rel));
   if (!file.startsWith(ROOT() + path.sep)) return new Response('', { status: 403 });
@@ -59,7 +69,7 @@ async function serve(request) {
 function createWindow() {
   win = new BrowserWindow({
     width: 1480, height: 940, minWidth: 420, minHeight: 600, show: false, backgroundColor: '#05080d',
-    title: 'Sentinel Lab', icon: path.join(HERE, '..', 'build', 'icon.png'),
+    title: 'Wavrel', icon: path.join(HERE, '..', 'build', 'icon.png'),
     titleBarStyle: 'hidden', titleBarOverlay: { color: '#05080d', symbolColor: '#c9d3df', height: 44 },
     webPreferences: { preload: path.join(HERE, '..', 'preload', 'preload.cjs'), contextIsolation: true, sandbox: true, nodeIntegration: false, webSecurity: true, spellcheck: false, devTools: !app.isPackaged },
   });
@@ -100,7 +110,7 @@ else {
     // The page may go full screen (presentation mode) and reach a camera on the LAN. Nothing else.
     const allowed = new Set(['fullscreen', 'local-network', 'local-network-access', 'loopback-network']);
     session.defaultSession.setPermissionRequestHandler((wc, permission, cb) => cb(allowed.has(permission) && wc.getURL().startsWith(ORIGIN)));
-    session.defaultSession.setPermissionCheckHandler((wc, permission, origin) => allowed.has(permission) && String(origin).startsWith('app://sentinel'));
+    session.defaultSession.setPermissionCheckHandler((wc, permission, origin) => allowed.has(permission) && String(origin).startsWith('app://wavrel'));
     wireIpc();
     createWindow();
     if (store.hasPassword()) await startHub();

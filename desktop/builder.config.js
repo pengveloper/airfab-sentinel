@@ -1,12 +1,14 @@
 // electron-builder configuration.
-// The Store identity below is the one Partner Center assigned when the name "Sentinel Lab" was
-// reserved (Product identity page). These values are public: they are written into every package
-// manifest. Environment variables can override them for a fork or a test identity.
+// The Store identity below is the one Partner Center assigned to product 9NVR2WGRQB9X when it was
+// first reserved under the name "Sentinel Lab". The identity name never changes for a product, so
+// it keeps that spelling; the display name is "Wavrel", which is also reserved on the same product.
+// These values are public: they are written into every package manifest. Environment variables can
+// override them for a fork or a test identity.
 const env = process.env;
 
 module.exports = {
-  appId: 'io.github.pengveloper.sentinellab',
-  productName: 'Sentinel Lab',
+  appId: 'com.wavrel.desktop',
+  productName: 'Wavrel',
   copyright: 'Copyright (c) 2026 pengveloper',
   directories: { output: 'dist', buildResources: 'desktop/build' },
   files: ['package.json', 'desktop/main/**', 'desktop/preload/**', 'desktop/build/icon.png', 'console/**', '!console/**/*.map'],
@@ -26,18 +28,18 @@ module.exports = {
   win: {
     icon: 'desktop/build/icon.ico',
     target: [{ target: 'appx', arch: ['x64'] }, { target: 'zip', arch: ['x64'] }],
-    artifactName: 'SentinelLab-${version}-win-${arch}.${ext}',
+    artifactName: 'Wavrel-${version}-win-${arch}.${ext}',
   },
   appx: {
-    applicationId: 'SentinelLab',
-    displayName: 'Sentinel Lab',
+    applicationId: 'Wavrel',
+    displayName: 'Wavrel',
     identityName: env.APPX_IDENTITY_NAME || 'Pengveloper.SentinelLab',
     publisher: env.APPX_PUBLISHER || 'CN=51D09130-0EBA-4F7D-8E24-51F9EC2B32F3',
     publisherDisplayName: env.APPX_PUBLISHER_DISPLAY_NAME || 'Pengveloper',
     backgroundColor: '#05080d',
     languages: ['ko-KR', 'en-US'],
     capabilities: ['runFullTrust', 'privateNetworkClientServer'],
-    artifactName: 'SentinelLab-${version}-store.${ext}',
+    artifactName: 'Wavrel-${version}-store.${ext}',
   },
   linux: { target: [{ target: 'dir' }], category: 'Development' },
   mac: { target: [{ target: 'dir' }], category: 'public.app-category.developer-tools' },

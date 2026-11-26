@@ -1,6 +1,6 @@
 # Alert channel for glasses and phones
 
-Sentinel Lab can say what it sees in one short sentence at a time, on one MQTT topic.
+Wavrel can say what it sees in one short sentence at a time, on one MQTT topic.
 A receiver (an app for smart glasses, a phone, anything that speaks MQTT) subscribes to that
 topic and shows the title and body. It needs to know nothing about ESP32 firmware.
 
@@ -59,7 +59,7 @@ mosquitto_sub -h <address of this PC> -p 1883 -u lab -P <hub password> -t lab/ou
 
 ## Receivers
 
-- [Sentinel Relay](../relay/README.md) for Android: shows each alert as a phone notification and on
+- [Wavrel Relay](../relay/README.md) for Android: shows each alert as a phone notification and on
   Rokid glasses through Rokid's CXR-M SDK. Tests T-REL-001 to T-REL-004 check it against this
   format, including that a missing or unknown `source` is labelled rather than shown as a measurement.
 

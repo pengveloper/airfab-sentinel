@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -189,7 +189,7 @@ class Glasses(private val app: Context, private val vault: Vault, private val on
     }
 
     companion object {
-        const val CLIENT_NAME = "Sentinel Relay"
+        const val CLIENT_NAME = "Wavrel Relay"
         private val SUCCEED = ValueUtil.CxrStatus.REQUEST_SUCCEED
         /** Rokid glasses advertise this BLE service (Rokid's CXR-M device connection guide). */
         const val SERVICE_UUID = "00009100-0000-1000-8000-00805f9b34fb"

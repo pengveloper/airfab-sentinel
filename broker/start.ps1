@@ -1,4 +1,4 @@
-﻿# Sentinel Lab 브로커 시작 (Windows, PowerShell 7)
+﻿# Wavrel 브로커 시작 (Windows, PowerShell 7)
 # 하는 일: Docker 확인 -> 비밀번호가 없으면 만들기 -> 브로커 실행 -> 이 PC의 LAN 주소 안내 -> 콘솔 열기
 # 비밀번호는 직접 입력하며, 해시는 Docker 볼륨에만 저장됩니다. 이 폴더와 화면 기록에는 남지 않습니다.
 # 방화벽과 시스템 설정은 바꾸지 않습니다.

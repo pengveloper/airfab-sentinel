@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import android.animation.ValueAnimator
 import android.content.Context

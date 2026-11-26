@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
@@ -81,7 +81,7 @@ class Vault(context: Context) {
 
         private const val SEALED = "sealed."
         private const val KEYSTORE = "AndroidKeyStore"
-        private const val ALIAS = "sentinel-relay"
+        private const val ALIAS = "wavrel-relay"
         private const val TRANSFORM = "AES/GCM/NoPadding"
         private const val IV_BYTES = 12
     }

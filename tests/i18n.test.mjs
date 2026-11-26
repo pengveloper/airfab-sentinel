@@ -9,8 +9,8 @@ import { scanAll, dictionary, shapeProblems } from '../tools/i18n-scan.mjs';
 
 const read = f => readFileSync(fileURLToPath(new URL('../console/js/' + f, import.meta.url)), 'utf8');
 function load(language, search = '', saved = null) {
-  const store = new Map(saved ? [['sentinel-lab-lang', saved]] : []);
-  const ctx = { navigator: { language }, location: { search, href: 'app://sentinel/index.html' + search + '#rules', replace(u) { ctx.opened = u; }, reload() { ctx.opened = 'reload'; } }, URLSearchParams, URL, history: { replaceState(a, b, u) { ctx.cleaned = u; } },
+  const store = new Map(saved ? [['wavrel-lang', saved]] : []);
+  const ctx = { navigator: { language }, location: { search, href: 'app://wavrel/index.html' + search + '#rules', replace(u) { ctx.opened = u; }, reload() { ctx.opened = 'reload'; } }, URLSearchParams, URL, history: { replaceState(a, b, u) { ctx.cleaned = u; } },
     localStorage: { getItem: k => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)) } };
   ctx.window = ctx; vm.createContext(ctx); vm.runInContext(read('i18n-en.js') + '\n' + read('i18n.js'), ctx);
   return { L: ctx.L, I18N: ctx.I18N, store, ctx };
@@ -39,8 +39,8 @@ test('T-I18N-003 언어는 주소, 저장한 선택, 기기 언어 순으로 정
   assert.equal(ko.L`${7}단계 중 ${3}단계`, '7단계 중 3단계'); assert.equal(en.L`${7}단계 중 ${3}단계`, '3 of 7 steps');
   assert.equal(en.L('조용함'), 'Quiet'); assert.equal(ko.L('조용함'), '조용함');
   assert.equal(en.L`사전에 없는 문장 ${1}`, '사전에 없는 문장 1'); assert.deepEqual([...en.I18N.missing], ['사전에 없는 문장 {0}'], '없는 문장은 원문을 보여 주고 따로 적어 둔다');
-  en.I18N.set('ko'); assert.equal(en.store.get('sentinel-lab-lang'), 'ko'); assert.equal(en.ctx.opened, 'app://sentinel/index.html?lang=ko#rules', '고른 언어를 주소에 실어 다시 연다');
-  const asked = load('ko-KR', '?lang=en'); assert.equal(asked.store.get('sentinel-lab-lang'), 'en'); assert.equal(asked.ctx.cleaned, 'app://sentinel/index.html#rules', '적용한 뒤에는 주소에서 지운다');
+  en.I18N.set('ko'); assert.equal(en.store.get('wavrel-lang'), 'ko'); assert.equal(en.ctx.opened, 'app://wavrel/index.html?lang=ko#rules', '고른 언어를 주소에 실어 다시 연다');
+  const asked = load('ko-KR', '?lang=en'); assert.equal(asked.store.get('wavrel-lang'), 'en'); assert.equal(asked.ctx.cleaned, 'app://wavrel/index.html#rules', '적용한 뒤에는 주소에서 지운다');
 });
 
 test('T-I18N-004 기본으로 붙은 이름은 화면 언어를 따라가고, 직접 지은 이름은 그대로 둔다', () => {

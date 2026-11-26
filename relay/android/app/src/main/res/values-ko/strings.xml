@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Sentinel Relay</string>
-    <string name="lede">PC의 Sentinel Lab이 보내는 알림을 이 휴대폰과 로키드 안경으로 옮깁니다.</string>
+    <string name="app_name">Wavrel Relay</string>
+    <string name="lede">PC의 Wavrel이 보내는 알림을 이 휴대폰과 로키드 안경으로 옮깁니다.</string>
 
     <string name="state_running">실행 중</string>
     <string name="state_stopped">멈춤</string>
@@ -55,7 +55,7 @@
     <string name="label_password">브로커 비밀번호</string>
     <string name="hint_password">내장 브로커 창에 있는 값</string>
     <string name="hint_saved">저장됨. 입력하면 바뀝니다</string>
-    <string name="help_hub">PC의 Sentinel Lab에서 \'브로커 연결\'을 누르면 내장 브로커 창에 Host 주소와 비밀번호가 나옵니다. 휴대폰과 PC가 같은 와이파이에 있어야 합니다.</string>
+    <string name="help_hub">PC의 Wavrel에서 \'브로커 연결\'을 누르면 내장 브로커 창에 Host 주소와 비밀번호가 나옵니다. 휴대폰과 PC가 같은 와이파이에 있어야 합니다.</string>
     <string name="addr_empty">내장 브로커 창의 Host 주소를 넣어 주세요.</string>
     <string name="addr_bad_host">주소 형식이 아닙니다. 내장 브로커 창의 Host 숫자(예: 192.168.0.12)를 넣어 주세요.</string>
     <string name="addr_bad_port">포트는 1부터 65535 사이 숫자여야 합니다. 바꾸지 않았다면 1883입니다.</string>
@@ -82,7 +82,7 @@
     <string name="test_glasses">안경에 시험 화면 띄우기</string>
     <string name="test_not_connected">안경을 먼저 연결해 주세요.</string>
     <string name="test_failed">안경이 화면을 받지 않았습니다.</string>
-    <string name="test_title">Sentinel Relay 시험</string>
+    <string name="test_title">Wavrel Relay 시험</string>
     <string name="test_body">이 글이 보이면 알림도 여기에 뜹니다.</string>
     <string name="phone_alerts">이 휴대폰에도 알림 띄우기</string>
 

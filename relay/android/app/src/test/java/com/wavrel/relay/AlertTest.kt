@@ -1,4 +1,4 @@
-package io.github.pengveloper.sentinel.relay
+package com.wavrel.relay
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

@@ -1,4 +1,4 @@
-/* Sentinel Lab Console. Layout: 왼쪽 레일 + 상단 상태줄 + 화면. 한 가지 어두운 테마(시험대 검정, PCB 금색, RF 파랑)를 의도적으로 고정합니다. */
+/* Wavrel Console. Layout: 왼쪽 레일 + 상단 상태줄 + 화면. 한 가지 어두운 테마(시험대 검정, PCB 금색, RF 파랑)를 의도적으로 고정합니다. */
 :root{
   --ink:#05080d;--surface:#0b1119;--raise:#121b27;--line:#1f2c3d;--text:#e8eef6;--muted:#8c9db3;
   --accent:#ecb955;--wave:#9cc6ff;--sim:#b9a8ff;--ok:#5fd3a2;--warn:#ff9d5c;--bad:#ff5c77;

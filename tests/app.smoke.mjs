@@ -11,7 +11,7 @@ import { _electron } from 'playwright-core';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'dist', 'smoke'); fs.mkdirSync(out, { recursive: true });
-const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-'));
+const userData = fs.mkdtempSync(path.join(os.tmpdir(), 'wavrel-'));
 const port = await new Promise(r => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); });
 const linux = process.platform === 'linux';
 const common = [...(linux ? ['--no-sandbox', '--password-store=basic', '--use-angle=swiftshader'] : []), '--enable-unsafe-swiftshader'];
@@ -42,7 +42,7 @@ const tryConnect = password => new Promise(resolve => {
   c.once('connect', () => resolve(c)); c.once('error', () => { c.end(true); resolve(null); });
 });
 
-const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LANGUAGE: 'ko', SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
+const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LANGUAGE: 'ko', WAVREL_MQTT_PORT: String(port), ...(linux ? { WAVREL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
 let failed = false;
 try {
   let win = await app.firstWindow(); const ui = drive(() => win);
@@ -55,7 +55,7 @@ try {
       if (Date.now() > end) throw new Error('the window did not come back in ' + lang); await new Promise(r => setTimeout(r, 300)); } };
   await ready();
   // --lang이 듣지 않는 환경에서는 화면 안에서 한국어로 바꿉니다.
-  const langState = () => win.evaluate(() => ({ lang: window.I18N && I18N.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable: ' + e.name; } })(), system: navigator.language, search: location.search }));
+  const langState = () => win.evaluate(() => ({ lang: window.I18N && I18N.lang, saved: (() => { try { return localStorage.getItem('wavrel-lang'); } catch (e) { return 'unavailable: ' + e.name; } })(), system: navigator.language, search: location.search }));
   if ((await langState()).lang !== 'ko') {
     await win.evaluate(() => { I18N.set('ko'); }).catch(() => {}); win = await settle('ko');
     const st = await langState(); console.log('note started in English, switched to Korean: ' + JSON.stringify(st));
@@ -65,8 +65,8 @@ try {
   console.log('note 3D scene: ' + (await win.evaluate(() => (window.Space && Space.ok) ? 'WebGL' : '2D fallback')));
   // 1. 창의 격리 상태
   const iso = await win.evaluate(async () => ({ url: location.href, require: typeof window.require, process: typeof window.process, bridge: Object.keys(window.desktop).sort(),
-    csp: (await fetch('index.html')).headers.get('content-security-policy'), outside: await fetch('app://sentinel/../package.json').then(r => r.status, () => 0) }));
-  assert.equal(iso.url, 'app://sentinel/index.html'); assert.equal(iso.require, 'undefined'); assert.equal(iso.process, 'undefined');
+    csp: (await fetch('index.html')).headers.get('content-security-policy'), outside: await fetch('app://wavrel/../package.json').then(r => r.status, () => 0) }));
+  assert.equal(iso.url, 'app://wavrel/index.html'); assert.equal(iso.require, 'undefined'); assert.equal(iso.process, 'undefined');
   assert.ok(iso.csp.includes("script-src 'self'") && iso.csp.includes("object-src 'none'")); assert.notEqual(iso.outside, 200);
   assert.deepEqual(iso.bridge, ['copy', 'info', 'onBroker', 'onMessage', 'publish', 'replayRetained', 'restart', 'revealPassword', 'setup', 'status', 'suggestPassword']);
   step('window is isolated: no Node, fixed bridge, CSP header, no path escape');
@@ -161,7 +161,7 @@ try {
   step('demo views open without errors');
   // 7. 창은 밖으로 나가지 못한다
   await win.evaluate(() => { try { location.href = 'https://example.com/'; } catch (e) { /* blocked */ } }); await sleep(800);
-  assert.equal((await win.evaluate(() => location.href)).startsWith('app://sentinel/'), true);
+  assert.equal((await win.evaluate(() => location.href)).startsWith('app://wavrel/'), true);
   assert.equal(await win.evaluate(() => window.open('https://example.com/') === null), true);
   assert.equal(app.windows().length, 1);
   step('navigation and new windows are blocked');
@@ -178,12 +178,12 @@ try { fs.rmSync(userData, { recursive: true, force: true, maxRetries: 10, retryD
 // 화면 안에서 언어를 바꾸면 페이지가 새로 열리는데, Windows 빌드 서버에서는 그 뒤로 창을 다루는 기다림이 가끔 끝나지 않습니다.
 // 그래서 전체 화면 점검은 처음부터 영어로 띄운 창에서 하고, 언어 버튼은 맨 마지막에 눌러 결과만 확인합니다.
 async function english() {
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'sentinel-lab-en-'));
-  const app2 = await _electron.launch({ args: [...common, '--lang=en-US', root, `--user-data-dir=${profile}`], cwd: root, env: { ...process.env, LANGUAGE: 'en', SENTINEL_MQTT_PORT: String(port), ...(linux ? { SENTINEL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'wavrel-en-'));
+  const app2 = await _electron.launch({ args: [...common, '--lang=en-US', root, `--user-data-dir=${profile}`], cwd: root, env: { ...process.env, LANGUAGE: 'en', WAVREL_MQTT_PORT: String(port), ...(linux ? { WAVREL_DEV_BASIC_STORE: '1' } : {}) }, timeout: 60_000 });
   try {
     let win = await app2.firstWindow(); const ui = drive(() => win); await ui.until(() => document.readyState !== 'loading', null, 90_000);   // 빌드 서버에서는 첫 화면(3D 장면 준비 포함)이 뜨는 데 오래 걸릴 때가 있습니다
     await ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 90_000);
-    const state = w => w.evaluate(() => ({ lang: I18N.lang, doc: document.documentElement.lang, saved: (() => { try { return localStorage.getItem('sentinel-lab-lang'); } catch (e) { return 'unavailable'; } })(), search: location.search }));
+    const state = w => w.evaluate(() => ({ lang: I18N.lang, doc: document.documentElement.lang, saved: (() => { try { return localStorage.getItem('wavrel-lang'); } catch (e) { return 'unavailable'; } })(), search: location.search }));
     const st = await state(win); assert.equal(st.lang, 'en', 'an English system starts in English: ' + JSON.stringify(st)); assert.equal(st.doc, 'en');
     const leftover = () => win.evaluate(() => { const H = /[\u3131-\u318e\uac00-\ud7a3]/, seen = [];
       const w = document.createTreeWalker(document.body, 4, { acceptNode: n => /^(SCRIPT|STYLE)$/.test(n.parentNode.nodeName) || n.parentNode.closest('.lang') ? 2 : 1 });

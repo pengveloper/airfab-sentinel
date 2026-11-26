@@ -1,6 +1,6 @@
 {
-  "name": "sentinel-lab",
-  "productName": "Sentinel Lab",
+  "name": "wavrel",
+  "productName": "Wavrel",
   "version": "0.3.0",
   "description": "Desktop console and MQTT hub for trying ESP32 sensing firmware side by side",
   "author": "pengveloper",

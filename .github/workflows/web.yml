@@ -1,0 +1,111 @@
+# Deploys the website to AWS (S3 + CloudFront) at wavrel.com.
+# No AWS keys are stored: the job assumes the wavrel-github-deploy role through GitHub's
+# OpenID Connect token, which that role accepts only from this repository's "aws" environment
+# (infra/bootstrap.yml). The role ARN is the repository variable AWS_DEPLOY_ROLE_ARN.
+name: web
+on:
+  push:
+    branches: [main, feat/aws-web]
+    paths:
+      - 'web/**'
+      - 'console/**'
+      - 'infra/web*.yml'
+      - 'tools/site.mjs'
+      - '.github/workflows/web.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: web-deploy
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  DOMAIN: wavrel.com
+
+jobs:
+  deploy:
+    name: Deploy the website
+    runs-on: ubuntu-latest
+    environment:
+      name: aws
+      url: https://wavrel.com/
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install without running package scripts
+        run: npm ci --ignore-scripts
+      - name: Assemble the site
+        run: |
+          node desktop/scripts/fonts.mjs
+          node tools/site.mjs _site
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: wavrel-web-${{ github.run_id }}
+
+      - name: Certificate (first run prints the DNS record to add at Cloudflare)
+        id: cert
+        run: |
+          set -euo pipefail
+          stack=wavrel-web-cert
+          if ! aws cloudformation describe-stacks --stack-name $stack >/dev/null 2>&1; then
+            aws cloudformation create-stack --stack-name $stack --template-body file://infra/web-cert.yml \
+              --parameters ParameterKey=DomainName,ParameterValue=$DOMAIN --tags Key=project,Value=wavrel
+          fi
+          for i in $(seq 1 30); do
+            status=$(aws cloudformation describe-stacks --stack-name $stack --query 'Stacks[0].StackStatus' --output text)
+            [ "$status" = CREATE_COMPLETE ] || [ "$status" = UPDATE_COMPLETE ] && break
+            case "$status" in *FAILED*|*ROLLBACK*) echo "::error::$stack is $status"; exit 1;; esac
+            if [ $i -eq 1 ] || [ $((i % 6)) -eq 0 ]; then
+              arn=$(aws cloudformation describe-stack-resources --stack-name $stack --query "StackResources[?LogicalResourceId=='Certificate'].PhysicalResourceId" --output text)
+              if [ -n "$arn" ] && [ "$arn" != None ]; then
+                aws acm describe-certificate --certificate-arn "$arn" --region us-east-1 \
+                  --query 'Certificate.DomainValidationOptions[].ResourceRecord' --output table || true
+              fi
+              echo "Waiting for ACM to see the validation record ($status)"
+            fi
+            sleep 20
+          done
+          if [ "$status" != CREATE_COMPLETE ] && [ "$status" != UPDATE_COMPLETE ]; then
+            echo "::warning::Add the CNAME above at Cloudflare (DNS only), then run this workflow again."
+            exit 1
+          fi
+          echo "arn=$(aws cloudformation describe-stacks --stack-name $stack --query "Stacks[0].Outputs[?OutputKey=='CertificateArn'].OutputValue" --output text)" >> "$GITHUB_OUTPUT"
+
+      - name: Bucket and CloudFront
+        id: web
+        run: |
+          set -euo pipefail
+          aws cloudformation deploy --stack-name wavrel-web --template-file infra/web.yml \
+            --parameter-overrides DomainName=$DOMAIN CertificateArn=${{ steps.cert.outputs.arn }} \
+            --tags project=wavrel --no-fail-on-empty-changeset
+          out() { aws cloudformation describe-stacks --stack-name wavrel-web --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          echo "bucket=$(out BucketName)" >> "$GITHUB_OUTPUT"
+          echo "distribution=$(out DistributionId)" >> "$GITHUB_OUTPUT"
+          echo "CloudFront address for the Cloudflare CNAME: $(out DistributionDomainName)"
+
+      - name: Upload
+        run: |
+          set -euo pipefail
+          b=s3://${{ steps.web.outputs.bucket }}
+          # Pages and code revalidate on every visit (names are not fingerprinted); fonts and images keep for a week.
+          aws s3 sync _site $b --delete --exclude '*' --include '*.html' --include '*.js' --include '*.css' --include '*.json' --include '*.md' \
+            --cache-control 'no-cache'
+          aws s3 sync _site $b --delete --exclude '*.html' --exclude '*.js' --exclude '*.css' --exclude '*.json' --exclude '*.md' \
+            --cache-control 'public, max-age=604800'
+          aws cloudfront create-invalidation --distribution-id ${{ steps.web.outputs.distribution }} --paths '/*' --query 'Invalidation.Id' --output text
+
+      - name: Check the live site
+        continue-on-error: true
+        run: |
+          for path in / /demo/ /privacy/ /does-not-exist; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN$path" || echo 000)
+            echo "$path -> $code"
+          done
+          curl -sI "https://$DOMAIN/" | grep -iE '^(strict-transport-security|content-security-policy|x-frame-options|x-content-type-options):' || true

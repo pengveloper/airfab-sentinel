@@ -1,14 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  Sentinel Lab, one-time setup. Lets GitHub Actions in pengveloper/airfab-sentinel deploy the
+  Wavrel, one-time setup. Lets GitHub Actions in this repository deploy the
   website and the alert relay without stored AWS keys (OpenID Connect). The role can only be
   assumed by jobs that run in the repository's "aws" environment, and it can only touch
-  resources named sentinel-*.
+  resources named wavrel-*.
 
 Parameters:
   Repository:
     Type: String
     Default: pengveloper/airfab-sentinel
+  NewRepository:
+    Type: String
+    Default: pengveloper/wavrel
+    Description: The name the repository will have after the rename; both are trusted.
   ExistingOidcProviderArn:
     Type: String
     Default: ''
@@ -30,8 +34,8 @@ Resources:
   DeployRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: sentinel-github-deploy
-      Description: Deploys Sentinel Lab from GitHub Actions (environment "aws" only)
+      RoleName: wavrel-github-deploy
+      Description: Deploys Wavrel from GitHub Actions (environment "aws" only)
       MaxSessionDuration: 3600
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -43,16 +47,18 @@ Resources:
             Condition:
               StringEquals:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
-                token.actions.githubusercontent.com:sub: !Sub repo:${Repository}:environment:aws
+                token.actions.githubusercontent.com:sub:
+                  - !Sub repo:${Repository}:environment:aws
+                  - !Sub repo:${NewRepository}:environment:aws
       Policies:
-        - PolicyName: sentinel-deploy
+        - PolicyName: wavrel-deploy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
               - Sid: Stacks
                 Effect: Allow
                 Action: cloudformation:*
-                Resource: !Sub arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/sentinel-*/*
+                Resource: !Sub arn:${AWS::Partition}:cloudformation:*:${AWS::AccountId}:stack/wavrel-*/*
               - Sid: StackReads
                 Effect: Allow
                 Action:
@@ -65,8 +71,8 @@ Resources:
                 Effect: Allow
                 Action: s3:*
                 Resource:
-                  - !Sub arn:${AWS::Partition}:s3:::sentinel-*
-                  - !Sub arn:${AWS::Partition}:s3:::sentinel-*/*
+                  - !Sub arn:${AWS::Partition}:s3:::wavrel-*
+                  - !Sub arn:${AWS::Partition}:s3:::wavrel-*/*
               - Sid: Website
                 Effect: Allow
                 Action:
@@ -103,12 +109,12 @@ Resources:
                   - iam:AddRoleToInstanceProfile
                   - iam:RemoveRoleFromInstanceProfile
                 Resource:
-                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/sentinel-*
-                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:instance-profile/sentinel-*
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-*
+                  - !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:instance-profile/wavrel-*
               - Sid: PassOnlyToEc2
                 Effect: Allow
                 Action: iam:PassRole
-                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/sentinel-*
+                Resource: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/wavrel-*
                 Condition:
                   StringEquals:
                     iam:PassedToService: ec2.amazonaws.com

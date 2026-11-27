@@ -13,8 +13,8 @@ android {
         applicationId = "com.wavrel.relay"
         minSdk = 28 // the Rokid SDK needs Android 9 or later
         targetSdk = 35
-        versionCode = 2
-        versionName = "0.5.0"
+        versionCode = 3
+        versionName = "0.6.0"
     }
 
     // Release builds are signed only in the release workflow, which loads the key from

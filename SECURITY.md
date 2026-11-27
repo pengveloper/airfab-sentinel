@@ -27,9 +27,10 @@ vulnerability). Please do not put details in a public issue.
 | Content Security Policy sent with every file: scripts only from the app, no plugins, no `<base>`, no form posts | `CSP` in `main.mjs` |
 | Navigation away from the app and new windows are blocked; a short allowlist of HTTPS documentation hosts opens in the system browser instead | `web-contents-created` handlers |
 | `<webview>` is disabled; permission requests are denied except full screen and reaching a camera on the LAN | `main.mjs` |
-| The bridge exposes seventeen fixed functions. The window never receives `ipcRenderer`, Node or Electron objects | `desktop/preload/preload.cjs` |
+| The bridge exposes eighteen fixed functions. The window never receives `ipcRenderer`, Node or Electron objects | `desktop/preload/preload.cjs` |
 | The window never reaches a model server itself. The main process asks for it, and only over plain HTTP to localhost, a loopback address or a private address written as an IP (no host names, so a name cannot later resolve elsewhere); no redirects, a 2 MB reply limit, one question at a time | `desktop/main/models.mjs`, T-MOD-001..007 |
 | The window never reaches the relay server itself. The main process keeps the link (`wss://` only, or `ws://` to the PC itself), seals its token with `safeStorage`, never returns the token to the window, and sends back only the answer the window published for a question that arrived over the link in the last 50 seconds | `desktop/main/link.mjs`, T-LNK-001, T-SRV-005 |
+| The window never reaches the camera itself either. For "Ask the camera", the main process takes one still from a private IP address only (plain HTTP, no redirects, JPEG only, 3 MB, 6 seconds) and sends it only to the model server above; the picture is never sent through the relay server | `desktop/main/camera.mjs`, T-CAM-001..002, T-MOD-008 |
 | Every IPC call checks that it came from the app's own main frame, and validates its arguments | `trusted()` and `handle()` in `main.mjs` |
 | No remote code, no auto-updater, no telemetry, no analytics | whole app |
 

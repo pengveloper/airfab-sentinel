@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Ask the camera.** The Models view takes one picture from the ESP32-CAM and asks a picture-reading open model (gemma3, llava, qwen2.5-vl and others) about it, showing the picture next to the answer. Questions from the glasses can carry a camera picture too. The picture goes only to the model server on this PC or the home network.
 - **Projects.** A new Projects view and wavrel.com/projects/ list seven experiments that tie boards, models and glasses together: parts, firmware, steps and what success looks like, in Korean and English. Ticked steps and parts are saved on the PC; each step can open its screen. Projects are JSON files in `projects/`, checked in CI, so anyone can add one by pull request.
 - "Broker" is now called the hub everywhere a person reads it, and the first-run screen explains what it is.
 

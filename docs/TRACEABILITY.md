@@ -48,6 +48,7 @@ Status words: SIMULATED, SOFTWARE_VERIFIED, HARDWARE_VERIFIED, OPERATOR_REQUIRED
 | REQ-SL-041 | The relay server answers a Rokid custom-agent request with the platform's event format, only with the right key, drops location and other metadata, and blocks repeated wrong keys. | T-SRV-001..004, T-SRV-009, T-SRV-010 | to be recorded | SOFTWARE_VERIFIED; with the real Rokid platform OPERATOR_REQUIRED |
 | REQ-SL-042 | The desktop app keeps one outgoing link to the relay server with a sealed token; a question arriving there is answered by the chosen model through `lab/in/ask`, and only that answer goes back. A second PC with the same token waits. | T-SRV-005..008, T-LNK-001, app smoke test | to be recorded | SOFTWARE_VERIFIED; across the internet OPERATOR_REQUIRED |
 | REQ-SL-043 | The relay server is deployed from `main` only, without SSH, with TLS and secrets that are never printed. | `server` workflow, `infra/server.yml` | to be recorded | to be verified on the first deploy |
+| REQ-SL-044 | "Ask the camera" takes one still from a camera on a private address and sends it only to the local model server; questions from the glasses can include it, falling back to text when the camera does not answer. | T-CAM-001..002, T-MOD-008, T-CON-021, app smoke test | to be recorded | SOFTWARE_VERIFIED; with a real ESP32-CAM and vision model OPERATOR_REQUIRED |
 
 Hardware results are added only with the board, firmware version, operator and time recorded.
 Failed results stay in the table.

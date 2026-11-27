@@ -10,6 +10,7 @@ import { app, BrowserWindow, Menu, clipboard, ipcMain, protocol, session, shell 
 import { Hub } from './broker.mjs';
 import { Models } from './models.mjs';
 import { Link, linkUrl, validToken } from './link.mjs';
+import { takeSnapshot } from './camera.mjs';
 import * as store from './store.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -117,6 +118,16 @@ function wireIpc() {
   handle('mqtt:publish', arg => { if (!arg) return false; relayAnswer(arg.topic, arg.payload); return hub.publish(arg.topic, arg.payload); });
   handle('models:list', () => models.list());
   handle('models:ask', arg => models.ask(arg && typeof arg === 'object' ? { model: arg.model, prompt: arg.prompt, system: arg.system, maxTokens: arg.maxTokens } : {}));
+  // Takes one still from the camera on the LAN and asks a picture-reading model about it. The
+  // picture goes only to the model server (this PC or the home network) and back to the window
+  // to show what the model saw; nothing else receives it.
+  handle('models:look', async arg => {
+    const a = arg && typeof arg === 'object' ? arg : {};
+    const shot = await takeSnapshot(a.camera);
+    if (!shot.ok) return { ok: false, error: 'CAMERA_' + shot.error };
+    const r = await models.ask({ model: a.model, prompt: a.prompt, system: a.system, maxTokens: a.maxTokens, images: [shot.b64] });
+    return { ...r, image: 'data:image/jpeg;base64,' + shot.b64, imageBytes: shot.bytes };
+  });
   handle('models:url', raw => { if (!models.setUrl(raw)) return { ok: false, url: models.url }; store.setModelUrl(models.url); return { ok: true, url: models.url }; });
   handle('link:status', () => linkStatus());
   handle('link:set', arg => {

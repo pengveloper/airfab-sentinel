@@ -112,17 +112,17 @@
       <article class="proj" id="door-camera" aria-labelledby="door-camera-t">
         <header>
           <p class="num">05</p>
-          <h2 id="door-camera-t">Watch the front door</h2>
-          <p class="meta"><span class="state">Medium</span><span class="state">About 40 min</span><span class="state">Not yet checked on hardware</span></p>
+          <h2 id="door-camera-t">Watch and ask the front-door camera</h2>
+          <p class="meta"><span class="state">Medium</span><span class="state">About 50 min</span><span class="state">Not yet checked on hardware</span></p>
           <p class="sum">Flash Tasmota's camera firmware to the ESP32-CAM and watch it in the Camera view. With a motion rule, you can check the picture the moment someone arrives.</p>
           
         </header>
         <div class="cols3">
-          <section><h3>What you learn</h3><ul class="dots"><li>Flashing the ESP32-CAM and its pin template</li><li>Watching video inside your own network only</li></ul>
-            <h3>Parts</h3><ul class="dots"><li>ESP32-CAM with its USB adapter</li><li>2.4 GHz Wi-Fi router (the one at home)</li><li>USB data cable</li></ul>
+          <section><h3>What you learn</h3><ul class="dots"><li>Flashing the ESP32-CAM and its pin template</li><li>Watching video inside your own network only</li><li>Asking an open picture-reading model about a photo</li></ul>
+            <h3>Parts</h3><ul class="dots"><li>ESP32-CAM with its USB adapter</li><li>2.4 GHz Wi-Fi router (the one at home)</li><li>USB data cable</li><li>A PC with Ollama installed (faster with a GPU)</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://tasmota.github.io/install/">Tasmota (tasmota32-webcam)</a></li></ul></section>
-          <section><h3>Steps</h3><ol class="steps"><li>Flash tasmota32-webcam to the ESP32-CAM on its adapter.</li><li>If there is no picture, apply the AI-Thinker ESP32-CAM template.</li><li>Enter the stream address (http://camera address:81/stream) in the Camera view.</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>The Camera view shows the picture</li><li>It does not open from outside your Wi-Fi</li></ul></section>
+          <section><h3>Steps</h3><ol class="steps"><li>Flash tasmota32-webcam to the ESP32-CAM on its adapter.</li><li>If there is no picture, apply the AI-Thinker ESP32-CAM template.</li><li>Enter the stream address (http://camera address:81/stream) in the Camera view.</li><li>In the Models view, under 'Ask the camera', pick a picture-reading model (gemma3:4b, say) and ask 'Is anyone at the door?'</li></ol></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>The Camera view shows the picture</li><li>It does not open from outside your Wi-Fi</li><li>The model describes what the picture shows in a sentence or two</li></ul></section>
         </div>
       </article>
       <article class="proj" id="ask-from-anywhere" aria-labelledby="ask-from-anywhere-t">

@@ -5,6 +5,7 @@
   "minutes": 45,
   "demo": true,
   "status": "OPERATOR_REQUIRED",
+  "start": true,
   "title": {
     "ko": "와이파이로 움직임 보기",
     "en": "See movement through Wi-Fi"

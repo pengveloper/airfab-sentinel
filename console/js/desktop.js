@@ -36,12 +36,14 @@ function draw(){if(!st||drawer.hidden)return;const state=$('#dk-state'),err=st.e
   $('#dk-clients').innerHTML=st.clients.length?st.clients.map(c=>`<li><b>${esc(c.id)}</b><span class="kv">${esc(c.address)}</span></li>`).join(''):L('<li class="none">아직 붙은 기기가 없습니다.</li>');
   $('#dk-live').hidden=S.source==='live';$('#dk-demo').hidden=S.source==='demo';}
 function open(){drawer.hidden=false;D.status().then(apply);D.info().then(i=>{$('#dk-ver').textContent='Wavrel '+i.version;}).catch(()=>{});$('#dk-close').focus();}
-function close(){drawer.hidden=true;shown=null;}
+/* 처음 비밀번호를 정한 뒤 열린 허브 창을 닫으면 처음 안내를 한 번 보여 줍니다. */
+let greet=false;
+function close(){drawer.hidden=true;shown=null;if(greet){greet=false;if(window.Welcome)setTimeout(()=>Welcome.maybe(),0);}}
 function apply(s){st=s;Desk.rev++;draw();}
 function openSetup(){setup.hidden=false;note.textContent=NOTE0;note.className='muted';$('#su-pass').focus();}
 
 D.onBroker(apply);
-D.status().then(s=>{apply(s);if(!s.hasPassword)openSetup();else live();});
+D.status().then(s=>{apply(s);if(!s.hasPassword)openSetup();else{live();if(window.Welcome)Welcome.maybe();}});
 
 $('#su-gen').addEventListener('click',()=>D.suggestPassword().then(v=>{$('#su-pass').value=v;}));
 $('#su-demo').addEventListener('click',()=>{setup.hidden=true;});
@@ -49,7 +51,7 @@ $('#su-form').addEventListener('submit',e=>{e.preventDefault();const v=$('#su-pa
   if(!/^[A-Za-z0-9!@#$%^&*_\-+=.]{10,64}$/.test(v)){note.className='muted err';note.textContent=L('쓸 수 없는 값입니다. 영문, 숫자, 기호(!@#$%^&*_-+=.)로 10자 이상 64자 이하로 정해 주세요.');return;}
   $('#su-go').disabled=true;D.setup(v).then(s=>{$('#su-go').disabled=false;apply(s);
     if(s.error==='NO_SECURE_STORAGE'||s.error==='INVALID'){note.className='muted err';note.textContent=s.error==='INVALID'?L('쓸 수 없는 값입니다.'):L('이 PC에서 암호화 저장소를 쓸 수 없어 비밀번호를 저장하지 못했습니다.');return;}
-    $('#su-pass').value='';setup.hidden=true;live();open();});});
+    $('#su-pass').value='';setup.hidden=true;live();greet=true;open();});});
 
 drawer.addEventListener('click',e=>{if(e.target===drawer){close();return;}const b=e.target.closest('button');if(!b)return;
   if(b.dataset.copy){const done=()=>{b.textContent=L('복사됨');setTimeout(()=>{b.textContent=L('복사');},1400);};

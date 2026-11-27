@@ -62,7 +62,7 @@ $('#conn-form').addEventListener('submit',e=>{e.preventDefault();note.className=
   Lab.connect($('#c-url').value.trim(),$('#c-user').value,$('#c-pass').value,err=>{if(err){note.className='muted err';note.textContent=err;if(S.source!=='live'&&S.source!=='demo')Lab.demo();}else{$('#c-pass').value='';closeDrawer();}});});
 
 /* 시작 */
-Views.wire();Views.update.models=Models.update;Models.wire();Look.wire();Remote.wire();Projects.wire();Space.init($('#space3d'));
+Views.wire();Views.update.models=Models.update;Views.update.projects=Projects.update;Models.wire();Look.wire();Remote.wire();Projects.wire();Welcome.wire();if(!window.desktop)setTimeout(()=>Welcome.maybe(),400);document.querySelector('#pj-welcome').addEventListener('click',()=>Welcome.open());Space.init($('#space3d'));
 const boot=$('#boot');if(boot){const kill=()=>boot.remove();boot.addEventListener('click',kill);setTimeout(kill,2400);}
 $('#main').addEventListener('pointermove',e=>{const p=e.target.closest('.panel');if(!p)return;const r=p.getBoundingClientRect();p.style.setProperty('--mx',(e.clientX-r.left)+'px');p.style.setProperty('--my',(e.clientY-r.top)+'px');});
 show(location.hash.slice(1)||'space',false);

@@ -5,6 +5,7 @@
   "minutes": 40,
   "demo": true,
   "status": "OPERATOR_REQUIRED",
+  "start": true,
   "title": {
     "ko": "움직임 알림을 안경으로 받기",
     "en": "Get motion alerts on your glasses"

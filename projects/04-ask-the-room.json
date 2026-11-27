@@ -5,6 +5,7 @@
   "minutes": 30,
   "demo": false,
   "status": "OPERATOR_REQUIRED",
+  "start": true,
   "title": {
     "ko": "안경으로 방 상태 묻기",
     "en": "Ask about the room from your glasses"

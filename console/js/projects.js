@@ -39,6 +39,19 @@ function setUp(p){const s=st(),u=applyTo(Lab.cfg,p,Date.now());if(!u)return;s.un
 function undo(){const s=st();undoTo(Lab.cfg,s.undo);s.undo=null;Lab.save();sync();}
 function sync(){const m=Lab.cfg.models||{};const g=$('#md-glass');if(g)g.checked=!!m.glass;if(window.Look)Look.draw();draw();}
 
+/* 실기 확인: 실제 보드가 허브에 붙어 있을 때만 남깁니다. 메모의 MAC·IP 모양은 가리고, 세션은 숫자만 붙입니다. */
+const MAC=/([0-9a-f]{2}[:-]){5}[0-9a-f]{2}/gi,IP=/\b\d{1,3}(\.\d{1,3}){3}\b/g;
+const scrub=t=>String(t||'').replace(/[\u0000-\u001f\u007f]+/g,' ').replace(MAC,'[MAC]').replace(IP,'[IP]').trim().slice(0,400);
+const RESULTS=['pass','fail','skip'];
+function lastSession(sessions){const x=(sessions||[]).find(s=>!s.sim&&s.source==='live'&&s.end);
+  return x?{labels:x.labels|0,hits:x.hits|0,misses:x.miss|0,falses:x.falses|0,minutes:Math.max(1,Math.round((x.end-x.start)/60000))}:null;}
+function record(p,results,note,parts,session,date,app){const d=date.toISOString().slice(0,10);
+  return{v:1,id:`EVD-${d.replace(/-/g,'')}-${p.id}`,project:p.id,date:d,app:String(app||''),source:'live',
+    criteria:p.success.ko.map((ko,i)=>({ko,en:p.success.en[i],result:RESULTS.includes(results[i])?results[i]:'skip'})),
+    parts:parts.filter(id=>PARTS[id]),session:session||null,note:scrub(note)};}
+let appVersion='';
+const copyText=t=>window.desktop?window.desktop.copy(t):navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject();
+
 function drawList(){const ol=$('#pj-list');ol.textContent='';const s=st();
   for(const p of P){const li=el('li'),b=el('button','pj-item'+(p.id===s.sel?' on':''));b.type='button';b.dataset.id=p.id;
     b.setAttribute('aria-current',p.id===s.sel?'true':'false');
@@ -50,7 +63,7 @@ function drawList(){const ol=$('#pj-list');ol.textContent='';const s=st();
 
 function drawDetail(){const box=$('#pj-detail');box.textContent='';const p=P.find(x=>x.id===st().sel);if(!p)return;const lg=lang();
   const head=el('div','ph');head.append(el('h2',null,p.title[lg]));
-  head.append(el('span','chip',p.status==='HARDWARE_VERIFIED'?L('실기 검증됨'):L('실기 검증 전')));box.append(head);
+  head.append(el('span','chip'+(p.status==='HARDWARE_VERIFIED'?' live':''),p.status==='HARDWARE_VERIFIED'?L`실기 검증됨 · ${p.verified}`:L('실기 검증 전')));box.append(head);
   const body=el('div','pb pj-body');box.append(body);
   const meta=el('p','kv',L`${LEVEL()[p.level]} · 약 ${p.minutes}분`);body.append(meta,el('p','pj-sum',p.summary[lg]));
   if(p.demo&&Lab.S.source!=='demo'){const b=el('button','btn',L('데모로 해 보기'));b.type='button';b.id='pj-demo';b.addEventListener('click',()=>{if(Lab.S.source!=='demo')Lab.demo();});body.append(b);}
@@ -87,7 +100,36 @@ function drawDetail(){const box=$('#pj-detail');box.textContent='';const p=P.fin
 
   const right=el('section');grid.append(right);right.append(el('h3',null,L('성공 기준')));
   const ok=el('ul','pj-dots ok');for(const t of p.success[lg])ok.append(el('li',null,t));right.append(ok);
-  right.append(el('p','muted',L('성공 기준은 직접 보고 판단합니다. 실기에서 확인한 결과는 기록 화면의 세션과 함께 남겨 두세요.')));}
+  right.append(el('p','muted',L('성공 기준은 직접 보고 판단합니다. 실기에서 확인한 결과는 아래 실기 확인에 남겨 두세요.')));
+  drawCheck(body,p);}
+
+function drawCheck(body,p){const lg=lang(),box=el('section','pj-check');box.id='pj-check';body.append(box);
+  box.append(el('h3',null,L('실기 확인')));
+  box.append(el('p','muted',L("실제 보드로 해 본 결과를 남깁니다. 기준이 모두 통과한 기록은 저장소의 evidence 폴더에 넣어 이 프로젝트를 '실기 검증됨'으로 올릴 수 있습니다.")));
+  if(Lab.S.source!=='live'){box.append(el('p','kv',L('허브에 실제 보드가 연결되어 있을 때만 남길 수 있습니다. 시뮬레이터 값은 기록하지 않습니다.')));}
+  else{const f=el('div','pjc-form');
+    p.success[lg].forEach((t,i)=>{const row=el('label','pjc-row');const sel=el('select');sel.id='pjc-'+i;
+      for(const[v,txt]of[['pass',L('통과')],['fail',L('실패')],['skip',L('확인 못 함')]]){const o=el('option',null,txt);o.value=v;sel.append(o);}
+      sel.value='skip';row.append(el('span',null,t),sel);f.append(row);});
+    const ses=lastSession(Lab.S.sessions);
+    if(ses){const lab=el('label','inl'),cb=el('input');cb.type='checkbox';cb.id='pjc-sess';cb.checked=true;
+      lab.append(cb,document.createTextNode(L`마지막 검증 세션 붙이기: ${ses.hits}/${ses.labels} 감지, 오탐 ${ses.falses}`));f.append(lab);}
+    const nl=el('label');nl.textContent=L('메모');const ta=el('textarea');ta.id='pjc-note';ta.maxLength=400;ta.rows=2;ta.placeholder=L('어떤 환경에서 했는지 적어 주세요. 주소나 비밀번호는 적지 마세요.');nl.append(ta);f.append(nl);
+    const b=el('button','btn primary',L('결과 남기기'));b.type='button';b.id='pjc-save';f.append(b);box.append(f);}
+  const list=(st().checks||{})[p.id]||[];
+  if(list.length){const ul=el('ul','pjc-list');list.forEach((r,i)=>{const li=el('li'),n=r.criteria.filter(c=>c.result==='pass').length;
+      li.append(el('span','kv',L`${r.date} · 통과 ${n}/${r.criteria.length}`+(n===r.criteria.length?' ✓':'')));
+      const c=el('button','btn sm',L('기록 복사'));c.type='button';c.dataset.copy=i;li.append(c);ul.append(li);});box.append(ul);}
+  const msg=el('p','kv');msg.id='pjc-msg';box.append(msg);}
+
+function saveCheck(p){const s=st();if(Lab.S.source!=='live')return null;
+  const results=p.success.ko.map((_,i)=>{const e=$('#pjc-'+i);return e?e.value:'skip';});
+  const sess=$('#pjc-sess')&&$('#pjc-sess').checked?lastSession(Lab.S.sessions):null;
+  const r=record(p,results,($('#pjc-note')||{}).value,p.parts.filter(id=>s.have[id]),sess,new Date(Lab.now()),appVersion);
+  if(!s.checks||typeof s.checks!=='object')s.checks={};const list=s.checks[p.id]=Array.isArray(s.checks[p.id])?s.checks[p.id]:[];
+  list.unshift(r);list.length=Math.min(list.length,10);Lab.save();return r;}
+function pick(id){const s=st(),p=P.find(x=>x.id===id);if(!p)return;s.sel=id;Lab.save();
+  if(s.auto!==false&&plan(p,Lab.cfg).length)setUp(p);else draw();location.hash='projects';}
 
 function draw(){drawList();drawDetail();}
 
@@ -96,14 +138,21 @@ function wire(){
     const p=P.find(x=>x.id===s.sel);if(p&&s.auto!==false&&plan(p,Lab.cfg).length)setUp(p);else draw();$('#pj-detail').focus({preventScroll:true});});
   $('#pj-detail').addEventListener('change',e=>{const t=e.target;if(t.type!=='checkbox')return;const s=st();
     if(t.id==='pj-auto'){s.auto=t.checked;Lab.save();return;}
+    if(t.id&&t.id.startsWith('pjc-'))return;
     if(t.dataset.part){if(t.checked)s.have[t.dataset.part]=true;else delete s.have[t.dataset.part];}
     else if(t.dataset.step!=null){const p=P.find(x=>x.id===s.sel);const set=new Set(done(p)),i=+t.dataset.step;if(t.checked)set.add(i);else set.delete(i);s.done[p.id]=[...set].sort((a,b)=>a-b);}
     Lab.save();draw();});
   $('#pj-detail').addEventListener('click',e=>{
     if(e.target.closest('#pj-apply')){setUp(P.find(x=>x.id===st().sel));return;}
     if(e.target.closest('#pj-undo')){undo();return;}
+    if(e.target.closest('#pjc-save')){const p=P.find(x=>x.id===st().sel),r=saveCheck(p);draw();
+      const m=$('#pjc-msg');if(m)m.textContent=r?(r.criteria.every(c=>c.result==='pass')?L("남겼습니다. 기준이 모두 통과했으니 '기록 복사'로 evidence 폴더에 올릴 수 있습니다."):L('남겼습니다. 통과하지 못한 기준이 있어 아직 실기 검증으로 올릴 수는 없습니다.')):'';return;}
+    const cp=e.target.closest('button[data-copy]');
+    if(cp){const r=((st().checks||{})[st().sel]||[])[+cp.dataset.copy];if(!r)return;
+      copyText(JSON.stringify(r,null,2)+'\n').then(()=>{const m=$('#pjc-msg');if(m)m.textContent=L`${r.id}.json 내용을 복사했습니다.`;}).catch(()=>{});return;}
     const b=e.target.closest('button[data-view]');if(!b)return;
     if(b.dataset.view==='glass'){if(window.Glass)Glass.open();return;}location.hash=b.dataset.view;});
+  if(window.desktop)window.desktop.info().then(i=>{appVersion=i.version;}).catch(()=>{});
   draw();}
-return{wire,update(){},count:()=>P.length,plan,applyTo,undoTo};
+return{wire,pick,record,scrub,lastSession,update(){},count:()=>P.length,plan,applyTo,undoTo};
 })();

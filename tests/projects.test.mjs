@@ -67,3 +67,27 @@ test('T-PRJ-005 a project setup may only turn on known rules and switches', () =
   assert.ok(load(tmp).projects.every(p => p.setup));
   fs.rmSync(tmp, { recursive: true, force: true });
 });
+
+test('T-PRJ-006 a project is marked checked on hardware only with a passing record from a real board', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wavrel-projects-')), proj = path.join(tmp, 'projects'), ev = path.join(tmp, 'evidence');
+  fs.mkdirSync(proj); fs.mkdirSync(ev);
+  const src = path.join(root, 'projects');
+  for (const f of fs.readdirSync(src)) if (f.endsWith('.json')) fs.copyFileSync(path.join(src, f), path.join(proj, f));
+  const file = path.join(proj, '01-wifi-motion.json'), p = JSON.parse(fs.readFileSync(file, 'utf8'));
+  p.status = 'HARDWARE_VERIFIED'; p.evidence = 'EVD-20261201-wifi-motion';
+  fs.writeFileSync(file, JSON.stringify(p));
+  const rec = { v: 1, id: p.evidence, project: 'wifi-motion', date: '2026-12-01', app: '0.6.1', source: 'live',
+    criteria: p.success.ko.map((ko, i) => ({ ko, en: p.success.en[i], result: 'pass' })), parts: ['esp32-s3'], session: { labels: 5, hits: 5, misses: 0, falses: 0, minutes: 3 }, note: 'living room, 3 m' };
+  const evFile = path.join(ev, `${p.evidence}.json`);
+  const withEv = (change, re) => { const r = JSON.parse(JSON.stringify(rec)); change(r); fs.writeFileSync(evFile, JSON.stringify(r)); if (re) assert.throws(() => load(proj, ev), re); else return load(proj, ev); };
+  assert.throws(() => load(proj, ev), /evidence\/EVD-20261201-wifi-motion.json is missing/);
+  const ok = withEv(() => {});
+  assert.equal(ok.projects[0].verified, '2026-12-01');
+  assert.match(renderPage(ok, 'ko'), /실기 검증됨 · 2026-12-01/);
+  withEv(r => { r.source = 'demo'; }, /real board, not the simulator/);
+  withEv(r => { r.criteria[1].result = 'skip'; }, /every success criterion must have passed/);
+  withEv(r => { r.project = 'ble-rooms'; }, /another project/);
+  withEv(r => { r.note = 'router at 192.168.0.1'; }, /must not hold addresses/);
+  withEv(r => { r.note = 'tag aa:bb:cc:dd:ee:ff'; }, /must not hold addresses/);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});

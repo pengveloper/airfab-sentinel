@@ -63,6 +63,7 @@ const app = await _electron.launch({ args, cwd: root, env: { ...process.env, LAN
 let failed = false;
 try {
   let win = await app.firstWindow(); const ui = drive(() => win);
+  const pageErrors = []; win.on('pageerror', e => pageErrors.push(String(e))); win.on('console', m => { if (m.type() === 'error') pageErrors.push(m.text()); });
   await ui.until(() => document.readyState !== 'loading', null, 90_000);   // 빌드 서버에서는 첫 화면(3D 장면 준비 포함)이 뜨는 데 오래 걸릴 때가 있습니다
   const ready = () => ui.until(() => window.Lab && window.I18N && window.Desk && window.Desk.status(), null, 90_000);
   // 언어를 바꾸면 화면이 새로 열립니다. Windows에서는 그 뒤로 처음 잡아 둔 창 객체의 기다림이 끝나지 않는 일이 있어,
@@ -106,6 +107,14 @@ try {
   await ui.until(() => /^Wavrel \d+\.\d+\.\d+$/.test(document.querySelector('#dk-ver').textContent), null, 5_000);
   assert.equal(await win.evaluate(() => document.querySelector('#dk-ver').textContent), 'Wavrel ' + JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).version, 'the broker dialog shows the app version');
   await ui.click('#dk-close');
+  // 처음 안내: 허브 창을 닫으면 프로젝트 고르기가 한 번 뜨고, '나중에'를 누르면 다시 뜨지 않는다
+  await ui.until(() => !document.querySelector('#welcome').hidden && document.querySelectorAll('#wl-cards .wl-card').length >= 4, null, 5_000);
+  await sleep(300); await shot(win, '01b-welcome.png');
+  await ui.click('#wl-later');
+  await ui.until(() => document.querySelector('#welcome').hidden, null, 5_000);
+  assert.equal(await win.evaluate(() => Lab.cfg.lab.welcomed), true);
+  await win.evaluate(() => Welcome.maybe());
+  assert.equal(await win.evaluate(() => document.querySelector('#welcome').hidden), true, 'the guide does not come back by itself');
 
   // 3. 인증
   // 연결이 안 된 것과 허브가 거절한 것을 구분합니다: 틀린 비밀번호는 허브의 거절 횟수가 실제로 늘어야 통과입니다.
@@ -242,8 +251,18 @@ try {
   await ui.until(() => /1\/\d+ 단계/.test(document.querySelector('#pj-list li:nth-child(2) .kv').textContent), null, 5_000);
   const lab = await win.evaluate(() => JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k => (localStorage.getItem(k) || '').includes('"lab"')) || 'null')));
   assert.ok(lab && lab.lab && lab.lab.done['ble-rooms'] && lab.lab.done['ble-rooms'][0] === 0 && Object.keys(lab.lab.have).length === 1, 'ticked steps and parts are saved');
+  // 실기 확인: 실제 보드가 붙은 허브에서만 남고, 기록 복사는 evidence 형식의 JSON을 준다
+  await ui.until(() => !!document.querySelector('#pjc-save'), null, 5_000);
+  await win.evaluate(() => { document.querySelectorAll('.pjc-row select').forEach(s => { s.value = 'pass'; }); document.querySelector('#pjc-note').value = 'desk 192.168.0.9'; });
+  await ui.click('#pjc-save');
+  await ui.until(() => document.querySelectorAll('.pjc-list li').length === 1, null, 5_000);
+  const rec = await win.evaluate(() => Lab.cfg.lab.checks['ble-rooms'][0]);
+  assert.ok(rec.id.startsWith('EVD-') && rec.id.endsWith('-ble-rooms') && rec.source === 'live' && rec.note === 'desk [IP]' && rec.criteria.every(c => c.result === 'pass') && /^\d+\.\d+\.\d+$/.test(rec.app), 'a hardware check record is kept: ' + JSON.stringify(rec));
+  await ui.click('.pjc-list button[data-copy="0"]');
+  await ui.until(() => /EVD-.*\.json/.test(document.querySelector('#pjc-msg').textContent), null, 5_000);
+  assert.equal(JSON.parse(await app.evaluate(({ clipboard }) => clipboard.readText())).id, rec.id, 'Copy record puts the evidence JSON on the clipboard');
   await sleep(800); await shot(win, '07-projects.png');
-  step('projects view: picking a project sets up its rules, undo puts them back, and ticked steps and parts are kept');
+  step('projects view: picking a project sets up its rules, undo puts them back, ticked steps and parts are kept, and a hardware check is recorded and copied');
   clearInterval(timer); board.end(true);
 
   // 6. 화면 기록 (데모)
@@ -251,7 +270,8 @@ try {
   assert.ok(await win.evaluate(() => document.querySelectorAll('#sp-feed li').length >= 3 && !document.querySelector('#v-space').hidden), 'the space view is showing its event list');
   const dim = await win.evaluate(async () => { let min = 1; for (let i = 0; i < 8; i++) { for (const li of [...document.querySelectorAll('#sp-feed li')].slice(1, 4)) min = Math.min(min, +getComputedStyle(li).opacity); await new Promise(r => setTimeout(r, 80)); } return min; });
   assert.equal(dim, 1, 'event list rows stay fully visible between updates');   // 같은 내용을 다시 그려 목록이 깜빡이던 문제의 재발 방지
-  for (const v of ['motion', 'presence', 'rules', 'nodes', 'evidence']) { await ui.click('#tab-' + v); await sleep(1200); await shot(win, `06-${v}.png`); }
+  for (const v of ['motion', 'presence', 'rules', 'projects', 'nodes', 'evidence']) { await ui.click('#tab-' + v); await sleep(1200); await shot(win, `06-${v}.png`); }
+  assert.deepEqual(pageErrors.filter(t => !/^Failed to load resource/.test(t)), [], 'no script errors in any view');   // 프로젝트 화면에서 매 프레임 오류가 나던 문제의 재발 방지
   step('demo views open without errors');
   // 7. 창은 밖으로 나가지 못한다
   await win.evaluate(() => { try { location.href = 'https://example.com/'; } catch (e) { /* blocked */ } }); await sleep(800);
@@ -287,6 +307,8 @@ async function english() {
     const korean = (await leftover()).map(t => 'first run: ' + t); await shot(win, '07-en-first-run.png');
     await ui.click('#su-demo'); await sleep(4000);
     for (const v of ['space', 'motion', 'presence', 'camera', 'rules', 'models', 'nodes', 'evidence']) { await ui.click('#tab-' + v); await sleep(900); korean.push(...(await leftover()).map(t => v + ': ' + t)); if (v === 'space' || v === 'rules') await shot(win, `07-en-${v}.png`); }
+    await ui.click('#tab-projects'); await sleep(700); await win.evaluate(() => document.querySelector('#pj-list button[data-id="wifi-motion"]').click()); await sleep(500); korean.push(...(await leftover()).map(t => 'projects: ' + t));
+    await win.evaluate(() => Welcome.open()); await sleep(400); korean.push(...(await leftover()).map(t => 'welcome: ' + t)); await shot(win, '07-en-welcome.png'); await ui.click('#wl-later');
     await win.evaluate(() => Glass.open()); await sleep(500); korean.push(...(await leftover()).map(t => 'glass: ' + t)); await win.evaluate(() => Glass.close());
     await ui.click('#openConn'); await sleep(500); korean.push(...(await leftover()).map(t => 'broker panel: ' + t)); await ui.click('#dk-close');
     const report = await win.evaluate(() => Report.build().replace(/<style[\s\S]*?<\/style>/, ''));
@@ -297,7 +319,7 @@ async function english() {
     await ui.click('#tab-evidence'); await sleep(600);
     const emptyRow = await win.evaluate(() => { const td = document.querySelector('#ev-sessions tr.empty td'), th = document.querySelector('#ev-sessions th'); if (!td) return null; const a = td.getBoundingClientRect(), b = th.getBoundingClientRect(); return { left: a.left - b.left, below: a.top >= b.bottom - 1 }; });
     assert.ok(emptyRow && Math.abs(emptyRow.left) < 2 && emptyRow.below, 'the empty-table row sits under its header: ' + JSON.stringify(emptyRow));
-    step('English: no Korean text on the first-run screen, any view, the glasses screen, the broker panel or the report');
+    step('English: no Korean text on the first-run screen, any view, the getting-started guide, the glasses screen, the broker panel or the report');
 
     // 언어 버튼: 누르면 화면이 한국어로 다시 열리고, 선택이 저장되며, 주소에는 흔적이 남지 않는다
     await win.evaluate(() => { document.querySelector('#lang').click(); }).catch(() => {});

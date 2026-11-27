@@ -55,6 +55,7 @@
       <div class="cols">
         <div class="panel w360">
           <div class="ph"><h2>따라 하는 프로젝트</h2><span class="chip" id="pj-count"></span></div>
+          <div class="pad"><button class="btn sm" type="button" id="pj-welcome">처음 안내 다시 보기</button></div>
           <p class="muted pad">보드, 모델, 안경을 엮은 작은 실험입니다. 단계를 체크하면 이 PC에 저장되고, 단계 옆 '열기'로 해당 화면에 바로 갑니다.</p>
           <ol class="pj-list" id="pj-list"></ol>
         </div>
@@ -290,6 +291,14 @@
   </form>
 </div>
 
+<div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="wl-t" hidden>
+  <div class="welcome-in">
+    <h2 id="wl-t">무엇부터 해 볼까요?</h2>
+    <p class="muted">하나를 고르면 필요한 설정을 맞추고 따라 할 순서를 보여 줍니다. 프로젝트 화면에서 언제든 바꿀 수 있습니다.</p>
+    <ul class="wl-cards" id="wl-cards"></ul>
+    <div class="row"><button class="btn" type="button" id="wl-later">나중에</button></div>
+  </div>
+</div>
 <div class="setup" id="setup" role="dialog" aria-modal="true" aria-labelledby="su-t" hidden>
   <img src="img/hero.webp" alt="">
   <p class="setup-w" aria-hidden="true">Wavrel</p>
@@ -340,6 +349,7 @@
 <script src="js/glass.js"></script>
 <script src="js/projects-data.js"></script>
 <script src="js/projects.js"></script>
+<script src="js/welcome.js"></script>
 <script src="js/models.js"></script>
 <script src="js/look.js"></script>
 <script src="js/remote.js"></script>

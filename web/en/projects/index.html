@@ -58,7 +58,8 @@
             <h3>Parts</h3><ul class="dots"><li>ESP32-S3 dev board (DevKitC-1, N16R8)</li><li>2.4 GHz Wi-Fi router (the one at home)</li><li>USB data cable</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://espectre.dev/tools/flash/">ESPectre</a></li></ul></section>
           <section><h3>Steps</h3><ol class="steps"><li>Start the hub and set its password.</li><li>Flash ESPectre to the ESP32-S3 and enter the hub's address, port, user and password.</li><li>Put the board 2 to 4 m away from the router.</li><li>Start a session in the Motion view and press L each time you walk past, at least three times.</li><li>Check the hit rate and false alarms in the Records view.</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>Most walk-pasts show up as detections</li><li>Few false alarms while nobody moves</li></ul></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>Most walk-pasts show up as detections</li><li>Few false alarms while nobody moves</li></ul>
+            <h3>What 'Set up for this project' does in the app</h3><ul class="dots"><li>Turn on the rule: motion on any node → an alert</li><li>Nothing else changes, and Undo puts it back</li></ul></section>
         </div>
       </article>
       <article class="proj" id="ble-rooms" aria-labelledby="ble-rooms-t">
@@ -74,7 +75,8 @@
             <h3>Parts</h3><ul class="dots"><li>ESP32-S3 dev board (DevKitC-1, N16R8)</li><li>ESP32-C3 Super Mini</li><li>A phone with Bluetooth on, or a BLE tag</li><li>USB data cable</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://espresense.com/firmware">ESPresense</a></li></ul></section>
           <section><h3>Steps</h3><ol class="steps"><li>Flash ESPresense to three boards (two S3 and the C3) and give each a different room name, such as office, living and entry.</li><li>In the Location view, enter the room size and drag the boards to where they really are.</li><li>Walk between rooms with the phone and watch the dot follow.</li><li>Turn on an 'enters a room' rule in Automation.</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>The room name changes within 10 seconds of moving</li><li>It does not flip between rooms while you stand still</li></ul></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>The room name changes within 10 seconds of moving</li><li>It does not flip between rooms while you stand still</li></ul>
+            <h3>What 'Set up for this project' does in the app</h3><ul class="dots"><li>Turn on the rule: someone enters office → LED #5aa9ff for 8 s</li><li>Turn on the rule: someone enters office → a notice</li><li>Nothing else changes, and Undo puts it back</li></ul></section>
         </div>
       </article>
       <article class="proj" id="glasses-alert" aria-labelledby="glasses-alert-t">
@@ -90,7 +92,8 @@
             <h3>Parts</h3><ul class="dots"><li>ESP32-S3 dev board (DevKitC-1, N16R8)</li><li>2.4 GHz Wi-Fi router (the one at home)</li><li>Android phone (Android 9 or later)</li><li>Rokid glasses</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://espectre.dev/tools/flash/">ESPectre</a></li><li><a href="https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk">Wavrel Relay</a></li></ul></section>
           <section><h3>Steps</h3><ol class="steps"><li>Install Wavrel Relay on the phone and enter the Host address and password from the hub panel.</li><li>Connect the glasses in Relay and send a test alert to see it on the lens.</li><li>Turn on the 'notify on motion' rule in Automation.</li><li>Preview how it looks on the lens in the glasses screen.</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>An alert reaches the lens a few seconds after motion</li><li>Simulator alerts carry the 'simulated' label</li></ul></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>An alert reaches the lens a few seconds after motion</li><li>Simulator alerts carry the 'simulated' label</li></ul>
+            <h3>What 'Set up for this project' does in the app</h3><ul class="dots"><li>Turn on the rule: motion on any node → an alert</li><li>Nothing else changes, and Undo puts it back</li></ul></section>
         </div>
       </article>
       <article class="proj" id="ask-the-room" aria-labelledby="ask-the-room-t">
@@ -106,7 +109,8 @@
             <h3>Parts</h3><ul class="dots"><li>A PC with Ollama installed (faster with a GPU)</li><li>Android phone (Android 9 or later)</li><li>Rokid glasses</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://ollama.com/download">Ollama</a></li><li><a href="https://github.com/pengveloper/wavrel/releases/latest/download/Wavrel-Relay.apk">Wavrel Relay</a></li></ul></section>
           <section><h3>Steps</h3><ol class="steps"><li>Install Ollama and pull one small model (around 4B, say).</li><li>In the Models view, ask two or three models the same question and compare.</li><li>Turn on 'Answer questions from phone and glasses' and pick the model.</li><li>Ask with 'Ask the PC out loud' in Relay.</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>The answer reaches the lens within 10 seconds</li><li>The answer fits in two lines</li></ul></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>The answer reaches the lens within 10 seconds</li><li>The answer fits in two lines</li></ul>
+            <h3>What 'Set up for this project' does in the app</h3><ul class="dots"><li>Turn on 'Answer questions from phone and glasses'</li><li>Nothing else changes, and Undo puts it back</li></ul></section>
         </div>
       </article>
       <article class="proj" id="door-camera" aria-labelledby="door-camera-t">
@@ -122,7 +126,8 @@
             <h3>Parts</h3><ul class="dots"><li>ESP32-CAM with its USB adapter</li><li>2.4 GHz Wi-Fi router (the one at home)</li><li>USB data cable</li><li>A PC with Ollama installed (faster with a GPU)</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://tasmota.github.io/install/">Tasmota (tasmota32-webcam)</a></li></ul></section>
           <section><h3>Steps</h3><ol class="steps"><li>Flash tasmota32-webcam to the ESP32-CAM on its adapter.</li><li>If there is no picture, apply the AI-Thinker ESP32-CAM template.</li><li>Enter the stream address (http://camera address:81/stream) in the Camera view.</li><li>In the Models view, under 'Ask the camera', pick a picture-reading model (gemma3:4b, say) and ask 'Is anyone at the door?'</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>The Camera view shows the picture</li><li>It does not open from outside your Wi-Fi</li><li>The model describes what the picture shows in a sentence or two</li></ul></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>The Camera view shows the picture</li><li>It does not open from outside your Wi-Fi</li><li>The model describes what the picture shows in a sentence or two</li></ul>
+            <h3>What 'Set up for this project' does in the app</h3><ul class="dots"><li>Turn on the rule: motion on any node → an alert</li><li>Turn on 'Send a camera picture with questions from the glasses too'</li><li>Nothing else changes, and Undo puts it back</li></ul></section>
         </div>
       </article>
       <article class="proj" id="ask-from-anywhere" aria-labelledby="ask-from-anywhere-t">
@@ -138,7 +143,8 @@
             <h3>Parts</h3><ul class="dots"><li>A PC with Ollama installed (faster with a GPU)</li><li>Wavrel relay server (agent.wavrel.com or your own)</li><li>Rokid glasses</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://github.com/pengveloper/wavrel/blob/main/docs/ROKID_AGENT.ko.md">docs/ROKID_AGENT.ko.md</a></li></ul></section>
           <section><h3>Steps</h3><ol class="steps"><li>Turn on answering as in project 4.</li><li>Enter the relay server address and the PC token under 'Ask from anywhere' in the Models view.</li><li>Create a custom agent on the Lingzhu platform with the URL and the AK.</li><li>Switch to that agent on the glasses and ask.</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>The lens gets an answer away from home</li><li>With the PC off, the lens says the PC is not connected</li></ul></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>The lens gets an answer away from home</li><li>With the PC off, the lens says the PC is not connected</li></ul>
+            <h3>What 'Set up for this project' does in the app</h3><ul class="dots"><li>Turn on 'Answer questions from phone and glasses'</li><li>Nothing else changes, and Undo puts it back</li></ul></section>
         </div>
       </article>
       <article class="proj" id="led-status" aria-labelledby="led-status-t">
@@ -154,7 +160,8 @@
             <h3>Parts</h3><ul class="dots"><li>ESP32-S3 dev board (DevKitC-1, N16R8)</li><li>WS2812B LED strip (5 V)</li><li>USB data cable</li></ul>
             <h3>Firmware and tools</h3><ul class="dots"><li><a href="https://install.wled.me/">WLED</a></li></ul></section>
           <section><h3>Steps</h3><ol class="steps"><li>Flash WLED and set MQTT to the hub's address and password with the topic wled/lab.</li><li>Wire the strip's data line to a GPIO on the board (5 V power separately).</li><li>Turn on 'LED on motion' in Automation and pick a colour.</li></ol></section>
-          <section><h3>It works when</h3><ul class="dots ok"><li>The LED changes colour on motion</li><li>It returns to its colour after 8 seconds</li></ul></section>
+          <section><h3>It works when</h3><ul class="dots ok"><li>The LED changes colour on motion</li><li>It returns to its colour after 8 seconds</li></ul>
+            <h3>What 'Set up for this project' does in the app</h3><ul class="dots"><li>Turn on the rule: motion on any node → LED #ecb955 for 8 s</li><li>Nothing else changes, and Undo puts it back</li></ul></section>
         </div>
       </article>
   </div>

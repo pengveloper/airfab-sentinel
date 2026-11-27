@@ -50,6 +50,22 @@
       "view": "rules"
     }
   ],
+  "setup": {
+    "rules": [
+      {
+        "when": {
+          "t": "motion",
+          "node": "*"
+        },
+        "then": {
+          "t": "led",
+          "color": "#ecb955",
+          "sec": 8
+        }
+      }
+    ],
+    "open": "rules"
+  },
   "success": {
     "ko": [
       "움직임이 있으면 LED 색이 바뀐다",

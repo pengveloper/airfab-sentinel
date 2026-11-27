@@ -61,6 +61,21 @@
       "view": "evidence"
     }
   ],
+  "setup": {
+    "rules": [
+      {
+        "when": {
+          "t": "motion",
+          "node": "*"
+        },
+        "then": {
+          "t": "notify",
+          "level": "alert"
+        }
+      }
+    ],
+    "open": "motion"
+  },
   "success": {
     "ko": [
       "지나간 횟수의 대부분이 감지로 잡힌다",

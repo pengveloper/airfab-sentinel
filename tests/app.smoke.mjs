@@ -225,14 +225,25 @@ try {
   // 5-4. 프로젝트 화면: 목록이 나오고, 단계와 부품 체크가 저장된다
   await win.evaluate(() => { location.hash = 'projects'; });
   await ui.until(() => document.querySelectorAll('#pj-list .pj-item').length >= 6, null, 5_000);
-  await ui.click('#pj-list li:nth-child(2) .pj-item');
+  const enterNotify = () => win.evaluate(() => Lab.cfg.rules.filter(r => r.when.t === 'enter' && r.then.t === 'notify' && r.on).length);
+  assert.equal(await enterNotify(), 0);
+  await ui.click('#pj-list li:nth-child(2) .pj-item');   // ble-rooms: picking it sets it up (auto is on by default)
+  await ui.until(() => !!document.querySelector('#pj-undo'), null, 5_000);
+  assert.equal(await enterNotify(), 1, 'picking the project turned on the rule it needs');
+  await sleep(300); await shot(win, '07-projects-setup.png');
+  await ui.click('#pj-undo');
+  await ui.until(() => !!document.querySelector('#pj-apply'), null, 5_000);
+  assert.equal(await enterNotify(), 0, 'undo removed only that rule');
+  await ui.click('#pj-apply');
+  await ui.until(() => !!document.querySelector('#pj-undo'), null, 5_000);
+  assert.equal(await enterNotify(), 1);
   await ui.click('#pj-detail .pj-steps input[data-step="0"]');
   await ui.click('#pj-detail .pj-checks input[data-part]');
   await ui.until(() => /1\/\d+ 단계/.test(document.querySelector('#pj-list li:nth-child(2) .kv').textContent), null, 5_000);
   const lab = await win.evaluate(() => JSON.parse(localStorage.getItem(Object.keys(localStorage).find(k => (localStorage.getItem(k) || '').includes('"lab"')) || 'null')));
   assert.ok(lab && lab.lab && lab.lab.done['ble-rooms'] && lab.lab.done['ble-rooms'][0] === 0 && Object.keys(lab.lab.have).length === 1, 'ticked steps and parts are saved');
   await sleep(800); await shot(win, '07-projects.png');
-  step('projects view lists the projects and keeps ticked steps and parts');
+  step('projects view: picking a project sets up its rules, undo puts them back, and ticked steps and parts are kept');
   clearInterval(timer); board.end(true);
 
   // 6. 화면 기록 (데모)

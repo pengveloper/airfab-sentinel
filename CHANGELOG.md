@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Set up for a project.** Picking a project turns on, or adds, the automation rules it needs and the model switches it uses, and says how many. Undo puts back only what it changed; other rules and settings are untouched. It can also be done with a button, and the automatic setup can be turned off. wavrel.com/projects lists what each project sets up.
+
 ## 0.6.0 (2026-11-27)
 
 - **Ask the camera.** The Models view takes one picture from the ESP32-CAM and asks a picture-reading open model (gemma3, llava, qwen2.5-vl and others) about it, showing the picture next to the answer. Questions from the glasses can carry a camera picture too. The picture goes only to the model server on this PC or the home network.

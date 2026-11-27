@@ -58,6 +58,24 @@
       "view": "models"
     }
   ],
+  "setup": {
+    "rules": [
+      {
+        "when": {
+          "t": "motion",
+          "node": "*"
+        },
+        "then": {
+          "t": "notify",
+          "level": "alert"
+        }
+      }
+    ],
+    "models": {
+      "gcam": true
+    },
+    "open": "camera"
+  },
   "success": {
     "ko": [
       "카메라 화면에 영상이 나온다",

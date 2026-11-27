@@ -12,6 +12,33 @@ function st(){const c=Lab.cfg;if(!c.lab||typeof c.lab!=='object')c.lab={};const 
 const done=p=>{const d=st().done[p.id];return Array.isArray(d)?d.filter(i=>Number.isInteger(i)&&i>=0&&i<p.steps.length):[];};
 const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
 
+/* 이 프로젝트에 맞추기: 필요한 규칙을 켜거나 더하고, 모델 화면의 두 스위치를 켭니다. 다른 규칙과 설정은 건드리지 않고,
+   무엇을 바꿨는지 기억해 두었다가 되돌리기로 그것만 원래대로 돌립니다. */
+const same=(r,s)=>!!(r&&r.when&&r.then)&&r.when.t===s.when.t&&r.then.t===s.then.t
+  &&(s.when.t==='enter'?r.when.room===s.when.room:(r.when.node||'*')===s.when.node)&&(s.when.t!=='quiet'||r.when.sec===s.when.sec)
+  &&(s.then.t!=='led'||String(r.then.color).toLowerCase()===s.then.color.toLowerCase())&&(s.then.t!=='notify'||(r.then.level||'alert')===s.then.level);
+function plan(p,cfg){const s=p.setup||{},out=[],m=cfg.models||{},rules=Array.isArray(cfg.rules)?cfg.rules:[];
+  for(const r of s.rules||[]){const have=rules.find(x=>same(x,r));if(!have)out.push({k:'add',r});else if(!have.on)out.push({k:'on',id:have.id,r});}
+  for(const k of['glass','gcam'])if(s.models&&s.models[k]&&!m[k])out.push({k});
+  return out;}
+function applyTo(cfg,p,stamp){const steps=plan(p,cfg);if(!steps.length)return null;
+  const u={id:p.id,added:[],turnedOn:[],models:{}};
+  steps.forEach((x,i)=>{if(x.k==='add'){const id='p'+stamp.toString(36)+i;cfg.rules.push({id,on:true,when:{...x.r.when},then:{...x.r.then},fired:0,last:0});u.added.push(id);}
+    else if(x.k==='on'){const r=cfg.rules.find(y=>y.id===x.id);if(r){r.on=true;u.turnedOn.push(r.id);}}
+    else{if(!cfg.models)cfg.models={pick:[],glass:false,gmodel:'',len:512};u.models[x.k]=!!cfg.models[x.k];cfg.models[x.k]=true;}});
+  return u;}
+function undoTo(cfg,u){if(!u)return;cfg.rules=cfg.rules.filter(r=>!u.added.includes(r.id));
+  for(const r of cfg.rules)if(u.turnedOn.includes(r.id))r.on=false;
+  for(const[k,v]of Object.entries(u.models||{}))if(cfg.models)cfg.models[k]=v;}
+function say(x){if(x.k==='glass')return L("'휴대폰·안경 질문에 답하기' 켜기");if(x.k==='gcam')return L("'안경 질문에도 카메라 사진을 함께 보내기' 켜기");
+  const w=x.r.when,t=x.r.then;
+  const when=w.t==='motion'?(w.node==='*'?L('어느 노드든 움직임이 있으면'):L`${w.node}에 움직임이 있으면`):w.t==='enter'?L`${w.room}에 들어오면`:L`${w.sec}초 동안 조용하면`;
+  const then=t.t==='led'?L`LED를 ${t.color}로 ${t.sec}초`:t.level==='alert'?L('경고 알림'):L('알림');
+  return L`규칙 켜기: ${when} → ${then}`;}
+function setUp(p){const s=st(),u=applyTo(Lab.cfg,p,Date.now());if(!u)return;s.undo=u;Lab.save();sync();}
+function undo(){const s=st();undoTo(Lab.cfg,s.undo);s.undo=null;Lab.save();sync();}
+function sync(){const m=Lab.cfg.models||{};const g=$('#md-glass');if(g)g.checked=!!m.glass;if(window.Look)Look.draw();draw();}
+
 function drawList(){const ol=$('#pj-list');ol.textContent='';const s=st();
   for(const p of P){const li=el('li'),b=el('button','pj-item'+(p.id===s.sel?' on':''));b.type='button';b.dataset.id=p.id;
     b.setAttribute('aria-current',p.id===s.sel?'true':'false');
@@ -27,6 +54,18 @@ function drawDetail(){const box=$('#pj-detail');box.textContent='';const p=P.fin
   const body=el('div','pb pj-body');box.append(body);
   const meta=el('p','kv',L`${LEVEL()[p.level]} · 약 ${p.minutes}분`);body.append(meta,el('p','pj-sum',p.summary[lg]));
   if(p.demo&&Lab.S.source!=='demo'){const b=el('button','btn',L('데모로 해 보기'));b.type='button';b.id='pj-demo';b.addEventListener('click',()=>{if(Lab.S.source!=='demo')Lab.demo();});body.append(b);}
+
+  if(p.setup){const box=el('div','pj-setup'),todo=plan(p,Lab.cfg),u=st().undo,mine=u&&u.id===p.id;
+    box.append(el('h3',null,L('이 프로젝트에 맞추기')));
+    if(todo.length){const ul=el('ul','pj-dots');for(const x of todo)ul.append(el('li',null,say(x)));box.append(ul);
+      const b=el('button','btn primary',L('한 번에 맞추기'));b.type='button';b.id='pj-apply';box.append(b);}
+    else box.append(el('p','kv',mine?L`맞췄습니다. 규칙 ${u.added.length+u.turnedOn.length}개와 스위치 ${Object.keys(u.models||{}).length}개를 켰고, 다른 것은 그대로입니다.`:L('이미 이 프로젝트에 맞춰져 있습니다.')));
+    const row=el('div','row');
+    if(mine){const b=el('button','btn',L('되돌리기'));b.type='button';b.id='pj-undo';row.append(b);}
+    if(p.setup.open){const b=el('button','btn',L('첫 화면 열기'));b.type='button';b.dataset.view=p.setup.open;row.append(b);}
+    if(row.childNodes.length)box.append(row);
+    const lab=el('label','inl'),cb=el('input');cb.type='checkbox';cb.id='pj-auto';cb.checked=st().auto!==false;lab.append(cb,document.createTextNode(L('프로젝트를 고르면 바로 맞추기')));box.append(lab);
+    body.append(box);}
 
   const grid=el('div','pj-grid');body.append(grid);
   const left=el('section');grid.append(left);
@@ -53,13 +92,18 @@ function drawDetail(){const box=$('#pj-detail');box.textContent='';const p=P.fin
 function draw(){drawList();drawDetail();}
 
 function wire(){
-  $('#pj-list').addEventListener('click',e=>{const b=e.target.closest('.pj-item');if(!b)return;st().sel=b.dataset.id;Lab.save();draw();$('#pj-detail').focus({preventScroll:true});});
+  $('#pj-list').addEventListener('click',e=>{const b=e.target.closest('.pj-item');if(!b)return;const s=st();s.sel=b.dataset.id;Lab.save();
+    const p=P.find(x=>x.id===s.sel);if(p&&s.auto!==false&&plan(p,Lab.cfg).length)setUp(p);else draw();$('#pj-detail').focus({preventScroll:true});});
   $('#pj-detail').addEventListener('change',e=>{const t=e.target;if(t.type!=='checkbox')return;const s=st();
+    if(t.id==='pj-auto'){s.auto=t.checked;Lab.save();return;}
     if(t.dataset.part){if(t.checked)s.have[t.dataset.part]=true;else delete s.have[t.dataset.part];}
     else if(t.dataset.step!=null){const p=P.find(x=>x.id===s.sel);const set=new Set(done(p)),i=+t.dataset.step;if(t.checked)set.add(i);else set.delete(i);s.done[p.id]=[...set].sort((a,b)=>a-b);}
     Lab.save();draw();});
-  $('#pj-detail').addEventListener('click',e=>{const b=e.target.closest('button[data-view]');if(!b)return;
+  $('#pj-detail').addEventListener('click',e=>{
+    if(e.target.closest('#pj-apply')){setUp(P.find(x=>x.id===st().sel));return;}
+    if(e.target.closest('#pj-undo')){undo();return;}
+    const b=e.target.closest('button[data-view]');if(!b)return;
     if(b.dataset.view==='glass'){if(window.Glass)Glass.open();return;}location.hash=b.dataset.view;});
   draw();}
-return{wire,update(){},count:()=>P.length};
+return{wire,update(){},count:()=>P.length,plan,applyTo,undoTo};
 })();

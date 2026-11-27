@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- **Getting started.** The first time the app opens (after the hub password is set), it offers three projects to start with, or a look around with simulated values. Picking one sets it up and opens its steps. The guide can be opened again from the Projects view.
+- **Hardware check.** Each project now has a place to record what happened on real boards: a result for each success criterion, the last test session if there is one, and a short note with addresses masked. Records can only be made while real boards feed the hub, never from the simulator. A record where everything passed can be copied as a file for the repository's `evidence/` folder, and only such a file lets a project show as checked on hardware, with its date.
+
 ## 0.6.1 (2026-11-27)
 
 - **Set up for a project.** Picking a project turns on, or adds, the automation rules it needs and the model switches it uses, and says how many. Undo puts back only what it changed; other rules and settings are untouched. It can also be done with a button, and the automatic setup can be turned off. wavrel.com/projects lists what each project sets up.

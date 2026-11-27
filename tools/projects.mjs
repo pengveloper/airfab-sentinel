@@ -50,7 +50,24 @@ function checkSetup(file, s) {
 }
 
 /** Reads and checks every project. Throws with the file name and the first problem found. */
-export function load(from = dir) {
+export const evidenceDir = path.join(root, 'evidence');
+const MACLIKE = /([0-9a-f]{2}[:-]){5}[0-9a-f]{2}|\b\d{1,3}(\.\d{1,3}){3}\b/i;
+
+/** A hardware check exported from the app (evidence/EVD-YYYYMMDD-<project>.json). */
+function checkEvidence(file, p, evDir) {
+  if (!/^EVD-\d{8}-[a-z0-9-]+$/.test(p.evidence || '')) fail(file, 'HARDWARE_VERIFIED needs an evidence id (EVD-YYYYMMDD-<project>)');
+  const ef = path.join(evDir, `${p.evidence}.json`);
+  if (!fs.existsSync(ef)) fail(file, `evidence/${p.evidence}.json is missing`);
+  const e = JSON.parse(fs.readFileSync(ef, 'utf8'));
+  if (e.v !== 1 || e.id !== p.evidence || e.project !== p.id) fail(file, 'the evidence file is for another project');
+  if (e.source !== 'live') fail(file, 'evidence must come from a real board, not the simulator');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date || '')) fail(file, 'evidence needs a date');
+  if (!Array.isArray(e.criteria) || e.criteria.length !== p.success.ko.length || e.criteria.some(c => c.result !== 'pass')) fail(file, 'every success criterion must have passed');
+  if (typeof e.note === 'string' && (e.note.length > 400 || MACLIKE.test(e.note))) fail(file, 'the evidence note must not hold addresses');
+  return e;
+}
+
+export function load(from = dir, evDir = evidenceDir) {
   const parts = JSON.parse(fs.readFileSync(path.join(from, 'parts.json'), 'utf8'));
   for (const [id, p] of Object.entries(parts)) if (!ID.test(id) || !pair(p, 80)) fail('parts.json', `bad part ${id}`);
   const projects = [];
@@ -63,7 +80,8 @@ export function load(from = dir) {
     if (!Number.isInteger(p.minutes) || p.minutes < 5 || p.minutes > 600) fail(file, 'minutes must be 5 to 600');
     if (typeof p.demo !== 'boolean') fail(file, 'demo must be true or false');
     if (!STATUS.includes(p.status)) fail(file, `status must be one of ${STATUS.join(', ')}`);
-    if (p.status === 'HARDWARE_VERIFIED' && !/^EVD-[A-Z0-9-]+$/.test(p.evidence || '')) fail(file, 'HARDWARE_VERIFIED needs an evidence id (EVD-...)');
+    if (p.status === 'HARDWARE_VERIFIED') p.verified = checkEvidence(file, p, evDir).date;
+    if (p.start !== undefined && p.start !== true) fail(file, 'start, if present, must be true');
     if (!pair(p.title, 60)) fail(file, 'title needs ko and en, up to 60 characters');
     if (!pair(p.summary, 400)) fail(file, 'summary needs ko and en, up to 400 characters');
     if (!lists(p.learn, 120)) fail(file, 'learn needs matching ko and en lists');
@@ -140,7 +158,7 @@ export function renderPage({ projects, parts }, lang) {
         <header>
           <p class="num">${String(i + 1).padStart(2, '0')}</p>
           <h2 id="${p.id}-t">${esc(p.title[lang])}</h2>
-          <p class="meta"><span class="state">${c.level[p.level]}</span><span class="state">${c.min(p.minutes)}</span><span class="state">${c.status[p.status]}</span></p>
+          <p class="meta"><span class="state">${c.level[p.level]}</span><span class="state">${c.min(p.minutes)}</span><span class="state">${p.status === 'HARDWARE_VERIFIED' ? `<a href="https://github.com/pengveloper/wavrel/blob/main/evidence/${p.evidence}.json">${c.status[p.status]} · ${p.verified}</a>` : c.status[p.status]}</span></p>
           <p class="sum">${esc(p.summary[lang])}</p>
           ${p.demo ? `<p><a href="${c.demoUrl}#projects">${c.demo}</a></p>` : ''}
         </header>

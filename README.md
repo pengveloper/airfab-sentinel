@@ -27,7 +27,7 @@ claimed in this repository yet. See [Status](#status).
 - **Open models on your own PC.** The Models view sends the same question to several models installed with [Ollama](https://ollama.com) and shows each answer with its time and speed side by side, or asks them about the recent sensor log. The window never talks to the model server itself: the main process checks that the address is on this PC or the home network, then asks for it. With answering turned on, a question spoken into Wavrel Relay comes to the PC, the model you picked answers in under 80 characters, and the answer goes to the phone and the glasses as an alert. Checked with a stand-in model server in tests; not yet with a real model on the laptop.
 - **Ask the camera.** "Ask the camera" takes one still from the ESP32-CAM and asks a picture-reading open model (gemma3, llava, qwen2.5-vl) what it shows; questions from the glasses can carry the picture too. The picture goes only to the model server on this PC or your network.
 - **Ask from anywhere.** With the optional relay server ([docs/ROKID_AGENT.md](docs/ROKID_AGENT.md)), Rokid glasses' custom agent sends a question to the server, the server passes it down the desktop app's own outgoing connection, and the same model answers on the lens. The PC needs no open port; the server keeps nothing you ask and drops the location the glasses send.
-- **Projects to follow.** The Projects view (and [wavrel.com/projects](https://wavrel.com/projects/)) walks through small experiments, from Wi-Fi motion to answers on the glasses, with parts, firmware, steps and success criteria. Each project is a JSON file in [`projects/`](projects/README.md), so new ones arrive by pull request.
+- **Projects to follow.** The Projects view (and [wavrel.com/projects](https://wavrel.com/projects/)) walks through small experiments, from Wi-Fi motion to answers on the glasses, with parts, firmware, steps and success criteria. Each project is a JSON file in [`projects/`](projects/README.md), so new ones arrive by pull request. The first time the app opens, it offers three of them to start with. A project is marked checked on hardware only when a record from real boards, with every success criterion passed, is in [`evidence/`](evidence/README.md); the Projects view makes that record.
 - **Alerts for glasses and phones.** Rules and validation sessions publish one short sentence at a time on a single topic that only the app can write to, so a wearable app needs nothing but an MQTT subscription. A full-screen black page previews what the glasses would show. [Wavrel Relay](relay/README.md), an Android app, receives them as phone notifications and puts them on Rokid glasses. It is built, unit tested and run in an emulator against the app's broker in CI; it has not run on real glasses yet. Format: [docs/NOTIFY.md](docs/NOTIFY.md).
 
 | First run | Hub panel |
@@ -154,7 +154,7 @@ The evidence table is in [evidence/EVIDENCE-P1.md](evidence/EVIDENCE-P1.md).
 ## Tests
 
 ```sh
-npm test            # data layer (T-CON-001..021), hub (T-HUB-001..010), models (T-MOD-001..008), camera (T-CAM-001..002), relay server and link (T-SRV-001..010, T-LNK-001), projects (T-PRJ-001..004), language (T-I18N-001..004)
+npm test            # data layer (T-CON-001..023), hub (T-HUB-001..010), models (T-MOD-001..008), camera (T-CAM-001..002), relay server and link (T-SRV-001..010, T-LNK-001), projects (T-PRJ-001..006), language (T-I18N-001..004)
 npm run test:app    # starts the real app: isolation, first run, auth, message flow, alerts, English
 ```
 

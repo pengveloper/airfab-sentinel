@@ -19,7 +19,8 @@ browser demo and [wavrel.com/projects](https://wavrel.com/projects/) are all mad
 | `level` | 1 easy, 2 medium, 3 challenging |
 | `minutes` | Rough time for someone doing it the first time |
 | `demo` | `true` if the browser demo's simulator can show it |
-| `status` | `OPERATOR_REQUIRED` until someone checks it on real hardware. `HARDWARE_VERIFIED` needs an `evidence` id (`EVD-…`) that points at a recorded session |
+| `status` | `OPERATOR_REQUIRED` until someone checks it on real hardware. `HARDWARE_VERIFIED` needs an `evidence` id (`EVD-…`) whose record is in [`evidence/`](../evidence/README.md), made on real boards, with every success criterion passed |
+| `start` | Optional, `true` only. Offers the project in the getting-started guide the app shows on first open |
 | `title`, `summary` | One line, then up to 400 characters |
 | `learn`, `success` | Lists in both languages, same length. `success` is what you can see when it works |
 | `parts` | Ids from `parts.json` |
@@ -28,4 +29,4 @@ browser demo and [wavrel.com/projects](https://wavrel.com/projects/) are all mad
 | `steps` | 2 to 10 steps. `view` opens a screen of the app: `space`, `motion`, `presence`, `camera`, `rules`, `models`, `nodes`, `evidence` or `glass` |
 
 The check refuses a file with a missing translation, an unknown part or screen, a plain `http://`
-link, angle brackets in text, or a hardware claim without evidence (T-PRJ-001 to 004).
+link, angle brackets in text, or a hardware claim without a passing record from real boards (T-PRJ-001 to 006).

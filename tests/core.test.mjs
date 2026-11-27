@@ -351,3 +351,19 @@ test('T-CON-022 프로젝트에 맞추기: 필요한 규칙만 켜거나 더하�
   Projects.undoTo(cfg, u3);
   assert.equal(cfg.models.glass, false);
 });
+
+test('T-CON-023 실기 확인 기록: 실제 보드 세션만 붙이고, 메모의 주소는 가린다', () => {
+  const env = boot();
+  vm.runInContext(read('projects-data.js'), env.ctx);
+  vm.runInContext(read('projects.js'), env.ctx);
+  const { Projects, PROJECTS } = env.ctx, p = PROJECTS.find(x => x.id === 'wifi-motion');
+  assert.equal(Projects.scrub('공유기 192.168.0.1 옆, 태그 AA:BB:CC:DD:EE:FF\n3m'), '공유기 [IP] 옆, 태그 [MAC] 3m');
+  const sessions = [{ sim: true, source: 'demo', end: 5, start: 1, labels: 9, hits: 9, miss: 0, falses: 0 },
+    { sim: false, source: 'live', end: 200000, start: 20000, labels: 5, hits: 4, miss: 1, falses: 2 }];
+  assert.deepEqual(JSON.parse(JSON.stringify(Projects.lastSession(sessions))), { labels: 5, hits: 4, misses: 1, falses: 2, minutes: 3 });
+  assert.equal(Projects.lastSession([sessions[0]]), null, 'a simulator session is never attached');
+  const r = JSON.parse(JSON.stringify(Projects.record(p, ['pass', 'nope'], 'MAC 11-22-33-44-55-66', ['esp32-s3', 'flux'], null, new Date('2026-12-01T09:00:00Z'), '0.6.1')));
+  assert.equal(r.id, 'EVD-20261201-wifi-motion'); assert.equal(r.source, 'live'); assert.equal(r.app, '0.6.1');
+  assert.deepEqual(r.criteria.map(c => c.result), ['pass', 'skip']);
+  assert.deepEqual(r.parts, ['esp32-s3']); assert.equal(r.note, 'MAC [MAC]');
+});

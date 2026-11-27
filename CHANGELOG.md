@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.1 (2026-11-27)
 
 - **Set up for a project.** Picking a project turns on, or adds, the automation rules it needs and the model switches it uses, and says how many. Undo puts back only what it changed; other rules and settings are untouched. It can also be done with a button, and the automatic setup can be turned off. wavrel.com/projects lists what each project sets up.
 

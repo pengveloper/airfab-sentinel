@@ -54,6 +54,12 @@
       "en": "Switch to that agent on the glasses and ask."
     }
   ],
+  "setup": {
+    "models": {
+      "glass": true
+    },
+    "open": "models"
+  },
   "success": {
     "ko": [
       "집 밖에서도 렌즈에 답이 뜬다",

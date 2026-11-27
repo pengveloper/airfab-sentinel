@@ -22,6 +22,33 @@ const text = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.lengt
 const pair = (v, max) => v && text(v.ko, max) && text(v.en, max);
 const lists = (v, max) => v && Array.isArray(v.ko) && Array.isArray(v.en) && v.ko.length > 0 && v.ko.length === v.en.length && v.ko.length <= 8 && [...v.ko, ...v.en].every(t => text(t, max));
 
+export const WHEN = ['motion', 'enter', 'quiet'];
+export const THEN = ['led', 'notify'];
+const NAME = /^(\*|[A-Za-z0-9_-]{1,40})$/;
+
+/** What "Set up for this project" may change: turn on or add rules, and two model switches. */
+function checkSetup(file, s) {
+  if (!s || typeof s !== 'object' || Array.isArray(s)) fail(file, 'setup must be an object');
+  for (const k of Object.keys(s)) if (!['rules', 'models', 'open'].includes(k)) fail(file, `setup has an unknown key ${k}`);
+  if (s.open !== undefined && !VIEWS.includes(s.open)) fail(file, 'setup.open must be a screen');
+  if (s.models !== undefined) {
+    if (!s.models || typeof s.models !== 'object') fail(file, 'setup.models must be an object');
+    for (const [k, v] of Object.entries(s.models)) if (!['glass', 'gcam'].includes(k) || v !== true) fail(file, 'setup.models may only turn on glass or gcam');
+  }
+  if (s.rules !== undefined) {
+    if (!Array.isArray(s.rules) || s.rules.length > 5) fail(file, 'setup.rules must be a list of up to 5 rules');
+    for (const r of s.rules) {
+      const w = r && r.when, t = r && r.then;
+      if (!w || !WHEN.includes(w.t)) fail(file, `rule when.t must be one of ${WHEN.join(', ')}`);
+      if (w.t === 'enter' ? !NAME.test(w.room || '') || w.room === '*' : !NAME.test(w.node || '')) fail(file, 'rule needs a node (motion, quiet) or a room (enter)');
+      if (w.t === 'quiet' && !(Number.isInteger(w.sec) && w.sec >= 10 && w.sec <= 3600)) fail(file, 'quiet rule needs sec 10 to 3600');
+      if (!t || !THEN.includes(t.t)) fail(file, `rule then.t must be one of ${THEN.join(', ')}`);
+      if (t.t === 'led' && (!/^#[0-9a-f]{6}$/i.test(t.color || '') || !(Number.isInteger(t.sec) && t.sec >= 1 && t.sec <= 60))) fail(file, 'led rule needs a #rrggbb color and sec 1 to 60');
+      if (t.t === 'notify' && !['info', 'alert'].includes(t.level)) fail(file, 'notify rule needs level info or alert');
+    }
+  }
+}
+
 /** Reads and checks every project. Throws with the file name and the first problem found. */
 export function load(from = dir) {
   const parts = JSON.parse(fs.readFileSync(path.join(from, 'parts.json'), 'utf8'));
@@ -48,6 +75,7 @@ export function load(from = dir) {
       if (!pair(s, 240)) fail(file, 'each step needs ko and en, up to 240 characters');
       if (s.view !== undefined && !VIEWS.includes(s.view)) fail(file, `step view must be one of ${VIEWS.join(', ')}`);
     }
+    if (p.setup !== undefined) checkSetup(file, p.setup);
     if (projects.some(q => q.id === p.id || q.order === p.order)) fail(file, 'id and order must be unique');
     projects.push(p);
   }
@@ -68,6 +96,7 @@ const COPY = {
     desc: 'ESP32 보드, 공개 모델, 스마트 안경을 엮은 Wavrel 예제 프로젝트. 부품, 펌웨어, 순서, 성공 기준을 한 장에 정리했습니다.',
     h1: '프로젝트로 배우기',
     lede: '하나씩 따라 하면 보드에서 렌즈까지 이어지는 작은 실험입니다. 앱의 프로젝트 화면에서도 같은 순서로 체크하며 진행할 수 있습니다.',
+    setup: "앱의 '이 프로젝트에 맞추기'가 하는 일",
     level: ['', '쉬움', '보통', '도전'], min: m => `약 ${m}분`, demo: '데모로 먼저 보기', learn: '배우는 것', parts: '부품', fw: '펌웨어와 도구', steps: '순서', success: '성공 기준',
     status: { OPERATOR_REQUIRED: '실기 검증 전', HARDWARE_VERIFIED: '실기 검증됨' },
     addH: '프로젝트 더하기', add: '프로젝트는 저장소의 projects 폴더에 JSON 파일 하나로 들어갑니다. 형식과 검사 방법은 안내 문서에 있고, 풀 리퀘스트로 보내 주시면 됩니다.', addLink: '프로젝트 추가 안내',
@@ -79,6 +108,7 @@ const COPY = {
     desc: 'Example Wavrel projects that combine ESP32 boards, open models and smart glasses, with parts, firmware, steps and what success looks like.',
     h1: 'Learn by building',
     lede: 'Small experiments that run from a board to a lens, one step at a time. The Projects view in the app follows the same steps with a checklist.',
+    setup: "What 'Set up for this project' does in the app",
     level: ['', 'Easy', 'Medium', 'Challenging'], min: m => `About ${m} min`, demo: 'Try it in the demo first', learn: 'What you learn', parts: 'Parts', fw: 'Firmware and tools', steps: 'Steps', success: 'It works when',
     status: { OPERATOR_REQUIRED: 'Not yet checked on hardware', HARDWARE_VERIFIED: 'Checked on hardware' },
     addH: 'Add a project', add: 'A project is one JSON file in the repository\'s projects folder. The guide explains the format and the check; send it as a pull request.', addLink: 'How to add a project',
@@ -86,6 +116,19 @@ const COPY = {
     foot: 'Wavrel is open source under the MIT license.', demoUrl: '/demo/?lang=en',
   },
 };
+
+/** One line per change, in the same words the app uses. */
+export function describeSetup(s, lang) {
+  const ko = lang === 'ko', out = [];
+  const when = w => w.t === 'motion' ? (ko ? (w.node === '*' ? '어느 노드든 움직임이 있으면' : `${w.node}에 움직임이 있으면`) : (w.node === '*' ? 'motion on any node' : `motion on ${w.node}`))
+    : w.t === 'enter' ? (ko ? `${w.room}에 들어오면` : `someone enters ${w.room}`) : (ko ? `${w.sec}초 동안 조용하면` : `${w.sec} s of quiet`);
+  const then = t => t.t === 'led' ? (ko ? `LED를 ${t.color}로 ${t.sec}초` : `LED ${t.color} for ${t.sec} s`) : (ko ? (t.level === 'alert' ? '경고 알림' : '알림') : (t.level === 'alert' ? 'an alert' : 'a notice'));
+  for (const r of s.rules || []) out.push(ko ? `규칙 켜기: ${when(r.when)} → ${then(r.then)}` : `Turn on the rule: ${when(r.when)} → ${then(r.then)}`);
+  if (s.models && s.models.glass) out.push(ko ? "'휴대폰·안경 질문에 답하기' 켜기" : "Turn on 'Answer questions from phone and glasses'");
+  if (s.models && s.models.gcam) out.push(ko ? "'안경 질문에도 카메라 사진을 함께 보내기' 켜기" : "Turn on 'Send a camera picture with questions from the glasses too'");
+  out.push(ko ? '다른 규칙과 설정은 건드리지 않고, 되돌리기로 원래대로 돌아갑니다' : 'Nothing else changes, and Undo puts it back');
+  return out;
+}
 
 const ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="3.2" fill="#ecb955"/><path d="M6 10.5a7.5 7.5 0 0 1 7.5 7.5M6 5.5A12.5 12.5 0 0 1 18.5 18" fill="none" stroke="#9cc6ff" stroke-width="2.2" stroke-linecap="round"/></svg>';
 
@@ -106,7 +149,8 @@ export function renderPage({ projects, parts }, lang) {
             <h3>${c.parts}</h3><ul class="dots">${li(p.parts.map(id => parts[id][lang]))}</ul>
             <h3>${c.fw}</h3><ul class="dots">${p.firmware.map(f => `<li><a href="${esc(f.url)}">${esc(f.name)}</a></li>`).join('')}</ul></section>
           <section><h3>${c.steps}</h3><ol class="steps">${li(p.steps.map(s => s[lang]))}</ol></section>
-          <section><h3>${c.success}</h3><ul class="dots ok">${li(p.success[lang])}</ul></section>
+          <section><h3>${c.success}</h3><ul class="dots ok">${li(p.success[lang])}</ul>
+            ${p.setup ? `<h3>${c.setup}</h3><ul class="dots">${li(describeSetup(p.setup, lang))}</ul>` : ''}</section>
         </div>
       </article>`).join('');
   const navHref = [c.demoUrl, `${c.home}#get`, lang === 'ko' ? '/projects/' : '/en/projects/'];

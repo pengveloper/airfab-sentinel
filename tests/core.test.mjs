@@ -320,3 +320,34 @@ test('T-CON-021 켜 두면 사진을 읽는 모델은 카메라 사진을 함께
   msg('lab/in/ask', { v: 1, id: 'c3', text: '안녕?', lang: 'ko' }); await flush(); await flush();
   assert.equal(asked.filter(a => a.look).length, before, 'a model that cannot read pictures gets no picture');
 });
+
+test('T-CON-022 프로젝트에 맞추기: 필요한 규칙만 켜거나 더하고, 되돌리기는 바꾼 것만 돌린다', () => {
+  const env = boot();
+  vm.runInContext(read('projects-data.js'), env.ctx);
+  vm.runInContext(read('projects.js'), env.ctx);
+  const { Projects, PROJECTS, Lab } = env.ctx;
+  const cfg = JSON.parse(JSON.stringify(Lab.cfg));
+  const byId = id => PROJECTS.find(p => p.id === id);
+  assert.equal(Projects.plan(byId('wifi-motion'), cfg).length, 0, 'the default motion alert rule already matches');
+  const before = JSON.stringify(cfg.rules.map(r => [r.id, r.on]));
+  const ble = byId('ble-rooms');
+  assert.deepEqual(JSON.parse(JSON.stringify(Projects.plan(ble, cfg).map(x => x.k))), ['add']);
+  const u = Projects.applyTo(cfg, ble, 1234);
+  assert.equal(cfg.rules.filter(r => r.when.t === 'enter' && r.then.t === 'notify' && r.on).length, 1);
+  assert.equal(Projects.plan(ble, cfg).length, 0, 'applying twice changes nothing');
+  assert.equal(Projects.applyTo(cfg, ble, 5678), null);
+  cfg.rules.find(r => r.id === 'r1').on = false;
+  const led = byId('led-status'), u2 = Projects.applyTo(cfg, led, 9);
+  assert.deepEqual(JSON.parse(JSON.stringify(u2.turnedOn)), ['r1']);
+  Projects.undoTo(cfg, u2);
+  assert.equal(cfg.rules.find(r => r.id === 'r1').on, false, 'undo puts back only what was changed');
+  Projects.undoTo(cfg, u);
+  cfg.rules.find(r => r.id === 'r1').on = true;
+  assert.equal(JSON.stringify(cfg.rules.map(r => [r.id, r.on])), before);
+  const ask = byId('ask-the-room');
+  cfg.models = { pick: [], glass: false, gmodel: '', len: 512 };
+  const u3 = Projects.applyTo(cfg, ask, 1);
+  assert.equal(cfg.models.glass, true);
+  Projects.undoTo(cfg, u3);
+  assert.equal(cfg.models.glass, false);
+});

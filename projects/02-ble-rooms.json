@@ -57,6 +57,32 @@
       "view": "rules"
     }
   ],
+  "setup": {
+    "rules": [
+      {
+        "when": {
+          "t": "enter",
+          "room": "office"
+        },
+        "then": {
+          "t": "led",
+          "color": "#5aa9ff",
+          "sec": 8
+        }
+      },
+      {
+        "when": {
+          "t": "enter",
+          "room": "office"
+        },
+        "then": {
+          "t": "notify",
+          "level": "info"
+        }
+      }
+    ],
+    "open": "presence"
+  },
   "success": {
     "ko": [
       "방을 옮기면 10초 안에 방 이름이 바뀐다",

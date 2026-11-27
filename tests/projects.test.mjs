@@ -51,3 +51,19 @@ test('T-PRJ-004 the website pages are static, linked both ways and escape what t
   const odd = { projects: [{ ...data.projects[0], title: { ko: 'A & B', en: 'A & B' } }], parts: data.parts };
   assert.ok(renderPage(odd, 'en').includes('A &amp; B'));
 });
+
+test('T-PRJ-005 a project setup may only turn on known rules and switches', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wavrel-projects-'));
+  const src = path.join(root, 'projects');
+  for (const f of fs.readdirSync(src)) if (f.endsWith('.json')) fs.copyFileSync(path.join(src, f), path.join(tmp, f));
+  const file = path.join(tmp, '07-led-status.json'), good = fs.readFileSync(file, 'utf8');
+  const bad = (change, re) => { const p = JSON.parse(good); change(p); fs.writeFileSync(file, JSON.stringify(p)); assert.throws(() => load(tmp), re); fs.writeFileSync(file, good); };
+  bad(p => { p.setup.rules[0].then = { t: 'publish', topic: 'x', payload: 'y' }; }, /then.t must be one of/);
+  bad(p => { p.setup.rules[0].then.color = 'red'; }, /#rrggbb/);
+  bad(p => { p.setup.rules[0].when = { t: 'enter', room: '*' }; }, /needs a node .* or a room/);
+  bad(p => { p.setup.models = { glass: false }; }, /may only turn on/);
+  bad(p => { p.setup.delete = ['r1']; }, /unknown key delete/);
+  bad(p => { p.setup.open = 'settings'; }, /setup.open must be a screen/);
+  assert.ok(load(tmp).projects.every(p => p.setup));
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
